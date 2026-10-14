@@ -61,21 +61,77 @@ Unknown native layouts remain unchanged with a notice.
 - `docs/images/social-preview.png`: 1280 x 640 GitHub social preview.
 - `docs/images/social-preview.svg`: reproducible source artwork.
 - Generate the PNG with `npm run media`.
+- `docs/images/board-before-after.png` and `docs/images/ticket-before-after.png`
+  compare native and customized layouts with the same fictional content.
+- Generate the comparisons with `npm run build` then `npm run screenshots`.
 - Use fictional fixture screenshots for a public listing. Never use private
   tickets, people, organization URLs, or an authenticated browser profile.
 
 ## Release checklist
 
-1. Run compile, unit tests, production build, and installed-browser tests.
-2. Run `npm run zip`. Inspect the Chrome ZIP and optional source ZIP before
-   publishing. Confirm the manifest version, LICENSE, and third-party notices.
+1. Use the CI pipeline below to compile, test, build the Chrome ZIP, and run
+   installed-browser tests against that exact build.
+2. Confirm the package version, permissions, LICENSE, and third-party notices.
+   The package guard checks archive paths and byte-matches every packaged file.
 3. Keep permissions limited to local storage, the active tab, script injection,
    and the two supported ADO host patterns.
 4. Exclude local reports, configuration exports, browser profiles, recordings,
    credentials, dependencies, and build caches from source control.
-5. Create the repository only after confirming its owner and public visibility.
-   Apply the description/topics and upload the social preview through repository
-   settings. Create a versioned release with the Chrome ZIP.
+5. Push a version tag only when ready to release. Keep repository visibility
+   unchanged; private releases require repository access.
+
+## CI and manual tag releases
+
+| Event | Result |
+| --- | --- |
+| Pull request or push to `main` | Compile, unit tests, production ZIP, browser tests, package verification, downloadable artifact |
+| Manual **Run workflow** | The same validation, without publishing |
+| Push a `vX.Y.Z` tag | Validate the tag, run the same pipeline, then publish the verified ZIP and `SHA256SUMS` |
+
+**Pushing a tag is the release approval.** The workflow does not bump versions,
+create tags, submit to the Chrome Web Store, or change repository visibility.
+
+Tags must match `package.json`, both lockfile version fields, and the generated
+manifest. The tagged commit must be reachable from `main`. It need not remain
+the latest commit while validation runs. A removed or moved tag cannot publish.
+
+Build the ZIP **before** browser tests. The archive is compared with every
+browser-tested file afterward, then transferred to the release job without a
+rebuild. Validation has read-only repository permissions. Only the tag-triggered
+publication job can write releases.
+
+To release the current `0.11.1` version after CI is green:
+
+```sh
+git switch main
+git pull --rebase origin main
+git tag -a v0.11.1 -m "ADOverride v0.11.1"
+git push origin v0.11.1
+```
+
+For a later release, update both manifests with
+`npm version patch --no-git-tag-version`, commit and push those changes to `main`,
+then tag the resulting version. Do not force-update a release tag.
+
+Failed validation produces no release. Browser failure artifacts contain only
+traces and error context from fictional fixtures, never browser profiles.
+Re-running publication resumes only a draft created by this workflow for the
+same commit. A completed release is verified and left unchanged. Existing
+published assets are never overwritten; use a new version for changes.
+
+For local package checks:
+
+```sh
+npm run compile
+npm test
+npm run zip
+npm run test:browser
+node scripts/release-check.mjs package
+```
+
+The release guards and their tests use Git, `zip`, and `unzip`. These are
+available on the Ubuntu CI runner. Review WXT's optional source ZIP separately;
+only the validated Chrome ZIP and checksum file are release assets.
 
 The store needs actual screenshots and its privacy declarations reviewed during
 submission. This document is listing copy, not a claim that the extension is

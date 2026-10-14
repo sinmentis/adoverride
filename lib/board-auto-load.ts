@@ -137,14 +137,17 @@ export function createBoardAutoLoader(document: Document, notify: () => void) {
         const advanced = !column || !root.contains(column) || changed(progress(column), pending.baseline);
         const stillBusy = pending.control.isConnected && busy(pending.control) || Boolean(offered && busy(offered.control)) ||
           Boolean(column && nativeLoading(column));
+        const elapsed = performance.now() - pending.started;
         const completed = !offered && column && !context.collapsed.has(column) &&
-          performance.now() - pending.started >= SETTLE_DELAY;
+          elapsed >= SETTLE_DELAY;
         if (!stillBusy && (advanced || completed)) { clearPending(); cooldown = performance.now() + SETTLE_DELAY; }
-        else if (performance.now() - pending.started >= AUTO_LOAD_TIMEOUT) {
+        else if (elapsed >= AUTO_LOAD_TIMEOUT) {
           fail('No loading progress for 30 seconds. Retry or use the native Show more items control.', candidates.length, itemsSeen);
           return;
         } else {
           publish('loading', candidates.length, itemsSeen, 'Loading more items...');
+          // Browser timers can fire before the monotonic deadline.
+          if (!deadline) schedule(Math.max(1, Math.ceil(AUTO_LOAD_TIMEOUT - elapsed)));
           if (!offered) schedule(SETTLE_DELAY);
           return;
         }

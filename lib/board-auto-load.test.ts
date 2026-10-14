@@ -109,6 +109,24 @@ describe('native Board auto-loading', () => {
       expect(loader.snapshot.status).toBe('complete');
     } finally { loader.dispose(); }
   });
+  it('rechecks an early deadline without reporting a stall before the monotonic 30-second threshold', async () => {
+    const now = performance.now.bind(performance);
+    vi.spyOn(performance, 'now').mockImplementation(() => {
+      const time = now();
+      return time >= AUTO_LOAD_TIMEOUT ? time - 0.1 : time;
+    });
+    const { loader, context, calls } = fixture();
+    try {
+      loader.update(context);
+      await vi.advanceTimersByTimeAsync(AUTO_LOAD_TIMEOUT);
+      expect(loader.snapshot.status).toBe('loading');
+      await vi.advanceTimersByTimeAsync(1);
+      expect(loader.snapshot.status).toBe('error');
+      expect(loader.snapshot.message).toContain('No loading progress for 30 seconds');
+      await vi.advanceTimersByTimeAsync(AUTO_LOAD_TIMEOUT * 2);
+      expect(calls).toEqual([0]);
+    } finally { loader.dispose(); }
+  });
   it('does not repeat a disappearing control when it returns with the same unchanged items', async () => {
     const { loader, context, columns, buttons, calls } = fixture();
     try {

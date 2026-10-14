@@ -23,7 +23,9 @@ export default defineConfig({
   },
   hooks: {
     'build:done': async wxt => {
-      for (const file of ['LICENSE', 'README.md', 'docs/publishing.md', 'docs/images/social-preview.svg', 'docs/images/social-preview.png']) {
+      for (const file of ['LICENSE', 'README.md', 'docs/guide.md', 'docs/publishing.md',
+        'docs/images/board-before-after.png', 'docs/images/ticket-before-after.png',
+        'docs/images/social-preview.svg', 'docs/images/social-preview.png']) {
         const target = path.join(wxt.config.outDir, file);
         await mkdir(path.dirname(target), { recursive: true });
         await copyFile(fileURLToPath(new URL(file, import.meta.url)), target);

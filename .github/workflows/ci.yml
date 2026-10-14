@@ -2,30 +2,88 @@ name: CI
 
 on:
   push:
+    branches: [main]
+    tags: ['v*']
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref_type != 'tag' }}
+
 jobs:
   chrome:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      artifact_name: adoverride-chrome-${{ steps.package.outputs.version }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - name: Validate manual release tag
+        if: github.ref_type == 'tag'
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/release-check.mjs tag
       - run: npm ci
       - run: npm run compile
       - run: npm test
-      - run: npm run build
+      - name: Build the release package
+        run: npm run zip
       - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
-      - run: npm run zip
+      - name: Verify the browser-tested package
+        id: package
+        run: node scripts/release-check.mjs package
+      - name: Upload failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-failure-${{ github.run_attempt }}
+          path: |
+            test-results/**/error-context.md
+            test-results/**/trace.zip
+          if-no-files-found: ignore
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         with:
-          name: adoverride-chrome
-          path: .output/*-chrome.zip
+          name: adoverride-chrome-${{ steps.package.outputs.version }}-${{ github.run_attempt }}
+          path: |
+            .output/${{ steps.package.outputs.zip_name }}
+            .output/SHA256SUMS
           include-hidden-files: true
           if-no-files-found: error
+          retention-days: 14
+
+  release:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: chrome
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.chrome.outputs.artifact_name }}
+          path: release
+      - name: Publish the verified release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: node scripts/publish-release.mjs
