@@ -1,0 +1,236 @@
+[data-ado-ticket-root] [data-ado-ticket-flow-item],
+[data-ado-ticket-root] [data-ado-ticket-column-item] {
+  grid-area: auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+[data-ado-ticket-root] [data-ado-ticket-flow-item] {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-self: stretch;
+}
+[data-ado-ticket-root] [data-ado-ticket-stack] {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-grid] {
+  display: grid !important;
+  grid-template-areas: none !important;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 0.8fr) !important;
+  grid-template-rows: auto auto !important;
+  grid-auto-rows: auto !important;
+  grid-auto-flow: row !important;
+  align-items: start;
+  align-content: start !important;
+  height: auto !important;
+  min-height: 0 !important;
+  width: auto !important;
+  min-width: 0;
+  column-gap: 16px;
+  row-gap: 0 !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-main-item] {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-rail-item] {
+  grid-column: 2 !important;
+  grid-row: 1 / span 2 !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-columns] {
+  display: grid !important;
+  grid-template-areas: none !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  grid-template-rows: auto !important;
+  grid-auto-rows: auto !important;
+  grid-auto-flow: row !important;
+  align-items: start;
+  align-content: start !important;
+  gap: 16px;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-rail-columns="1"] { grid-template-columns: minmax(0, 1fr) !important; }
+[data-ado-ticket-root] [data-ado-ticket-grid][data-ado-ticket-main="false"],
+[data-ado-ticket-root] [data-ado-ticket-grid][data-ado-ticket-rail="false"],
+[data-ado-ticket-root] [data-ado-ticket-grid][data-ado-ticket-narrow] {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-grid][data-ado-ticket-main="false"] > [data-ado-ticket-rail-item],
+[data-ado-ticket-root] [data-ado-ticket-grid][data-ado-ticket-narrow] > [data-ado-ticket-rail-item] {
+  grid-column: 1 !important;
+  grid-row: auto !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-grid][data-ado-ticket-narrow] > [data-ado-ticket-columns] {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+[data-ado-ticket-root] .html-editor,
+[data-ado-ticket-root] .rooster-editor { min-width: 0; max-width: 100%; }
+[data-ado-ticket-root] :is(.work-item-form-group, .work-item-form-discussion):has(ado-ticket-visibility-control) {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box;
+}
+[data-ado-ticket-root] [data-ado-ticket-header-row] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between;
+  min-width: 0;
+}
+[data-ado-ticket-root] [data-ado-ticket-header-row]:has(ado-ticket-visibility-control) {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+[data-ado-ticket-root] [data-ado-ticket-header-row]:has(ado-ticket-visibility-control) > [data-ado-ticket-header-title] {
+  flex-basis: 80px !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-header-actions] {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center;
+  margin-inline-start: auto;
+  white-space: nowrap;
+}
+[data-ado-ticket-root] [data-ado-ticket-header-title] {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-header-title],
+[data-ado-ticket-root] [data-ado-ticket-header-title] > :first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+[data-ado-ticket-root] :is([data-ado-ticket-ui="handle"], [data-ado-ticket-ui="visibility"]) {
+  opacity: 0;
+  transition: opacity 100ms ease;
+}
+[data-ado-ticket-root] .work-item-form-collapsible-header:hover :is([data-ado-ticket-ui="handle"], [data-ado-ticket-ui="visibility"]),
+[data-ado-ticket-root] .work-item-form-group:hover :is([data-ado-ticket-ui="handle"], [data-ado-ticket-ui="visibility"]),
+[data-ado-ticket-root] .work-item-form-discussion:hover :is([data-ado-ticket-ui="handle"], [data-ado-ticket-ui="visibility"]),
+[data-ado-ticket-root] :is([data-ado-ticket-ui="handle"], [data-ado-ticket-ui="visibility"]):focus-within,
+[data-ado-ticket-root] [data-ado-ticket-ui="handle"][data-ado-ticket-dragging] { opacity: 1; }
+[data-ado-ticket-root] [data-ado-ticket-drag-source] {
+  outline: 2px solid #1f6feb;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px #1f6feb24;
+}
+[data-ado-ticket-root] [data-ado-ticket-drop] {
+  outline: 2px dashed #1f6feb;
+  outline-offset: 2px;
+}
+[data-ado-ticket-root] [data-ado-ticket-drop="before"] { box-shadow: 0 -3px #1f6feb; }
+[data-ado-ticket-root] [data-ado-ticket-drop="after"] { box-shadow: 0 3px #1f6feb; }
+[data-ado-ticket-root] [data-ado-ticket-contents] { display: contents !important; }
+[data-ado-ticket-root] [data-ado-ticket-manual] {
+  display: block !important;
+  position: relative !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+[data-ado-ticket-root] [data-ado-ticket-manual-card] {
+  position: absolute !important;
+  grid-area: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  max-height: none !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-hidden] { display: none !important; }
+
+[data-ado-ticket-root][data-ado-ticket-workspace-shell],
+[data-ado-ticket-root] [data-ado-ticket-workspace-shell] {
+  position: relative !important;
+  overflow: auto !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-flow] {
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-form-navigation] {
+  flex: 0 0 auto !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-header],
+[data-ado-ticket-root] [data-ado-ticket-workspace-subheader] {
+  overflow: visible !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  padding-block: 0 !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-footer] {
+  min-height: 0 !important;
+  height: auto !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-body] {
+  padding-block: 4px !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-navigation] {
+  flex: 1 1 auto !important;
+  flex-direction: row !important;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  padding-inline: 0 !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-navigation] > .wif-tabbar {
+  order: -1;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-meta] {
+  position: absolute !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  overflow: visible !important;
+  flex: 0 0 auto !important;
+  z-index: 1;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-field] {
+  display: grid !important;
+  grid-template-columns: minmax(80px, 100px) minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  margin-block: 0 !important;
+  min-width: 0;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-field] > * { min-width: 0; }
+[data-ado-ticket-root] [data-ado-ticket-workspace-field] :is(.work-item-control-label, .workitemcontrol-label, label) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+[data-ado-ticket-root] [data-ado-ticket-workspace-control] {
+  margin-block: 0 !important;
+  padding-block: 2px !important;
+}
+[data-ado-ticket-root] [data-ado-ticket-ui="workspace-properties"] {
+  position: absolute;
+  box-sizing: border-box;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 20px;
+  border-bottom: 1px solid currentColor;
+  pointer-events: none;
+}

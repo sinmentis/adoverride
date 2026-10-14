@@ -1,0 +1,43 @@
+.popup { display: flex; flex-direction: column; width: 340px; height: 480px; overflow: hidden; background: var(--bgColor-default); color: var(--fgColor-default); }
+.popup .popup-header { display: flex; align-items: center; gap: 6px; padding: 9px 11px; }
+.popup .brand { display: grid; place-items: center; flex: 0 0 26px; height: 26px; border-radius: var(--borderRadius-medium); background: var(--bgColor-accent-muted); color: var(--fgColor-accent); }
+.popup .brand-copy { flex: 1; min-width: 0; }
+.popup .caption { display: block; color: var(--fgColor-muted); font-size: 11px; line-height: 1.5; }
+.popup .brand-copy .caption { margin-top: 1px; font-size: 10px; }
+.popup .controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 8px 11px 10px; border-top: 1px solid var(--borderColor-default); border-bottom: 1px solid var(--borderColor-default); }
+.popup .control-field { display: grid; align-content: start; gap: 4px; min-width: 0; }
+.popup .section-title { font-size: 11px; font-weight: 600; color: var(--fgColor-muted); }
+.popup .preset-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px; }
+.popup .preset-actions > :first-child { min-width: 0; }
+.popup .popup-body { flex: 1; min-height: 0; padding: 10px 11px; overflow-y: auto; scrollbar-width: thin; }
+.popup .categories { display: flex; flex-wrap: wrap; gap: 2px; margin: 7px 0 10px; }
+.popup .density { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 8px; margin-bottom: 8px; }
+.popup .preview-note { margin: 0 0 8px; font-size: 10px; }
+.popup .feature-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; min-height: 34px; padding: 5px 6px; border-bottom: 1px solid var(--borderColor-muted); font-size: 12px; }
+.popup .feature-row:last-child { border-bottom: none; }
+.popup .feature-group { margin-bottom: 5px; }
+.popup .popup-footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; padding: 4px 7px 4px 11px; border-top: 1px solid var(--borderColor-default); background: var(--bgColor-muted); }
+.popup .save-form { display: grid; gap: 12px; }
+.popup .save-heading { display: flex; align-items: center; gap: 6px; }
+.popup .notice { margin-bottom: 9px; font-size: 12px; }
+.popup .startup { display: grid; gap: 16px; justify-items: center; padding: 24px 16px; }
+.popup .footer-actions { display: flex; align-items: center; gap: 2px; }
+.popup .inspection-details { display: grid; gap: 10px; }
+.popup .diagnostics { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; }
+.popup .area-tabs { padding: 0 11px 8px; }
+.popup .ticket-scope { padding: 4px 0; font-size: 12px; }
+.popup .ticket-toolbar { display: flex; justify-content: space-between; align-items: center; margin: 5px 0; }
+.popup .ticket-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; font-size: 12px; }
+.popup .ticket-row > :first-child { min-width: 0; }
+.popup .ticket-status { margin: 0 0 4px 6px; font-size: 10px; }
+.popup .save-feedback { flex: 0 0 auto; padding: 0 11px 8px; }
+.popup .configuration-panel { display: grid; gap: 8px; }
+.popup .board-settings { display: grid; gap: 4px; }
+.popup .board-settings h2 { margin: 0; }
+.popup .board-settings .feature-row { min-height: 32px; padding: 3px 6px; }
+.popup .board-settings p { margin: 2px 0; }
+.popup .label-with-help { display: flex; align-items: center; gap: 4px; min-width: 0; }
+.popup .context-help { flex: 0 0 auto; width: 24px; height: 24px; color: var(--fgColor-muted); }
+.popup .configuration-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.popup .configuration-summary { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
+.popup .configuration-summary th, .popup .configuration-summary td { padding: 4px 2px; border-bottom: 1px solid var(--borderColor-muted); }

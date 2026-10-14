@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640">
+  <rect width="1280" height="640" fill="#0d1117"/>
+  <g font-family="DejaVu Sans, sans-serif">
+    <rect x="56" y="48" width="52" height="52" rx="12" fill="#0969da"/>
+    <g stroke="#fff" stroke-width="3" fill="#0969da">
+      <path d="M69 62v24M82 62v24M95 62v24"/>
+      <circle cx="69" cy="69" r="4"/><circle cx="82" cy="79" r="4"/><circle cx="95" cy="69" r="4"/>
+    </g>
+    <text x="124" y="82" font-size="30" font-weight="700" fill="#f0f6fc">ADO Customize</text>
+    <text x="56" y="157" font-size="48" font-weight="700" fill="#f0f6fc">Your Azure DevOps. Your view.</text>
+    <text x="58" y="199" font-size="22" fill="#b1bac4">Personal Boards and work item layouts. Native controls. Local settings.</text>
+    <rect x="56" y="237" width="698" height="318" rx="14" fill="#fff"/>
+    <text x="80" y="270" font-size="18" font-weight="700" fill="#1f2328">Kanban Board</text>
+    <rect x="572" y="251" width="156" height="28" rx="14" fill="#ddf4ff"/>
+    <text x="650" y="271" text-anchor="middle" font-size="13" fill="#0969da">Equal-width columns</text>
+    <g fill="#f6f8fa">
+      <rect x="78" y="293" width="208" height="240" rx="7"/>
+      <rect x="300" y="293" width="208" height="240" rx="7"/>
+      <rect x="522" y="293" width="208" height="240" rx="7"/>
+    </g>
+    <g font-size="15" font-weight="700" fill="#57606a">
+      <text x="94" y="319">New</text><text x="316" y="319">Active</text><text x="538" y="319">Done</text>
+    </g>
+    <g fill="#fff" stroke="#d0d7de">
+      <rect x="90" y="333" width="184" height="70" rx="6"/>
+      <rect x="312" y="333" width="184" height="70" rx="6"/>
+      <rect x="534" y="333" width="184" height="70" rx="6"/>
+      <rect x="90" y="415" width="184" height="70" rx="6"/>
+    </g>
+    <g font-size="15" fill="#1f2328">
+      <text x="104" y="360">Plan next milestone</text>
+      <text x="326" y="360">Polish the workflow</text>
+      <text x="548" y="360">Write clear docs</text>
+      <text x="104" y="442">Review open tasks</text>
+    </g>
+    <g font-size="12" fill="#57606a">
+      <text x="104" y="386">User Story</text><text x="326" y="386">User Story</text>
+      <text x="548" y="386">Task</text><text x="104" y="468">Task</text>
+    </g>
+    <rect x="782" y="237" width="442" height="318" rx="14" fill="#fff"/>
+    <text x="806" y="270" font-size="18" font-weight="700" fill="#1f2328">Ticket Workspace</text>
+    <path d="M806 288h394" stroke="#d0d7de"/>
+    <rect x="1054" y="304" width="146" height="225" rx="7" fill="#f6f8fa"/>
+    <text x="1068" y="331" font-size="14" font-weight="700" fill="#1f2328">Properties</text>
+    <g font-size="12" fill="#57606a">
+      <text x="1068" y="364">State</text><text x="1135" y="364">Active</text>
+      <text x="1068" y="398">Priority</text><text x="1135" y="398">2</text>
+      <text x="1068" y="432">Effort</text><text x="1135" y="432">3</text>
+    </g>
+    <g font-size="14" font-weight="700" fill="#1f2328">
+      <text x="806" y="329">Description</text><text x="806" y="430">Acceptance Criteria</text>
+    </g>
+    <g stroke="#d0d7de" stroke-width="5" stroke-linecap="round">
+      <path d="M809 353h213M809 369h201M809 385h178"/>
+      <path d="M809 454h213M809 470h184M809 486h200"/>
+    </g>
+    <text x="58" y="602" font-size="17" fill="#8b949e">Open source | Chrome extension | kiwifruit preset</text>
+    <text x="1224" y="602" text-anchor="end" font-size="14" fill="#8b949e">Illustration with fictional content</text>
+  </g>
+</svg>
