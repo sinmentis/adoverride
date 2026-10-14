@@ -35,7 +35,7 @@ export function createTicketVisibilityUi(context: ContentScriptContext,
     saving = true; render();
     try { await commit(token, action); }
     catch (reason) {
-      console.error('[ADO Customize] Could not save card visibility.', reason);
+      console.error('[ADOverride] Could not save card visibility.', reason);
       if (!disposed) report(reason instanceof Error ? reason.message : 'Could not save card visibility.');
     } finally { saving = false; render(); }
   }
@@ -104,7 +104,7 @@ export function createTicketVisibilityUi(context: ContentScriptContext,
       render();
     }).catch(reason => {
       scoped.release();
-      console.error('[ADO Customize] Could not mount card visibility controls.', reason);
+      console.error('[ADOverride] Could not mount card visibility controls.', reason);
       if (!disposed && !binding.removed) report('Card visibility controls could not be displayed. Use the Ticket tab.');
     });
   }
@@ -121,7 +121,7 @@ export function createTicketVisibilityUi(context: ContentScriptContext,
       ui.shadowHost.setAttribute('data-ado-ticket-ui', 'hidden-menu');
       ui.mount(); render();
     }).catch(reason => {
-      console.error('[ADO Customize] Could not display hidden cards.', reason);
+      console.error('[ADOverride] Could not display hidden cards.', reason);
       if (!disposed) report('Hidden cards could not be displayed. Use the Ticket tab to restore them.');
     }).finally(() => { mountingMenu = false; });
   }

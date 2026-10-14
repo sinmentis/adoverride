@@ -11,7 +11,7 @@ export default defineBackground(() => {
     setIcon: details => browser.action.setIcon(details),
     setTitle: details => browser.action.setTitle(details),
   });
-  const toolbarError = (reason: unknown) => console.error('[ADO Customize] Could not update toolbar activity.', reason);
+  const toolbarError = (reason: unknown) => console.error('[ADOverride] Could not update toolbar activity.', reason);
   browser.tabs.onActivated.addListener(({ tabId }) => { void toolbar.refresh(tabId).catch(toolbarError); });
   browser.tabs.onUpdated.addListener((tabId, changes) => {
     if (changes.status === 'loading') void toolbar.loading(tabId).catch(toolbarError);
@@ -24,7 +24,7 @@ export default defineBackground(() => {
     try {
       await preferencesStore.update(current => current);
     } catch (error) {
-      console.error('[ADO Customize] Could not initialize preferences.', error);
+      console.error('[ADOverride] Could not initialize preferences.', error);
     }
   });
   browser.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
@@ -62,12 +62,12 @@ export default defineBackground(() => {
         preferences => sendResponse({ ok: true, preferences, message: preferenceSaveMessage(action),
           undoId: preferences.ticket.undo?.id === id ? id : null }),
         reason => {
-          console.error('[ADO Customize] Could not commit preferences.', reason);
+          console.error('[ADOverride] Could not commit preferences.', reason);
           sendResponse({ ok: false, error: reason instanceof Error ? reason.message : 'Could not save preferences.' });
         },
       );
     } catch (reason) {
-      console.error('[ADO Customize] Invalid settings mutation.', reason);
+      console.error('[ADOverride] Invalid settings mutation.', reason);
       sendResponse({ ok: false, error: reason instanceof Error ? reason.message : 'Invalid preferences action.' });
     }
     return true;

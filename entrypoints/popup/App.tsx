@@ -96,7 +96,7 @@ export default function App() {
   const count = inspectorLabel(inspector);
   const version = extensionVersion();
   const diagnostics = JSON.stringify({
-    extension: 'ADO Customize',
+    extension: 'ADOverride',
     version,
     status: inspector.status,
     view: context?.pageKind ?? 'not-ado',
@@ -130,7 +130,7 @@ export default function App() {
       setCopyError('');
       setAnnouncement('Copied inspection diagnostics.');
     } catch (reason) {
-      console.error('[ADO Customize] Could not copy inspection diagnostics.', reason);
+      console.error('[ADOverride] Could not copy inspection diagnostics.', reason);
       setCopyError('Could not copy diagnostics. Select the text below and copy it manually.');
     }
   }
@@ -191,7 +191,7 @@ export default function App() {
             <header className="popup-header">
               <span className="brand"><SlidersIcon size={18} /></span>
               <div className="brand-copy">
-                <Heading as="h1" style={{ fontSize: 14 }}>ADO Customize</Heading>
+                <Heading as="h1" style={{ fontSize: 14 }}>ADOverride</Heading>
                 <Text className="caption" data-extension-version={version}>v{version}</Text>
               </div>
               <IconButton
@@ -200,7 +200,7 @@ export default function App() {
                 aria-label={`Switch popup to ${preferences.theme === 'light' ? 'dark' : 'light'} theme`}
                 onClick={() => void update({ kind: 'patch', theme: preferences.theme === 'light' ? 'dark' : 'light' })}
               />
-              <VisuallyHidden id={masterLabel}>Enable ADO Customize</VisuallyHidden>
+              <VisuallyHidden id={masterLabel}>Enable ADOverride</VisuallyHidden>
               <ToggleSwitch
                 size="small" aria-labelledby={masterLabel}
                 checked={preferences.enabled}

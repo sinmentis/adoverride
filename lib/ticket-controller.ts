@@ -313,7 +313,7 @@ export function createTicketController(document: Document, address: () => string
         schedule();
       }).catch(reason => {
         if (disposed || request !== epoch) return;
-        console.error('[ADO Customize] Form metadata unavailable.', reason);
+        console.error('[ADOverride] Form metadata unavailable.', reason);
         pending = false;
         error = reason instanceof Error ? reason.message : 'Form metadata unavailable.';
         schedule();

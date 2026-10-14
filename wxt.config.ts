@@ -18,6 +18,7 @@ export default defineConfig({
       '**/.env*', '**/*.key', '**/*.pem', '**/*.pfx', '**/*.p12', '**/*.har',
       'node_modules/**/*', 'test-results/**/*', 'playwright-report/**/*', '.playwright-mcp/**/*', '.output/**/*',
       'ado-layout*.json', 'ado-board-layout*.json', 'ado-customize-config*.json', 'ado-customize-configuration*.json',
+      'adoverride-config*.json', 'adoverride-configuration*.json',
     ],
   },
   hooks: {
@@ -46,8 +47,8 @@ export default defineConfig({
     },
   },
   manifest: {
-    name: 'ADO Customize - Azure DevOps Boards & Work Items',
-    description: 'Customize Azure DevOps Boards and work items with personal layouts, compact cards, and local presets.',
+    name: 'ADOverride - Azure DevOps Boards & Work Items',
+    description: 'Personal Azure DevOps Boards and work item layouts, compact cards, and local presets. Your Azure DevOps. Your way.',
     permissions: ['storage', 'activeTab', 'scripting'],
     host_permissions: ['https://dev.azure.com/*', 'https://*.visualstudio.com/*'],
     action: { default_title: INACTIVE_TOOLBAR_TITLE, default_icon: toolbarIconPaths(false) },

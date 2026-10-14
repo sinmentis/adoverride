@@ -156,7 +156,7 @@ export function createTicketDragUi(context: ContentScriptContext,
     try {
       return { move: { key, ...cardDropPosition(session.layout, key, targetId, after) }, targetId, target, after };
     } catch (reason) {
-      console.error('[ADO Customize] The drop target changed.', reason);
+      console.error('[ADOverride] The drop target changed.', reason);
       report('The drop target changed. Try moving the card again.');
       cancel();
       return null;
@@ -209,7 +209,7 @@ export function createTicketDragUi(context: ContentScriptContext,
     trace('drag-end', { ...plan.move, target: plan.targetId });
     render();
     void commit(current, plan.move).catch(reason => {
-      console.error('[ADO Customize] Could not save card arrangement.', reason);
+      console.error('[ADOverride] Could not save card arrangement.', reason);
       if (!disposed) report(reason instanceof Error ? reason.message : 'Could not save card arrangement.');
     }).finally(() => { saving = false; if (!disposed) render(); });
   }
@@ -291,7 +291,7 @@ export function createTicketDragUi(context: ContentScriptContext,
       render();
     }).catch(reason => {
       scoped.release();
-      console.error('[ADO Customize] Could not mount card drag controls.', reason);
+      console.error('[ADOverride] Could not mount card drag controls.', reason);
       if (!disposed && !binding.disposed) report(reason instanceof Error ? reason.message : 'Card dragging is unavailable.');
     });
   }

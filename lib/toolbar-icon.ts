@@ -4,8 +4,8 @@ import { isObject } from './ticket';
 export const TOOLBAR_REPORT = 'ado-customize/toolbar-state';
 export const TOOLBAR_QUERY = 'ado-customize/toolbar-state-query';
 export const TOOLBAR_VERSION = 1;
-export const ACTIVE_TOOLBAR_TITLE = 'ADO Customize (active)';
-export const INACTIVE_TOOLBAR_TITLE = 'ADO Customize (inactive)';
+export const ACTIVE_TOOLBAR_TITLE = 'ADOverride (active)';
+export const INACTIVE_TOOLBAR_TITLE = 'ADOverride (inactive)';
 export function toolbarIconPaths(active: boolean): Record<number, string> {
   const directory = active ? 'icon' : 'icon-gray';
   return Object.fromEntries([16, 32, 48, 96, 128].map(size => [size, `${directory}/${size}.png`]));

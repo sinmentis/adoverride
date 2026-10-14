@@ -28,6 +28,8 @@ ado-layout*.json
 ado-board-layout*.json
 ado-customize-config*.json
 ado-customize-configuration*.json
+adoverride-config*.json
+adoverride-configuration*.json
 chromium-profile/
 chrome-profile/
 

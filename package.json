@@ -1,8 +1,16 @@
 {
-  "name": "ado-customize",
-  "description": "Chrome extension for personal Azure DevOps Boards and work item layouts, compact cards, and local presets.",
+  "name": "adoverride",
+  "description": "ADOverride: a Chrome extension for personal Azure DevOps Boards and work item layouts. Your Azure DevOps. Your way.",
+  "homepage": "https://github.com/sinmentis/adoverride#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sinmentis/adoverride.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sinmentis/adoverride/issues"
+  },
   "private": true,
-  "version": "0.11.0",
+  "version": "0.11.1",
   "license": "MIT",
   "type": "module",
   "keywords": [

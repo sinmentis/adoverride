@@ -100,7 +100,7 @@ export function createBoardAutoLoader(document: Document, notify: () => void) {
   function cancelWake() { window.clearTimeout(wake); wake = 0; }
   function fail(message: string, remaining: number, itemsSeen: number) {
     failure = message; clearPending(); cancelWake();
-    console.error('[ADO Customize] Board auto-loading stopped.', message);
+    console.error('[ADOverride] Board auto-loading stopped.', message);
     publish('error', remaining, itemsSeen, message);
   }
   function schedule(delay = 0) {
@@ -186,7 +186,7 @@ export function createBoardAutoLoader(document: Document, notify: () => void) {
       }
       schedule(SETTLE_DELAY);
     } catch (reason) {
-      console.error('[ADO Customize] Could not auto-load Board items.', reason);
+      console.error('[ADOverride] Could not auto-load Board items.', reason);
       fail('The native Show more items control could not be activated. Use it manually or retry.', snapshot.remaining, snapshot.itemsSeen);
     }
   }

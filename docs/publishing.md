@@ -1,8 +1,13 @@
-# Publishing ADO Customize
+# Publishing ADOverride
 
 ## GitHub discoverability
 
-Use `ado-customize` as the repository name.
+Repository: [sinmentis/adoverride](https://github.com/sinmentis/adoverride).
+Visibility remains private until public publication is explicitly approved.
+
+**Tagline**
+
+> Your Azure DevOps. Your way.
 
 **Description**
 
@@ -25,15 +30,15 @@ Choose the repository owner explicitly before uploading source.
 
 **Name**
 
-> ADO Customize - Azure DevOps Boards & Work Items
+> ADOverride - Azure DevOps Boards & Work Items
 
 **Short description**
 
-> Customize Azure DevOps Boards and work items with personal layouts, compact cards, and local presets.
+> Personal Azure DevOps Boards and work item layouts, compact cards, and local presets. Your Azure DevOps. Your way.
 
 **Overview**
 
-ADO Customize gives you a personal view of Azure DevOps without changing your
+ADOverride gives you a personal view of Azure DevOps without changing your
 team's process. Fill Kanban Boards with equal-width columns, reduce header
 spacing, choose visible card fields, and load native batches automatically.
 

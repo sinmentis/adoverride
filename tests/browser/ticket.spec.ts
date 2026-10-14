@@ -136,7 +136,7 @@ test('Toolbar activity: actual icons follow Board Tickets, lock, master switch, 
         const path = log.calls.filter(call => call.tabId === id).at(-1)?.path;
         return typeof path === 'object' ? path['16'] : path;
       }, tabId);
-      await expect.poll(title).toBe('ADO Customize (active)');
+      await expect.poll(title).toBe('ADOverride (active)');
       expect(await worker.evaluate(() => chrome.runtime.getManifest().action?.default_icon)).toEqual({
         16: 'icon-gray/16.png', 32: 'icon-gray/32.png', 48: 'icon-gray/48.png', 96: 'icon-gray/96.png', 128: 'icon-gray/128.png',
       });
@@ -144,7 +144,7 @@ test('Toolbar activity: actual icons follow Board Tickets, lock, master switch, 
         button.addEventListener('click', () => document.querySelector('.work-item-form-dialog')?.removeAttribute('hidden'));
       });
       await page.getByRole('button', { name: 'Open Ticket', exact: true }).click();
-      await expect.poll(title).toBe('ADO Customize (active)');
+      await expect.poll(title).toBe('ADOverride (active)');
       await expect.poll(icon).toBe('icon/16.png');
       await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
       await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
@@ -160,26 +160,26 @@ test('Toolbar activity: actual icons follow Board Tickets, lock, master switch, 
       expect(await native.evaluate(buttons => buttons.length === 4 && buttons.every(button =>
         button.node.isConnected && button.node.parentElement === button.parent &&
         button.node.getBoundingClientRect().height === button.height && getComputedStyle(button.node).fontSize === button.font))).toBe(true);
-      await expect.poll(title).toBe('ADO Customize (active)');
-      await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
-      await expect.poll(title).toBe('ADO Customize (inactive)');
+      await expect.poll(title).toBe('ADOverride (active)');
+      await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
+      await expect.poll(title).toBe('ADOverride (inactive)');
       await expect.poll(icon).toBe('icon-gray/16.png');
-      await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
-      await expect.poll(title).toBe('ADO Customize (active)');
+      await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
+      await expect.poll(title).toBe('ADOverride (active)');
       await expect(page.locator('ado-ticket-visibility-control')).toHaveCount(0);
       await page.getByRole('button', { name: 'Close', exact: true }).evaluate(button => {
         button.addEventListener('click', () => document.querySelector('.work-item-form-dialog')?.setAttribute('hidden', ''));
       });
       await page.getByRole('button', { name: 'Close', exact: true }).click();
-      await expect.poll(title).toBe('ADO Customize (active)');
+      await expect.poll(title).toBe('ADOverride (active)');
       await expect.poll(icon).toBe('icon/16.png');
       await page.reload();
-      await expect.poll(title).toBe('ADO Customize (active)');
+      await expect.poll(title).toBe('ADOverride (active)');
       await page.getByRole('button', { name: 'Open Ticket', exact: true }).evaluate(button => {
         button.addEventListener('click', () => document.querySelector('.work-item-form-dialog')?.removeAttribute('hidden'));
       });
       await page.getByRole('button', { name: 'Open Ticket', exact: true }).click();
-      await expect.poll(title).toBe('ADO Customize (active)');
+      await expect.poll(title).toBe('ADOverride (active)');
       await expect(page.locator('ado-ticket-visibility-control')).toHaveCount(0);
       await page.bringToFront();
       await popup.reload();
@@ -199,11 +199,11 @@ test('Toolbar activity: actual icons follow Board Tickets, lock, master switch, 
         if (tabs[0]?.id === undefined) throw new Error('Missing unrelated tab.');
         return tabs[0].id;
       });
-      await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), otherTab)).toBe('ADO Customize (inactive)');
+      await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), otherTab)).toBe('ADOverride (inactive)');
       await page.bringToFront();
-      await expect.poll(title).toBe('ADO Customize (active)');
+      await expect.poll(title).toBe('ADOverride (active)');
       await page.goto('https://example.com/other');
-      await expect.poll(title).toBe('ADO Customize (inactive)');
+      await expect.poll(title).toBe('ADOverride (inactive)');
       await expect.poll(icon).toBe('icon-gray/16.png');
     } finally { await icons.evaluate(log => log.restore()); }
   } finally { await context.close(); }
@@ -809,10 +809,10 @@ for (const scenario of [
       await popup.getByRole('menuitemradio', { name: 'Ticket focus', exact: true }).click();
       await expect(page.locator('#sample\\.planning')).not.toBeVisible();
 
-      await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+      await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
       await expect(page.locator('#sample\\.planning')).toBeVisible();
       await expect(page.locator('[data-ado-ticket-root]')).toHaveCount(0);
-      await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+      await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
       await expect(page.locator('#sample\\.planning')).not.toBeVisible();
       expect(await handle?.evaluate(element => element.isConnected)).toBe(true);
       await expect(description).toHaveValue('Draft survives every layout change');
@@ -959,10 +959,10 @@ test('hiding a card closes fixed native row gaps', async ({}, info) => {
     expect(await rowGap(), 'Review must move into the row vacated by Planning').toBeLessThanOrEqual(1);
     expect(await original?.evaluate(element => element.isConnected)).toBe(true);
     await expect(draft).toHaveValue('Keep this unsaved draft');
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(page.locator('[data-ado-ticket-root]')).toHaveCount(0);
     expect(await rowGap()).toBe(320);
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(page.locator('#sample\\.planning')).not.toBeVisible();
     expect(await rowGap()).toBeLessThanOrEqual(1);
     await popup.getByRole('button', { name: 'Show all', exact: true }).click();
@@ -1144,10 +1144,10 @@ test('native hover handle moves a card across grid columns without reparenting e
     await popup.getByRole('button', { name: 'Choose preset, current Custom view', exact: true }).click();
     await popup.getByRole('menuitemradio', { name: 'Reordered', exact: true }).click();
     await expect(page.locator('.work-item-grid')).toHaveAttribute('data-ado-ticket-manual', '');
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(page.locator('ado-ticket-drag-handle')).toHaveCount(0);
     await expect(page.locator('[data-ado-ticket-manual]')).toHaveCount(0);
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(page.locator('.work-item-grid')).toHaveAttribute('data-ado-ticket-manual', '');
   } finally { await context.close(); }
 });
@@ -1185,7 +1185,7 @@ test('hand controls share the actual native header action row without shifting e
     expect(geometry.overflow).toBeLessThanOrEqual(1);
     expect(await identity.evaluate(state => state.button.isConnected && state.button.parentElement === state.parent)).toBe(true);
     await page.screenshot({ path: info.outputPath('native-aligned-actions.png') });
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(card.locator('ado-ticket-drag-handle')).toHaveCount(0);
     await expect(card.locator('[data-ado-ticket-header-actions]')).toHaveCount(0);
   } finally { await context.close(); }
@@ -1661,7 +1661,7 @@ test('detailed layout recording survives popup closure and downloads the real dr
     await download.saveAs(file);
     const encoded = await readFile(file, 'utf8');
     const report: unknown = JSON.parse(encoded);
-    expect(report).toMatchObject({ extension: 'ADO Customize', kind: 'ado-layout-capture', version: 1,
+    expect(report).toMatchObject({ extension: 'ADOverride', kind: 'ado-layout-capture', version: 1,
       events: expect.arrayContaining([expect.objectContaining({ type: 'drag-start' }),
         expect.objectContaining({ type: 'drag-end' }), expect.objectContaining({ type: 'save-ack' })]),
       snapshots: expect.arrayContaining([expect.objectContaining({ stage: 'start' }),
@@ -2112,7 +2112,7 @@ test('Inline visibility: unmapped regions prevent dragging but not safe card hid
     await page.getByRole('button', { name: 'Hidden (1)', exact: true }).click();
     await page.getByRole('menuitem', { name: 'Show Planning', exact: true }).click();
     await expect(page.locator('#sample\\.planning')).toBeVisible();
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(page.locator('ado-ticket-visibility-control')).toHaveCount(0);
     await expect(page.locator('[data-ado-ticket-ui="card-actions"]')).toHaveCount(0);
     await expect(page.locator('[data-ado-ticket-root]')).toHaveCount(0);
@@ -2142,7 +2142,7 @@ test('Configuration transfer: download round-trips both banks without ticket con
     const pending = popup.waitForEvent('download');
     await popup.getByRole('button', { name: 'Export JSON', exact: true }).click();
     const download = await pending;
-    expect(download.suggestedFilename()).toMatch(/^ado-customize-config-.+\.json$/);
+    expect(download.suggestedFilename()).toMatch(/^adoverride-config-.+\.json$/);
     const file = info.outputPath('configuration.json');
     await download.saveAs(file);
     const encoded = await readFile(file, 'utf8');
@@ -2339,7 +2339,7 @@ test('Configuration transfer: queued import survives popup closure and backup re
     await context.close();
     context = await launch(profile);
     const reopened = await fixture(context, 'https://example.visualstudio.com', false);
-    await expect(reopened.popup.getByRole('button', { name: 'Enable ADO Customize', exact: true })).toHaveAttribute('aria-pressed', 'false');
+    await expect(reopened.popup.getByRole('button', { name: 'Enable ADOverride', exact: true })).toHaveAttribute('aria-pressed', 'false');
     await reopened.popup.getByRole('button', { name: 'Configuration', exact: true }).click();
     await reopened.popup.getByRole('button', { name: 'Restore pre-import backup...', exact: true }).click();
     await reopened.popup.getByRole('button', { name: 'Restore configuration', exact: true }).click();

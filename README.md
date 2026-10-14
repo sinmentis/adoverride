@@ -1,4 +1,6 @@
-# ADO Customize
+# ADOverride
+
+**Your Azure DevOps. Your way.**
 
 **A Chrome extension for personal Azure DevOps Boards and work item layouts.**
 
@@ -6,7 +8,7 @@ Make Azure Boards use the screen space you have. Hide optional ticket fields,
 arrange native cards, and keep your own preferences without changing the team's
 process or saving work items. Built with WXT, React, TypeScript, and GitHub Primer.
 
-![ADO Customize: personal Azure DevOps Boards and work item layouts](docs/images/social-preview.png)
+![ADOverride: personal Azure DevOps Boards and work item layouts](docs/images/social-preview.png)
 
 ## Features
 
@@ -54,7 +56,7 @@ in the current format survive restart and export/import.
 2. Open `chrome://extensions` and turn on **Developer mode**.
 3. Choose **Load unpacked**, then select the extracted folder containing
    `manifest.json`.
-4. Pin **ADO Customize** and open an Azure DevOps Board or work item.
+4. Pin **ADOverride** and open an Azure DevOps Board or work item.
 
 Use the same folder for updates so Chrome retains the extension identity and
 settings. Save drafts, click **Reload** on the extension card, then refresh ADO.
@@ -113,6 +115,8 @@ that must remain reachable.
 
 Settings stay in Chrome's local extension storage. There is no backend,
 telemetry, personal access token, or extension-owned work-item update.
+The ADOverride rename keeps the existing storage and configuration-format
+identifiers, so stored settings, backups, and earlier exports still work.
 
 | Permission | Purpose |
 | --- | --- |

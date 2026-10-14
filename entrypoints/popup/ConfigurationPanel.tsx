@@ -28,7 +28,7 @@ export function ConfigurationPanel({ preferences, saving, update, onBack }: {
     let active = true;
     let changed = false;
     void configurationBackup().then(value => { if (active && !changed) setBackup(value); }).catch(reason => {
-      console.error('[ADO Customize] Could not read configuration backup.', reason);
+      console.error('[ADOverride] Could not read configuration backup.', reason);
       if (active) setError(reason instanceof Error ? reason.message : 'Could not read configuration backup.');
     });
     const listener: Parameters<typeof browser.storage.onChanged.addListener>[0] = (changes, area) => {
@@ -38,7 +38,7 @@ export function ConfigurationPanel({ preferences, saving, update, onBack }: {
         const value: unknown = changes[CONFIGURATION_BACKUP_KEY].newValue;
         setBackup(value === undefined ? null : decodeConfigurationBackup(value));
       } catch (reason) {
-        console.error('[ADO Customize] Invalid configuration backup.', reason);
+        console.error('[ADOverride] Invalid configuration backup.', reason);
         setError(reason instanceof Error ? reason.message : 'Invalid configuration backup.');
       }
     };
@@ -55,12 +55,12 @@ export function ConfigurationPanel({ preferences, saving, update, onBack }: {
       const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
       const link = document.createElement('a');
       link.href = url;
-      link.download = `ado-customize-config-${extensionVersion()}-${Date.now()}.json`;
+      link.download = `adoverride-config-${extensionVersion()}-${Date.now()}.json`;
       link.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
       setMessage('Configuration downloaded.');
     } catch (reason) {
-      console.error('[ADO Customize] Could not export configuration.', reason);
+      console.error('[ADOverride] Could not export configuration.', reason);
       setError(reason instanceof Error ? reason.message : 'Could not export configuration.');
     }
   }
@@ -73,7 +73,7 @@ export function ConfigurationPanel({ preferences, saving, update, onBack }: {
       const configuration = parseConfiguration(await file.text());
       if (request === reads.current) setPreview({ configuration, expectedRevision: revision, name: file.name, backupId: null });
     } catch (reason) {
-      console.error('[ADO Customize] Could not read configuration file.', reason);
+      console.error('[ADOverride] Could not read configuration file.', reason);
       if (request === reads.current) setError(reason instanceof Error ? reason.message : 'Could not read configuration file.');
     } finally { if (request === reads.current) setBusy(false); }
   }

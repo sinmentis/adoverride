@@ -58,7 +58,7 @@ export function createSaveFeedbackUi(context: ContentScriptContext, undo: (id: s
     ui.mounted.render(<ThemeProvider colorMode={theme}><BaseStyles style={{ color: 'CanvasText' }}>
       <SaveFeedback state={state} trustedOnly onDismiss={clear} onUndo={id => {
         void undo(id).catch(reason => {
-          console.error('[ADO Customize] Could not undo customization.', reason);
+          console.error('[ADOverride] Could not undo customization.', reason);
           show({ status: 'error', message: reason instanceof Error ? reason.message : 'Could not undo customization.', undoId: null }, theme);
         });
       }} />
@@ -82,13 +82,13 @@ export function createSaveFeedbackUi(context: ContentScriptContext, undo: (id: s
       ui.mount();
       render();
     }).catch(reason => {
-      console.error('[ADO Customize] Could not display save feedback.', reason);
+      console.error('[ADOverride] Could not display save feedback.', reason);
       if (disposed) return;
       fallback?.remove();
       fallback = document.createElement('div');
       fallback.setAttribute('data-ado-ticket-ui', 'save-error');
       fallback.setAttribute('role', 'alert');
-      fallback.textContent = 'Save controls could not be displayed. Open ADO Customize to check the saved change or use Undo.';
+      fallback.textContent = 'Save controls could not be displayed. Open ADOverride to check the saved change or use Undo.';
       Object.assign(fallback.style, { position: 'fixed', right: '16px', bottom: '16px', maxWidth: '340px', padding: '12px',
         background: 'Canvas', color: 'CanvasText', border: '1px solid #cf222e', borderRadius: '6px', zIndex: '2147483647', font: '14px system-ui' });
       document.body.append(fallback);

@@ -24,7 +24,7 @@ export function useTicket(ready: boolean) {
           if (!active) return;
           try { setSnapshot(decodeTicketSnapshot(value)); }
           catch (reason) {
-            console.error('[ADO Customize] Invalid Ticket catalog.', reason);
+            console.error('[ADOverride] Invalid Ticket catalog.', reason);
             setSnapshot({ ...emptyTicketSnapshot(), status: 'error', message: reason instanceof Error ? reason.message : 'Invalid Ticket catalog.' });
           }
         });
@@ -32,7 +32,7 @@ export function useTicket(ready: boolean) {
           if (active) setSnapshot(current => ({ ...current, status: 'error', message: 'The Ticket reader disconnected. Reload the extension popup.' }));
         });
       } catch (reason) {
-        console.error('[ADO Customize] Could not connect Ticket reader.', reason);
+        console.error('[ADOverride] Could not connect Ticket reader.', reason);
         if (active) setSnapshot({ ...emptyTicketSnapshot(), status: 'error', message: reason instanceof Error ? reason.message : 'Could not connect Ticket reader.' });
       }
     })();

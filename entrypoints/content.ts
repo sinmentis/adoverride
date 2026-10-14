@@ -45,7 +45,7 @@ export default defineContentScript({
       }).catch(reason => {
         if (context.isValid && sequence === reportSequence) {
           reported = undefined;
-          console.error('[ADO Customize] Could not report toolbar activity.', reason);
+          console.error('[ADOverride] Could not report toolbar activity.', reason);
         }
       });
     };
@@ -61,7 +61,7 @@ export default defineContentScript({
       void preferencesStore.load().then(value => {
         if (context.isValid && generation === settingsGeneration) applySettings(value);
       }).catch(reason => {
-        console.error('[ADO Customize] Ticket settings unavailable.', reason);
+        console.error('[ADOverride] Ticket settings unavailable.', reason);
         if (context.isValid && generation === settingsGeneration) {
           enabled = false;
           const message = reason instanceof Error ? reason.message : 'Settings unavailable.';
@@ -79,7 +79,7 @@ export default defineContentScript({
         applySettings(value);
       }
       catch (reason) {
-        console.error('[ADO Customize] Invalid Ticket settings.', reason);
+        console.error('[ADOverride] Invalid Ticket settings.', reason);
         enabled = false;
         const message = reason instanceof Error ? reason.message : 'Invalid settings.';
         controller.failSettings(message); board.failSettings(message);
@@ -125,7 +125,7 @@ export default defineContentScript({
           if (message.command === 'start') controller.startLayoutRecording();
           sendResponse({ ok: true, ...controller.exportLayoutRecording() });
         } catch (reason) {
-          console.error('[ADO Customize] Layout diagnostics failed.', reason);
+          console.error('[ADOverride] Layout diagnostics failed.', reason);
           sendResponse({ ok: false, error: reason instanceof Error ? reason.message : 'Could not read layout diagnostics.' });
         }
         return;
@@ -135,7 +135,7 @@ export default defineContentScript({
       try {
         reply = { version: INSPECT_PROTOCOL, ok: true, inspection: inspectPage(document, location.href) };
       } catch (error) {
-        console.error('[ADO Customize] Read-only inspection failed.', error);
+        console.error('[ADOverride] Read-only inspection failed.', error);
         reply = { version: INSPECT_PROTOCOL, ok: false, error: error instanceof Error ? error.message : 'The page inspector failed.' };
       }
       sendResponse(reply);

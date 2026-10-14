@@ -121,7 +121,7 @@ export function createBoardController(document: Document, address: () => string)
         message: appliedPresentation.message, equalColumns: applying, autoLoad, presentation: appliedPresentation });
     } catch (reason) {
       clear(); stopAuto();
-      console.error('[ADO Customize] Could not customize Board widths.', reason);
+      console.error('[ADOverride] Could not customize Board widths.', reason);
       publish({ ...emptyBoardSnapshot(), status: 'error', message: reason instanceof Error ? reason.message : 'Could not customize Board widths.' });
     }
   }

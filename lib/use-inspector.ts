@@ -35,7 +35,7 @@ export function useInspector(enabled: boolean, ready: boolean) {
       setContext(inspection.context);
       setState({ status: 'ready', inspection, connection });
     } catch (reason) {
-      console.error('[ADO Customize] Could not inspect the active page.', reason);
+      console.error('[ADOverride] Could not inspect the active page.', reason);
       if (request === requestId.current) setState({
         status: 'error',
         message: reason instanceof Error ? reason.message : 'Could not inspect the active page.',

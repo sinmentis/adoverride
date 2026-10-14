@@ -164,12 +164,12 @@ test('Board toolbar: a supported enabled Board stays blue even with Original pre
         return typeof path === 'string' ? path : path?.['16'];
       }, tabId);
       await expect.poll(icon).toBe('icon/16.png');
-      await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADO Customize (active)');
+      await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADOverride (active)');
       await expect(page.locator('[data-ado-board-root]')).toHaveCount(0);
       await expect(popup.getByRole('button', { name: 'Equal-width columns', exact: true })).toHaveAttribute('aria-pressed', 'false');
-      await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+      await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
       await expect.poll(icon).toBe('icon-gray/16.png');
-      await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+      await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
       await expect.poll(icon).toBe('icon/16.png');
     } finally { await tracking.evaluate(value => value.restore()); }
   } finally { await context.close(); }
@@ -207,35 +207,35 @@ test('Board toolbar lifecycle: native same-document navigation tracks filtered B
         'https://dev.azure.com/example/Platform/_boards/board/t/Example%20Team/Stories?System.AssignedTo=%40me#board',
       ]) {
         await page.evaluate(() => history.pushState(null, '', '/example/Platform/_git/example'));
-        await expect.poll(title).toBe('ADO Customize (inactive)');
+        await expect.poll(title).toBe('ADOverride (inactive)');
         await expect.poll(icon).toBe('icon-gray/16.png');
         await page.evaluate(value => history.pushState(null, '', value), address);
-        await expect.poll(title).toBe('ADO Customize (active)');
+        await expect.poll(title).toBe('ADOverride (active)');
         await expect.poll(icon).toBe('icon/16.png');
         await expect.poll(() => tracking.evaluate(value => value.reports.at(-1)?.tabUrl)).toBe(address);
         expect(await tracking.evaluate(value => value.reports.at(-1)?.sourceUrl)).toBe(ADDRESS);
       }
       await page.evaluate(() => history.back());
-      await expect.poll(title).toBe('ADO Customize (inactive)');
+      await expect.poll(title).toBe('ADOverride (inactive)');
       await expect.poll(icon).toBe('icon-gray/16.png');
       await page.evaluate(() => history.forward());
-      await expect.poll(title).toBe('ADO Customize (active)');
+      await expect.poll(title).toBe('ADOverride (active)');
       await expect.poll(icon).toBe('icon/16.png');
       await page.evaluate(() => history.pushState(null, '', `${location.pathname}?System.AssignedTo=%40me&text=example`));
-      await expect.poll(title).toBe('ADO Customize (active)');
+      await expect.poll(title).toBe('ADOverride (active)');
       await expect.poll(icon).toBe('icon/16.png');
       const original = await settings(context);
       for (const enabled of [false, true]) {
         await worker.evaluate(({ key, value }) => chrome.storage.local.set({ [key]: value }), {
           key: KEY, value: { ...original, enabled, revision: original.revision + (enabled ? 2 : 1) },
         });
-        await expect.poll(title).toBe(`ADO Customize (${enabled ? 'active' : 'inactive'})`);
+        await expect.poll(title).toBe(`ADOverride (${enabled ? 'active' : 'inactive'})`);
         await expect.poll(icon).toBe(enabled ? 'icon/16.png' : 'icon-gray/16.png');
         await worker.evaluate(async ({ tabId, type, version, effective }) => chrome.scripting.executeScript({
           target: { tabId }, args: [type, version, effective],
           func: async (type, version, effective) => chrome.runtime.sendMessage({ type, version, effective }),
         }), { tabId, type: TOOLBAR_REPORT, version: TOOLBAR_VERSION, effective: !enabled });
-        await expect.poll(title).toBe(`ADO Customize (${enabled ? 'active' : 'inactive'})`);
+        await expect.poll(title).toBe(`ADOverride (${enabled ? 'active' : 'inactive'})`);
         await expect.poll(icon).toBe(enabled ? 'icon/16.png' : 'icon-gray/16.png');
       }
     } finally { await tracking.evaluate(value => value.restore()); }
@@ -263,7 +263,7 @@ test('Board toolbar lifecycle: a fresh Board reader activates without opening th
       for (const reload of [false, true]) {
         if (reload) await page.reload();
         await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId))
-          .toBe('ADO Customize (active)');
+          .toBe('ADOverride (active)');
         await expect.poll(() => tracking.evaluate((value, id) => {
           const path = value.calls.filter(call => call.tabId === id).at(-1)?.path;
           return typeof path === 'string' ? path : path?.['16'];
@@ -336,7 +336,7 @@ test('Board toolbar: a late initial settings read cannot override a newer master
     await worker.evaluate(({ key, value }) => chrome.storage.local.set({ [key]: value }), {
       key: KEY, value: { ...original, enabled: false, revision: original.revision + 5 },
     });
-    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADO Customize (inactive)');
+    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADOverride (inactive)');
     await worker.evaluate(id => chrome.scripting.executeScript({
       target: { tabId: id }, func: () => {
         const release = Reflect.get(globalThis, 'adoFixtureReleaseSettings');
@@ -348,7 +348,7 @@ test('Board toolbar: a late initial settings read cannot override a newer master
     const state: unknown = await worker.evaluate(({ tabId, query, version }) =>
       chrome.tabs.sendMessage(tabId, { type: query, version }), { tabId, query: TOOLBAR_QUERY, version: TOOLBAR_VERSION });
     expect(state).toMatchObject({ effective: false });
-    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADO Customize (inactive)');
+    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADOverride (inactive)');
   } finally { await context.close(); }
 });
 
@@ -380,7 +380,7 @@ test('Board compact presentation: captured card/header geometry tightens without
     expect((await settings(context)).ticket).toEqual(ticket);
     await page.locator('.bolt-page').screenshot({ path: info.outputPath('compact-native-board.png'), caret: 'initial' });
     await popup.locator('.popup').screenshot({ path: info.outputPath('board-presentation-controls.png') });
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(page.locator('[data-ado-board-card]')).toHaveCount(0);
     await expect(page.getByRole('tab', { name: 'Analytics', exact: true })).toBeVisible();
     expect(await page.locator('.bolt-page').innerHTML()).toBe(originalMarkup);
@@ -647,7 +647,7 @@ for (const roleLink of [false, true]) test(`Board auto-load: popup activates nat
     expect((await settings(context)).ticket).toEqual(ticket);
     const tabId = await worker.evaluate(async () => (await chrome.tabs.query({ url: 'https://dev.azure.com/*' }))[0]?.id);
     if (tabId === undefined) throw new Error('Missing auto-load icon tab.');
-    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADO Customize (active)');
+    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADOverride (active)');
     if (!roleLink) await popup.locator('.popup').screenshot({ path: info.outputPath('library-auto-load.png') });
   } finally { await context.close(); }
 });
@@ -688,7 +688,7 @@ for (const master of [false, true]) test(`Board auto-load: ${master ? 'master pa
     const ticket = (await settings(context)).ticket;
     await popup.getByRole('button', { name: 'Auto-load all items', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('data-native-active-requests', '1');
-    await popup.getByRole('button', { name: master ? 'Enable ADO Customize' : 'Auto-load all items', exact: true }).click();
+    await popup.getByRole('button', { name: master ? 'Enable ADOverride' : 'Auto-load all items', exact: true }).click();
     await expect(page.locator('html')).toHaveAttribute('data-native-active-requests', '0');
     expect(await page.locator('.wit-card').count()).toBe(6);
     expect(await page.locator('html').getAttribute('data-native-requests')).toBe('1');
@@ -798,12 +798,12 @@ test('Board Library: real toggle fills columns, retains native controls and rest
     await expect(drop).toHaveAttribute('data-native-drop', 'yes');
     const tabId = await worker.evaluate(async () => (await chrome.tabs.query({ url: 'https://dev.azure.com/*' }))[0]?.id);
     if (tabId === undefined) throw new Error('Missing Board icon tab.');
-    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADO Customize (active)');
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADOverride (active)');
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(page.locator('[data-ado-board-root]')).toHaveCount(0);
     await expect.poll(() => geometry(page)).toEqual(original);
-    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADO Customize (inactive)');
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADOverride (inactive)');
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect.poll(() => geometry(page).then(value => value.trailing)).toBeLessThanOrEqual(4.1);
     await popup.getByRole('button', { name: 'Equal-width columns', exact: true }).click();
     await expect(page.locator('[data-ado-board-root]')).toHaveCount(0);
@@ -1059,9 +1059,9 @@ test('Board migration: retired v9 column memory is dropped and native collapse n
     await expect(closed).toHaveAttribute('aria-expanded', 'false');
     await expect(popup.getByRole('region', { name: 'Board customization', exact: true }).getByRole('status')).toContainText('1 collapsed');
     expect(await settings(context)).toEqual(migrated);
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(closed).toHaveAttribute('aria-expanded', 'false');
-    await popup.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(closed).toHaveAttribute('aria-expanded', 'false');
     await expect(page.locator('.kanban-board-column').nth(1)).toBeVisible();
     await page.reload();

@@ -18,7 +18,7 @@ export function exportConfiguration(preferences: Preferences): Configuration {
 }
 export function decodeConfiguration(value: unknown): Configuration {
   if (!isObject(value) || value.kind !== 'ado-customize-configuration' || value.version !== 1) {
-    throw new Error('This is not a supported ADO Customize configuration file.');
+    throw new Error('This is not a supported ADOverride configuration file.');
   }
   return { kind: value.kind, version: 1, preferences: portablePreferences(value.preferences) };
 }

@@ -1,10 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { decodeConfigurationBackup, exportConfiguration, parseConfiguration } from './configuration';
+import { CONFIGURATION_BACKUP_KEY, decodeConfigurationBackup, exportConfiguration, parseConfiguration } from './configuration';
 import { applyPreferenceAction, commitPreferenceAction, createPreferencesStore, decodePreferenceAction, defaultPreferences,
   MAX_CONFIGURATION_BYTES, portablePreferences } from './preferences';
 import type { Preferences } from './preferences';
 
 describe('portable configuration and acknowledged replacement', () => {
+  it('keeps previous-brand configuration and backup identifiers compatible with ADOverride', () => {
+    const current = applyPreferenceAction(defaultPreferences(), {
+      kind: 'save-preset', area: 'library', id: 'before-rebrand', name: 'Before rebrand', viewKey: 'all',
+    });
+    const legacy = exportConfiguration(current);
+    expect(legacy.kind).toBe('ado-customize-configuration');
+    expect(CONFIGURATION_BACKUP_KEY).toBe('ado-customize.configuration-backup.v1');
+    expect(parseConfiguration(JSON.stringify(legacy)).preferences).toEqual(portablePreferences(current));
+    expect(decodeConfigurationBackup({
+      kind: 'ado-customize-configuration-backup', version: 1, id: 'before-rebrand', configuration: legacy,
+    }).configuration).toEqual(legacy);
+  });
   it('round-trips both banks and presentation without exporting Undo history or a local revision', () => {
     let current = commitPreferenceAction(defaultPreferences(), { kind: 'ticket-target', key: 'group:details/planning', hidden: true }, 'hide-1');
     current = applyPreferenceAction(current, { kind: 'save-preset', area: 'ticket', id: 'daily', name: 'Daily' });

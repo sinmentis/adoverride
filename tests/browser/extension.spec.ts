@@ -111,7 +111,7 @@ test('installed extension counts tickets without altering the page and persists 
     const popup = await browserContext.newPage();
     await board.bringToFront();
     await popup.goto(`chrome-extension://${extensionId}/popup.html`);
-    await expect(popup.getByRole('heading', { name: 'ADO Customize', exact: true })).toBeVisible();
+    await expect(popup.getByRole('heading', { name: 'ADOverride', exact: true })).toBeVisible();
     await expect(popup.locator('[data-inspector-state]')).toHaveText('Tickets loaded: 2');
     await expect(board.locator('body')).toHaveJSProperty('innerHTML', original);
 
@@ -203,7 +203,7 @@ test('installed extension counts tickets without altering the page and persists 
     await expect.poll(() => reopened.evaluate(() => navigator.clipboard.readText())).toContain('"surface": "rows"');
     await reopened.getByRole('button', { name: 'Back to feature library', exact: true }).click();
 
-    await reopened.getByRole('button', { name: 'Enable ADO Customize', exact: true }).click();
+    await reopened.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect(reopened.locator('[data-inspector-state]')).toHaveText('Inspector paused');
     await reopened.getByRole('button', { name: 'Switch popup to dark theme', exact: true }).click();
     await expect(reopened.locator('.popup')).toHaveCSS('background-color', 'rgb(13, 17, 23)');

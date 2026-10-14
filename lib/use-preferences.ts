@@ -19,7 +19,7 @@ export function usePreferences() {
     preferencesStore.load().then(value => {
       if (mounted.current) setPreferences(previous => previous && previous.revision > value.revision ? previous : value);
     }).catch(reason => {
-      console.error('[ADO Customize] Could not load preferences.', reason);
+      console.error('[ADOverride] Could not load preferences.', reason);
       if (mounted.current) setError(reason instanceof Error ? reason.message : 'Could not load preferences.');
     });
     const listener: Parameters<typeof browser.storage.onChanged.addListener>[0] = (changes, area) => {
@@ -35,7 +35,7 @@ export function usePreferences() {
           setSaveState({ status: 'saved', message: ticketChangeMessage(decoded.ticket.undo.kind), undoId: decoded.ticket.undo.id });
         }
       } catch (reason) {
-        console.error('[ADO Customize] Invalid preferences update.', reason);
+        console.error('[ADOverride] Invalid preferences update.', reason);
         setError(reason instanceof Error ? reason.message : 'Invalid preferences update.');
       }
     };
@@ -60,7 +60,7 @@ export function usePreferences() {
       }
       return true;
     } catch (reason) {
-      console.error('[ADO Customize] Could not save preferences.', reason);
+      console.error('[ADOverride] Could not save preferences.', reason);
       if (mounted.current) {
         const message = reason instanceof Error ? reason.message : 'Could not save preferences.';
         setError(message);
@@ -81,7 +81,7 @@ export function usePreferences() {
         setError('');
       }
     } catch (reason) {
-      console.error('[ADO Customize] Could not reset preferences.', reason);
+      console.error('[ADOverride] Could not reset preferences.', reason);
       if (mounted.current) setError(reason instanceof Error ? reason.message : 'Could not reset preferences.');
     }
   }, []);

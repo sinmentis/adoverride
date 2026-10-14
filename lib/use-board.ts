@@ -21,7 +21,7 @@ export function useBoard(ready: boolean) {
           if (!active) return;
           try { setSnapshot(decodeBoardSnapshot(value)); }
           catch (reason) {
-            console.error('[ADO Customize] Invalid Board status.', reason);
+            console.error('[ADOverride] Invalid Board status.', reason);
             setSnapshot({ ...emptyBoardSnapshot(), status: 'error', message: 'Invalid Board status.' });
           }
         });
@@ -29,7 +29,7 @@ export function useBoard(ready: boolean) {
           if (active) setSnapshot(current => ({ ...current, status: 'error', effective: false, message: 'The Board reader disconnected. Reopen the popup.' }));
         });
       } catch (reason) {
-        console.error('[ADO Customize] Could not connect Board reader.', reason);
+        console.error('[ADOverride] Could not connect Board reader.', reason);
         if (active) setSnapshot({ ...emptyBoardSnapshot(), status: 'error', message: reason instanceof Error ? reason.message : 'Could not connect Board reader.' });
       }
     })();
@@ -41,7 +41,7 @@ export function useBoard(ready: boolean) {
         if (!port.current) throw new Error('The Board reader is not connected.');
         port.current.postMessage({ type: 'retry-autoload' });
       } catch (reason) {
-        console.error('[ADO Customize] Could not retry Board auto-loading.', reason);
+        console.error('[ADOverride] Could not retry Board auto-loading.', reason);
         setSnapshot(current => ({ ...current, status: 'error', effective: false, message: 'Could not retry auto-loading. Reopen the popup.' }));
       }
     }, []) };

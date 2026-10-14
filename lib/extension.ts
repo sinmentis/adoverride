@@ -7,6 +7,7 @@ import { LAYOUT_MESSAGE, decodeLayoutReply, type LayoutCommand } from './layout-
 import { decodeBoardLayoutReply } from './board-layout-report';
 import { CONFIGURATION_BACKUP_KEY, decodeConfigurationBackup, exportConfiguration, type ConfigurationBackup } from './configuration';
 
+// Stable storage identifiers preserve settings across product renames.
 export const PREFERENCES_KEY = 'ado-customize.preferences.v11';
 export const V10_PREFERENCES_KEY = 'ado-customize.preferences.v10';
 export const V9_PREFERENCES_KEY = 'ado-customize.preferences.v9';
@@ -98,12 +99,12 @@ export async function inspectActivePage(tabId: number): Promise<{ inspection: In
     let pending = connections.get(tabId);
     if (!pending) {
       pending = (async () => {
-        console.info('[ADO Customize] Connecting the page controller.');
+        console.info('[ADOverride] Connecting the page controller.');
         try {
           await browser.scripting.executeScript({ target: { tabId }, files: ['/content-scripts/content.js'] });
         } catch (reason) {
           const detail = reason instanceof Error ? reason.message : 'The browser refused the content script.';
-          throw new Error(`Could not connect the page controller. Allow ADO Customize to access this site, then retry. ${detail}`, { cause: reason });
+          throw new Error(`Could not connect the page controller. Allow ADOverride to access this site, then retry. ${detail}`, { cause: reason });
         }
       })().finally(() => connections.delete(tabId));
       connections.set(tabId, pending);

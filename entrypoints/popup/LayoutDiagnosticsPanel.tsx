@@ -12,7 +12,7 @@ export function LayoutDiagnosticsPanel({ available, boardAvailable = false }: { 
   function installedReport(text: string) {
     const parsed: unknown = JSON.parse(text);
     if (!isObject(parsed)) throw new Error('Invalid layout report.');
-    return JSON.stringify({ extension: 'ADO Customize', extensionVersion: extensionVersion(), ...parsed }, null, 2);
+    return JSON.stringify({ extension: 'ADOverride', extensionVersion: extensionVersion(), ...parsed }, null, 2);
   }
   async function run(action: 'start' | 'copy' | 'download' | 'board') {
     setBusy(true); setError('');
@@ -36,7 +36,7 @@ export function LayoutDiagnosticsPanel({ available, boardAvailable = false }: { 
         setMessage('Report downloaded.');
       }
     } catch (reason) {
-      console.error('[ADO Customize] Could not export layout diagnostics.', reason);
+      console.error('[ADOverride] Could not export layout diagnostics.', reason);
       setError(reason instanceof Error ? reason.message : 'Could not export layout diagnostics.');
     } finally { setBusy(false); }
   }
