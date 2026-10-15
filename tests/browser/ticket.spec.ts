@@ -2585,13 +2585,13 @@ for (const scenario of [
   });
 }
 
-test('Ticket popup layers: Undo and Lock stay global while view and visibility controls live in their own tabs', async ({}, info) => {
+test('Ticket popup layers: one-row preset tools, Cards & fields first, and view controls in Layout', async ({}, info) => {
   const context = await launch(info.outputPath('profile'));
   try {
     const { page, popup } = await fixture(context, 'https://dev.azure.com', false, false, false, ticketHtml(false, true));
     const cardsTab = popup.getByRole('tab', { name: /^Cards & fields/ });
     await expect(cardsTab).toHaveAttribute('aria-selected', 'true');
-    await expect(cardsTab).not.toContainText('hidden');
+    await expect(cardsTab).not.toContainText(/\d/);
     await expect(popup.getByRole('searchbox', { name: 'Find a Ticket card or field', exact: true })).toBeVisible();
     await expect(popup.getByRole('button', { name: 'Show all', exact: true })).toBeVisible();
     await expect(popup.getByRole('radio')).toHaveCount(0);
@@ -2599,7 +2599,8 @@ test('Ticket popup layers: Undo and Lock stay global while view and visibility c
     await find(popup, 'Review');
     await popup.getByRole('button', { name: 'Show Review', exact: true }).click();
     await expect(page.locator('#sample\\.review')).not.toBeVisible();
-    await expect(cardsTab).toContainText('1 hidden');
+    await expect(cardsTab).toContainText('1');
+    await expect(cardsTab).not.toContainText('hidden');
 
     await popup.getByRole('tab', { name: 'Layout', exact: true }).click();
     await expect(popup.getByRole('searchbox')).toHaveCount(0);

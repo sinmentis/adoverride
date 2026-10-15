@@ -1,5 +1,5 @@
 .popup { display: flex; flex-direction: column; width: 340px; height: 480px; overflow: hidden; background: var(--bgColor-default); color: var(--fgColor-default); }
-.popup .popup-header { display: flex; align-items: center; gap: 6px; padding: 9px 11px; }
+.popup .popup-header { display: flex; align-items: center; gap: 6px; padding: 6px 11px; }
 .popup .brand { display: grid; place-items: center; flex: 0 0 26px; height: 26px; border-radius: var(--borderRadius-medium); background: var(--bgColor-accent-muted); color: var(--fgColor-accent); }
 .popup .brand-copy { flex: 1; min-width: 0; }
 .popup .caption { display: block; color: var(--fgColor-muted); font-size: 11px; line-height: 1.5; }
@@ -7,10 +7,10 @@
 .popup .controls { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 8px 11px 10px; border-top: 1px solid var(--borderColor-default); border-bottom: 1px solid var(--borderColor-default); }
 .popup .control-field { display: grid; align-content: start; gap: 4px; min-width: 0; }
 .popup .section-title { font-size: 11px; font-weight: 600; color: var(--fgColor-muted); }
-.popup .controls.single { grid-template-columns: minmax(0, 1fr); }
+.popup .controls.single { grid-template-columns: minmax(0, 1fr); padding: 4px 11px; }
 .popup .preset-actions { display: flex; align-items: center; gap: 4px; }
 .popup .preset-actions > :first-child { flex: 1 1 auto; min-width: 0; }
-.popup .controls.single .preset-actions > :first-child { flex: 0 1 160px; }
+.popup .controls.single .preset-actions > :first-child { flex: 0 1 auto; max-width: 180px; }
 .popup .ticket-history { display: flex; gap: 4px; margin-left: auto; }
 .popup .lock-toggle[aria-pressed="true"] { color: var(--fgColor-accent); background: var(--bgColor-accent-muted); border-color: var(--borderColor-accent-emphasis); }
 .popup .popup-body { flex: 1; min-height: 0; padding: 10px 11px; overflow-y: auto; scrollbar-width: thin; }
@@ -28,14 +28,14 @@
 .popup .footer-actions { display: flex; align-items: center; gap: 2px; }
 .popup .inspection-details { display: grid; gap: 10px; }
 .popup .diagnostics { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; }
-.popup .area-tabs { padding: 0 11px 8px; }
-.popup .ticket-tabs { margin: -10px -11px 0; }
-.popup .ticket-tabs [role="tablist"] { padding: 0 11px; }
-.popup .ticket-tabs [role="tabpanel"] { padding: 8px 11px 0; }
+.popup .area-tabs { padding: 0 11px 6px; }
+.popup .ticket-tabs { min-height: 0; margin: -10px -11px 6px; padding: 0 11px; }
+.popup .ticket-tabs [role="tablist"] { height: 32px; padding: 0; }
+.popup .ticket-tabs [role="tab"]::after { margin-bottom: 0; }
 .popup .ticket-view { margin-bottom: 10px; }
 .popup .ticket-search { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
 .popup .ticket-search > :first-child { flex: 1; min-width: 0; }
-.popup .ticket-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; font-size: 12px; }
+.popup .ticket-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; font-size: 12px; }
 .popup .ticket-row > :first-child { min-width: 0; }
 .popup .ticket-status { margin: 0 0 4px 6px; font-size: 10px; }
 .popup .save-feedback { flex: 0 0 auto; padding: 0 11px 8px; }

@@ -96,7 +96,7 @@ Native/server limits still apply; loaded counts are not a server-side total.
 ## Personalize a Ticket
 
 The popup selects **Ticket** over an active native editor. Ticket settings are
-global across the browser profile and every Ticket type. The Preset row holds
+global across the browser profile and every Ticket type. Next to the preset are
 two icon buttons: **Undo** reverts the last Ticket change, and **Lock** removes
 the on-page hand and Hide controls while keeping saved presentation active.
 
@@ -105,8 +105,8 @@ Properties rail). Each view keeps its own card positions. **Reset positions**
 clears positions for the active view only.
 
 **Cards & fields** lists pages, cards and fields with their switches. Search to
-filter, and use **Show all** to restore visibility. The tab shows how many items
-on this Ticket are hidden. Hiding a parent keeps its children's choices.
+filter, and use **Show all** to restore visibility. The number on the tab counts
+hidden items on this Ticket. Hiding a parent keeps its children's choices.
 
 Hover or focus a mapped card header to use the hand and Hide controls. Dragging
 changes visual placement, not native editor nodes or parents. Escape cancels.

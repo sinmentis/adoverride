@@ -65,8 +65,8 @@ export function TicketPanel({ snapshot, preferences, saving, update }: {
       {snapshot.status === 'loading' && <Spinner size="small" aria-label="Loading Ticket layout" />}
       <UnderlinePanels aria-label="Ticket settings" className="ticket-tabs" value={tab}
         onChange={({ value }) => setTab(value === 'layout' ? 'layout' : 'cards')}>
+        <UnderlinePanels.Tab value="cards" counter={hidden || undefined}>Cards &amp; fields</UnderlinePanels.Tab>
         <UnderlinePanels.Tab value="layout">Layout</UnderlinePanels.Tab>
-        <UnderlinePanels.Tab value="cards" counter={hidden ? `${hidden} hidden` : undefined}>Cards &amp; fields</UnderlinePanels.Tab>
         <UnderlinePanels.Panel value="layout">
           <RadioGroup name="ticket-view" className="ticket-view" disabled={saving}
             onChange={value => { if (value) void update({ kind: 'ticket-view', viewMode: value === 'workspace' ? 'workspace' : 'native' }); }}>

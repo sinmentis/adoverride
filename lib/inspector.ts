@@ -1,7 +1,7 @@
 import { isPageKind, parseAdoContext, type AdoContext } from './context';
 
 export const INSPECT_MESSAGE = 'ado-customize/inspect' as const;
-export const INSPECT_PROTOCOL = 31;
+export const INSPECT_PROTOCOL = 32;
 
 const CARDS = '.wit-card, .boards-card, .taskboard-card';
 const GRIDS = '[role="grid"], [role="treegrid"], .bolt-table, .grid';

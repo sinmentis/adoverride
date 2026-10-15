@@ -217,13 +217,11 @@ export default function App() {
             </div>
             <div className={`controls${area === 'ticket' ? ' single' : ''}`}>
               <div className="control-field">
-                {area === 'ticket' ? <div className="label-with-help"><Text className="section-title">Preset</Text>
-                  <Help label="Ticket scope" text="Ticket settings are global. They apply to every Ticket type in this browser profile." /></div> :
-                  <Text className="section-title">Preset</Text>}
+                {area !== 'ticket' && <Text className="section-title">Preset</Text>}
                 <div className="preset-actions">
                   <ActionMenu open={menuOpen} onOpenChange={setMenuOpen}>
                     <ActionMenu.Button
-                      ref={presetButton} size="small" block disabled={!available}
+                      ref={presetButton} size="small" block={area !== 'ticket'} disabled={!available}
                       leadingVisual={custom ? SlidersIcon : ProjectIcon}
                       aria-label={`Choose preset, current ${custom ? 'Custom view' : base?.name ?? 'Unavailable'}`}
                     >
@@ -232,7 +230,7 @@ export default function App() {
                     <ActionMenu.Overlay width="small" align="start">
                       <ActionList selectionVariant="single">
                         <ActionList.Group>
-                          <ActionList.GroupHeading>{area === 'ticket' ? 'Ticket presets' : 'Library presets'}</ActionList.GroupHeading>
+                          <ActionList.GroupHeading>{area === 'ticket' ? 'Ticket presets (all Ticket types)' : 'Library presets'}</ActionList.GroupHeading>
                           {presets.map(preset => (
                             <ActionList.Item
                               key={preset.id}
