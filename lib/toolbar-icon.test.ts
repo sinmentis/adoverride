@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ACTIVE_TOOLBAR_TITLE, createToolbarIconManager, decodeToolbarState, INACTIVE_TOOLBAR_TITLE,
-  toolbarIconPaths } from './toolbar-icon';
+import { ACTIVE_TOOLBAR_TITLE, createToolbarIconManager, INACTIVE_TOOLBAR_TITLE, toolbarActive, toolbarIconPaths } from './toolbar-icon';
 
 const address = 'https://dev.azure.com/example/Platform/_workitems/edit/101';
 function fixture() {
-  const pages = new Map([[1, { url: address, status: 'complete' }], [2, { url: 'https://example.com/', status: 'complete' }]]);
+  const pages = new Map<number, { url?: string }>([[1, { url: address }], [2, { url: 'https://example.com/' }]]);
+  let enabled = true;
   const driver = {
     getTab: vi.fn(async (tabId: number) => {
       const tab = pages.get(tabId);
       if (!tab) throw new Error('No such tab.');
       return tab;
     }),
-    requestState: vi.fn(async (): Promise<unknown> => ({ version: 1, effective: true })),
+    enabled: vi.fn(async () => enabled),
     setIcon: vi.fn(async (_details: { tabId: number; path: Record<number, string> }) => {}),
     setTitle: vi.fn(async (_details: { tabId: number; title: string }) => {}),
   };
-  return { pages, driver, manager: createToolbarIconManager(driver) };
+  return { pages, driver, setEnabled: (value: boolean) => { enabled = value; }, manager: createToolbarIconManager(driver) };
 }
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -23,96 +23,84 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
-describe('per-tab toolbar activity', () => {
-  it('uses the matching blue/gray PNG size set and rejects malformed activity replies', () => {
+describe('URL-based toolbar activity', () => {
+  it('uses the matching blue/gray PNG size sets', () => {
     expect(toolbarIconPaths(true)).toEqual({ 16: 'icon/16.png', 32: 'icon/32.png', 48: 'icon/48.png', 96: 'icon/96.png', 128: 'icon/128.png' });
     expect(toolbarIconPaths(false)).toEqual({ 16: 'icon-gray/16.png', 32: 'icon-gray/32.png', 48: 'icon-gray/48.png', 96: 'icon-gray/96.png', 128: 'icon-gray/128.png' });
-    expect(decodeToolbarState({ version: 1, effective: false })).toBe(false);
-    expect(() => decodeToolbarState({ version: 2, effective: true })).toThrow('Invalid toolbar');
-    expect(() => decodeToolbarState({ version: 1, effective: 'yes' })).toThrow('Invalid toolbar');
   });
-  it('refreshes each tab independently and does not repeatedly redraw unchanged activity', async () => {
+  it.each([
+    ['https://dev.azure.com/example/Platform/_boards/board/t/Team/Stories?System.AssignedTo=%40me', true],
+    ['https://example.visualstudio.com/Platform/_boards/board/t/Team%20A/Stories', true],
+    ['https://dev.azure.com/example/Platform/_sprints/taskboard/Team', true],
+    ['https://dev.azure.com/example/Platform/_backlogs/backlog/Team/Stories', true],
+    ['https://dev.azure.com/example/Platform/_queries/query/example', true],
+    [address, true],
+    ['https://dev.azure.com/example/Platform/_git/repo?workitem=101', true],
+    ['https://dev.azure.com/example/Platform/_git/repo', false],
+    ['https://dev.azure.com/example/Platform/_dashboards', false],
+    ['https://example.com/_boards/board', false],
+    ['http://dev.azure.com/example/Platform/_boards/board', false],
+    ['chrome://extensions', false],
+    [undefined, false],
+  ])('decides %s from the URL alone', (url, active) => {
+    expect(toolbarActive(url, true)).toBe(active);
+    expect(toolbarActive(url, false)).toBe(false);
+  });
+  it('redraws every refresh so a Chrome per-tab reset cannot leave a stale gray icon', async () => {
     const { driver, manager } = fixture();
     await manager.refresh(1);
     await manager.refresh(1);
     await manager.refresh(2);
-    expect(driver.requestState).toHaveBeenCalledTimes(2);
     expect(driver.setIcon.mock.calls.map(([details]) => details)).toEqual([
-      { tabId: 1, path: toolbarIconPaths(true) }, { tabId: 2, path: toolbarIconPaths(false) },
+      { tabId: 1, path: toolbarIconPaths(true) }, { tabId: 1, path: toolbarIconPaths(true) }, { tabId: 2, path: toolbarIconPaths(false) },
     ]);
-    expect(driver.setTitle.mock.calls.map(([details]) => details)).toEqual([
-      { tabId: 1, title: ACTIVE_TOOLBAR_TITLE }, { tabId: 2, title: INACTIVE_TOOLBAR_TITLE },
-    ]);
+    expect(driver.setTitle).toHaveBeenLastCalledWith({ tabId: 2, title: INACTIVE_TOOLBAR_TITLE });
   });
-  it('does not let a stale query override a newer live inactive state', async () => {
-    const { driver, manager } = fixture();
-    const reply = deferred<unknown>();
-    driver.requestState.mockReturnValueOnce(reply.promise);
-    const refreshing = manager.refresh(1);
-    await vi.waitFor(() => expect(driver.requestState).toHaveBeenCalled());
-    driver.requestState.mockResolvedValueOnce({ version: 1, effective: false });
+  it('follows the master switch and URL changes', async () => {
+    const { pages, driver, setEnabled, manager } = fixture();
+    setEnabled(false);
     await manager.refresh(1);
-    reply.resolve({ version: 1, effective: true });
-    await refreshing;
-    expect(driver.setIcon).toHaveBeenCalledExactlyOnceWith({ tabId: 1, path: toolbarIconPaths(false) });
-  });
-  it('resets navigation to gray and never queries unsupported or loading documents', async () => {
-    const { pages, driver, manager } = fixture();
+    expect(driver.setTitle).toHaveBeenLastCalledWith({ tabId: 1, title: INACTIVE_TOOLBAR_TITLE });
+    setEnabled(true);
     await manager.refresh(1);
-    pages.set(1, { url: 'https://example.com/', status: 'loading' });
-    await manager.loading(1);
+    expect(driver.setTitle).toHaveBeenLastCalledWith({ tabId: 1, title: ACTIVE_TOOLBAR_TITLE });
+    pages.set(1, { url: 'https://dev.azure.com/example/Platform/_git/repo' });
     await manager.refresh(1);
     expect(driver.setIcon).toHaveBeenLastCalledWith({ tabId: 1, path: toolbarIconPaths(false) });
-    expect(driver.setIcon).toHaveBeenCalledTimes(2);
-    pages.set(1, { url: address, status: 'loading' });
-    await manager.refresh(1);
-    expect(driver.setIcon).toHaveBeenCalledTimes(2);
-    expect(driver.requestState).toHaveBeenCalledTimes(1);
   });
-  it('serializes a pending blue write before the final gray navigation state', async () => {
-    const { driver, manager } = fixture();
+  it('does not let a slow earlier read override a newer state', async () => {
+    const { pages, driver, manager } = fixture();
+    const slow = deferred<{ url?: string }>();
+    driver.getTab.mockReturnValueOnce(slow.promise);
+    const first = manager.refresh(1);
+    pages.set(1, { url: 'https://dev.azure.com/example/Platform/_git/repo' });
+    await manager.refresh(1);
+    slow.resolve({ url: address });
+    await first;
+    expect(driver.setIcon).toHaveBeenCalledExactlyOnceWith({ tabId: 1, path: toolbarIconPaths(false) });
+  });
+  it('serializes writes so a pending blue write is followed by the newer gray state', async () => {
+    const { pages, driver, manager } = fixture();
     const gate = deferred<void>();
     driver.setIcon.mockReturnValueOnce(gate.promise);
     const active = manager.refresh(1);
     await vi.waitFor(() => expect(driver.setIcon).toHaveBeenCalled());
-    const loading = manager.loading(1);
+    pages.set(1, { url: 'https://example.com/' });
+    const inactive = manager.refresh(1);
     gate.resolve();
-    await Promise.all([active, loading]);
+    await Promise.all([active, inactive]);
     expect(driver.setIcon.mock.calls.map(([details]) => details.path[16])).toEqual(['icon/16.png', 'icon-gray/16.png']);
     expect(driver.setTitle).toHaveBeenCalledExactlyOnceWith({ tabId: 1, title: INACTIVE_TOOLBAR_TITLE });
   });
-  it('drops an in-flight query when its tab closes', async () => {
-    const { pages, driver, manager } = fixture();
-    const reply = deferred<unknown>();
-    driver.requestState.mockReturnValueOnce(reply.promise);
+  it('drops an in-flight refresh when its tab closes and surfaces icon errors for retry', async () => {
+    const { driver, manager } = fixture();
+    const slow = deferred<{ url?: string }>();
+    driver.getTab.mockReturnValueOnce(slow.promise);
     const refreshing = manager.refresh(1);
-    await vi.waitFor(() => expect(driver.requestState).toHaveBeenCalled());
     manager.remove(1);
-    pages.delete(1);
-    reply.resolve({ version: 1, effective: true });
+    slow.resolve({ url: address });
     await refreshing;
     expect(driver.setIcon).not.toHaveBeenCalled();
-  });
-  it('rejects a query from before navigation and recovers from the current document', async () => {
-    const { pages, driver, manager } = fixture();
-    const reply = deferred<unknown>();
-    driver.requestState.mockReturnValueOnce(reply.promise);
-    const refreshing = manager.refresh(1);
-    await vi.waitFor(() => expect(driver.requestState).toHaveBeenCalled());
-    pages.set(1, { url: 'https://dev.azure.com/example/Platform/_boards/board/t/Team/Stories', status: 'complete' });
-    reply.resolve({ version: 1, effective: true });
-    await refreshing;
-    expect(driver.setIcon).toHaveBeenLastCalledWith({ tabId: 1, path: toolbarIconPaths(false) });
-    await manager.refresh(1);
-    expect(driver.setIcon).toHaveBeenLastCalledWith({ tabId: 1, path: toolbarIconPaths(true) });
-  });
-  it('treats missing page readers as inactive but surfaces other errors and permits retry', async () => {
-    const { driver, manager } = fixture();
-    driver.requestState.mockRejectedValueOnce(new Error('Could not establish connection. Receiving end does not exist.'));
-    await manager.refresh(1);
-    expect(driver.setIcon).toHaveBeenLastCalledWith({ tabId: 1, path: toolbarIconPaths(false) });
-    driver.requestState.mockResolvedValueOnce({});
-    await expect(manager.refresh(1)).rejects.toThrow('Invalid toolbar activity');
     driver.setIcon.mockRejectedValueOnce(new Error('Icon failed.'));
     await expect(manager.refresh(1)).rejects.toThrow('Icon failed');
     await manager.refresh(1);

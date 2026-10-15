@@ -595,6 +595,17 @@ export function createTicketController(document: Document, address: () => string
         if (workspaceWanted && shell) {
           const commandWidth = shell.commands.getBoundingClientRect().width;
           const commentWidth = shell.comments?.getBoundingClientRect().width ?? 0;
+          // Board dialogs add full-screen/close buttons to the header's top-right; keep the moved commands clear of them.
+          const headerBox = shell.header.getBoundingClientRect();
+          const commandHeight = shell.commands.getBoundingClientRect().height;
+          const band = { top: headerBox.top + 8, bottom: headerBox.top + 8 + commandHeight };
+          const chromeLeft = Math.min(headerBox.right, ...[...shell.header.querySelectorAll<HTMLElement>('button,[role="button"],a[href]')]
+            .filter(control => rendered(control) && ![shell.commands, shell.titleRow, shell.comments, ...shell.metadata]
+              .some(owner => owner?.contains(control)))
+            .map(control => control.getBoundingClientRect())
+            .filter(box => box.left > headerBox.left + headerBox.width / 2 && box.top < band.bottom && box.bottom > band.top)
+            .map(box => box.left));
+          const chromeWidth = headerBox.right - chromeLeft > 0 ? headerBox.right - chromeLeft + WORKSPACE_GAP : 0;
           mark(shell.host, 'workspace-shell');
           if (shell.formNavigation) mark(shell.formNavigation, 'workspace-form-navigation');
           mark(shell.header, 'workspace-header');
@@ -608,11 +619,11 @@ export function createTicketController(document: Document, address: () => string
           for (const [index, element] of shell.metadata.entries()) mark(element, 'workspace-meta', String(index));
           workspaceApplied = true;
           if (nativeWidth >= 850) {
-            shellStyles += `[data-ado-ticket-root] [data-ado-ticket-workspace-title]{padding-inline-end:${commandWidth + commentWidth + WORKSPACE_GAP * 2}px!important;}\n` +
-              `[data-ado-ticket-root] [data-ado-ticket-workspace-commands]{position:absolute!important;right:8px;top:8px;width:${commandWidth}px;}\n`;
+            shellStyles += `[data-ado-ticket-root] [data-ado-ticket-workspace-title]{padding-inline-end:${commandWidth + commentWidth + chromeWidth + WORKSPACE_GAP * 2}px!important;}\n` +
+              `[data-ado-ticket-root] [data-ado-ticket-workspace-commands]{position:absolute!important;right:${8 + chromeWidth}px;top:8px;width:${commandWidth}px;}\n`;
             if (shell.comments) {
               mark(shell.comments, 'workspace-comments');
-              shellStyles += `[data-ado-ticket-root] [data-ado-ticket-workspace-comments]{position:absolute!important;right:${commandWidth + 8 + WORKSPACE_GAP}px;top:8px;}\n`;
+              shellStyles += `[data-ado-ticket-root] [data-ado-ticket-workspace-comments]{position:absolute!important;right:${commandWidth + chromeWidth + 8 + WORKSPACE_GAP}px;top:8px;}\n`;
             }
           }
         }
@@ -766,8 +777,9 @@ export function createTicketController(document: Document, address: () => string
     ] : []);
     clearActionAnchors(neededAnchors);
     clearSchemaHeaders(new Set(cards.map(card => card.element)));
-    const unmappedCurrentGroups = allTargets.some(target => target.kind === 'group' && target.parentId === selected?.id &&
-      target.available && !target.opaque && !bindings.has(target.id));
+    const boundGroups = new Set(bindings.values());
+    // Only rendered native cards we could not bind are unmapped; schema cards this ticket does not render are expected.
+    const unmappedCurrentGroups = groups.some(group => rendered(group) && !boundGroups.has(group));
     dragDiagnostics.mountedHandles = root.querySelectorAll('ado-ticket-drag-handle').length;
     publish({
       version: 2, token, revision, surface, status: pending ? 'loading' : layout && !unmappedCurrentGroups && !unmappedLayout && !dragBlocked && !workspaceMessage ? 'ready' : 'partial',

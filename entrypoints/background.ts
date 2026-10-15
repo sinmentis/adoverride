@@ -1,25 +1,26 @@
 import { browser } from 'wxt/browser';
-import { configurationBackup, PREFERENCE_MESSAGE, preferencesStore } from '@/lib/extension';
+import { configurationBackup, PREFERENCE_MESSAGE, PREFERENCES_KEY, preferencesStore } from '@/lib/extension';
 import { applyPreferenceAction, commitPreferenceAction, decodePreferenceAction, preferenceSaveMessage } from '@/lib/preferences';
 import { isObject } from '@/lib/ticket';
-import { createToolbarIconManager, decodeToolbarState, TOOLBAR_QUERY, TOOLBAR_REPORT, TOOLBAR_VERSION } from '@/lib/toolbar-icon';
+import { createToolbarIconManager } from '@/lib/toolbar-icon';
 
 export default defineBackground(() => {
   const toolbar = createToolbarIconManager({
     getTab: tabId => browser.tabs.get(tabId),
-    requestState: tabId => browser.tabs.sendMessage(tabId, { type: TOOLBAR_QUERY, version: TOOLBAR_VERSION }),
+    enabled: async () => (await preferencesStore.load()).enabled,
     setIcon: details => browser.action.setIcon(details),
     setTitle: details => browser.action.setTitle(details),
   });
   const toolbarError = (reason: unknown) => console.error('[ADOverride] Could not update toolbar activity.', reason);
-  browser.tabs.onActivated.addListener(({ tabId }) => { void toolbar.refresh(tabId).catch(toolbarError); });
-  browser.tabs.onUpdated.addListener((tabId, changes) => {
-    if (changes.status === 'loading') void toolbar.loading(tabId).catch(toolbarError);
-    else if (changes.url || changes.status === 'complete') void toolbar.refresh(tabId).catch(toolbarError);
-  });
+  const refresh = (tabId: number) => { void toolbar.refresh(tabId).catch(toolbarError); };
+  const refreshAll = () => browser.tabs.query({}).then(tabs => { for (const tab of tabs) if (tab.id !== undefined) refresh(tab.id); }, toolbarError);
+  browser.tabs.onActivated.addListener(({ tabId }) => refresh(tabId));
+  browser.tabs.onUpdated.addListener((tabId, changes) => { if (changes.url || changes.status) refresh(tabId); });
+  // Prerendered navigations swap the tab ID without an update event for the new tab.
+  browser.tabs.onReplaced.addListener((added, removed) => { toolbar.remove(removed); refresh(added); });
   browser.tabs.onRemoved.addListener(tabId => toolbar.remove(tabId));
-  void browser.tabs.query({}).then(tabs => Promise.all(tabs.flatMap(tab =>
-    tab.id === undefined ? [] : [toolbar.refresh(tab.id)]))).catch(toolbarError);
+  browser.storage.onChanged.addListener((changes, area) => { if (area === 'local' && changes[PREFERENCES_KEY]) void refreshAll(); });
+  void refreshAll();
   browser.runtime.onInstalled.addListener(async () => {
     try {
       await preferencesStore.update(current => current);
@@ -29,20 +30,6 @@ export default defineBackground(() => {
   });
   browser.runtime.onMessage.addListener((message: unknown, sender, sendResponse) => {
     if (sender.id !== browser.runtime.id || !isObject(message)) return;
-    if (message.type === TOOLBAR_REPORT) {
-      if (sender.tab?.id === undefined || sender.frameId !== 0 || !sender.url) return;
-      try {
-        decodeToolbarState(message);
-        // Chrome keeps sender.url at the injection URL during same-document navigation.
-        void toolbar.refresh(sender.tab.id).then(
-          () => sendResponse({ ok: true }),
-          reason => { toolbarError(reason); sendResponse({ ok: false, error: 'Could not update toolbar activity.' }); },
-        );
-      } catch (reason) {
-        toolbarError(reason); sendResponse({ ok: false, error: 'Invalid toolbar activity report.' });
-      }
-      return true;
-    }
     if (message.type !== PREFERENCE_MESSAGE) return;
     try {
       const action = decodePreferenceAction(message.action);

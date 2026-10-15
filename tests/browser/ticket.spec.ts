@@ -168,6 +168,46 @@ for (const bug of [false, true]) test(`Workspace header: the current ADO toolbar
   } finally { await context.close(); }
 });
 
+test('Ticket status: schema cards this ticket does not render do not raise the unmapped-content warning', async ({}, info) => {
+  const context = await launch(info.outputPath('profile'), true);
+  try {
+    const layout = structuredClone(TICKET_LAYOUT);
+    layout.pages[0]?.sections.push({ id: 'unrendered', groups: [{ id: 'sample.unrendered', label: 'Not on this ticket', controls: [
+      { id: 'Custom.NotRendered', label: 'Not rendered', controlType: 'FieldControl' },
+    ] }] });
+    const { popup } = await fixture(context, 'https://dev.azure.com', false, false, false, workspaceTicketHtml(false),
+      { reference: 'Example.UserStory', layout });
+    await expect(popup.getByRole('searchbox', { name: 'Find a Ticket card or field' })).toBeVisible();
+    await popup.getByRole('button', { name: 'Inspection details', exact: true }).click();
+    const diagnostics = popup.getByLabel('Inspection diagnostics', { exact: true });
+    await expect.poll(async () => JSON.parse(await diagnostics.innerText()).ticket.status).toBe('ready');
+    await expect(diagnostics).not.toContainText('not mounted or mapped');
+  } finally { await context.close(); }
+});
+
+test('Workspace header: Board dialog full-screen and close buttons stay clear of the moved command bar', async ({}, info) => {
+  const context = await launch(info.outputPath('profile'), true);
+  try {
+    const html = boardOpenedWorkspaceHtml(false).replace('<a href="#sample-id">101</a></div>',
+      '<a href="#sample-id">101</a><span style="flex:1"></span><button type="button" aria-label="Enter full screen" style="width:34px;height:34px">F</button>' +
+      '<button type="button" aria-label="Close dialog" style="width:34px;height:34px">X</button></div>');
+    const { page } = await fixture(context, 'https://dev.azure.com', false, false, false, html);
+    await page.setViewportSize({ width: 1536, height: 825 });
+    await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
+    for (const name of ['Enter full screen', 'Close dialog']) {
+      const button = page.getByRole('button', { name, exact: true });
+      await expect.poll(() => button.evaluate(node => {
+        const box = node.getBoundingClientRect();
+        const commands = document.querySelector('[data-ado-ticket-workspace-commands]')?.getBoundingClientRect();
+        const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+        return Boolean(commands) && (box.right <= (commands?.left ?? 0) || box.left >= (commands?.right ?? 0) ||
+          box.bottom <= (commands?.top ?? 0) || box.top >= (commands?.bottom ?? 0)) && Boolean(hit && node.contains(hit));
+      })).toBe(true);
+    }
+    await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeVisible();
+  } finally { await context.close(); }
+});
+
 test('Bug discovery: pending form metadata does not disable a safely bound native field menu', async ({}, info) => {
   const context = await launch(info.outputPath('profile'), true);
   let release!: () => void;

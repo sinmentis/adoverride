@@ -7,7 +7,6 @@ import { TICKET_LAYOUT } from './ticket-fixtures';
 import { workspaceTicketHtml } from './workspace-fixture';
 import { capturedBoardHtml, loadMoreBoardHtml } from './board-fixture';
 import { presentationBoardHtml } from './board-presentation-fixture';
-import { TOOLBAR_QUERY, TOOLBAR_REPORT, TOOLBAR_VERSION } from '../../lib/toolbar-icon';
 
 type ExtensionApi = (typeof import('wxt/browser'))['browser'];
 declare const chrome: ExtensionApi;
@@ -182,19 +181,12 @@ test('Board toolbar lifecycle: native same-document navigation tracks filtered B
     await popup.close();
     const tabId = await worker.evaluate(async () => (await chrome.tabs.query({ url: 'https://dev.azure.com/*' }))[0]?.id);
     if (tabId === undefined) throw new Error('Missing same-document Board tab.');
-    const tracking = await worker.evaluateHandle(reportType => {
+    const tracking = await worker.evaluateHandle(() => {
       const native = chrome.action.setIcon.bind(chrome.action);
       const calls: Parameters<typeof chrome.action.setIcon>[0][] = [];
-      const reports: { sourceUrl?: string; tabUrl?: string; message: unknown }[] = [];
-      const record: Parameters<typeof chrome.runtime.onMessage.addListener>[0] = (message: unknown, sender) => {
-        if (typeof message === 'object' && message !== null && 'type' in message && message.type === reportType) {
-          reports.push({ sourceUrl: sender.url, tabUrl: sender.tab?.url, message });
-        }
-      };
-      chrome.runtime.onMessage.addListener(record);
       chrome.action.setIcon = async details => { calls.push(details); return native(details); };
-      return { calls, reports, restore: () => { chrome.action.setIcon = native; chrome.runtime.onMessage.removeListener(record); } };
-    }, TOOLBAR_REPORT);
+      return { calls, restore: () => { chrome.action.setIcon = native; } };
+    });
     try {
       const title = () => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId);
       const icon = () => tracking.evaluate((value, id) => {
@@ -212,8 +204,6 @@ test('Board toolbar lifecycle: native same-document navigation tracks filtered B
         await page.evaluate(value => history.pushState(null, '', value), address);
         await expect.poll(title).toBe('ADOverride (active)');
         await expect.poll(icon).toBe('icon/16.png');
-        await expect.poll(() => tracking.evaluate(value => value.reports.at(-1)?.tabUrl)).toBe(address);
-        expect(await tracking.evaluate(value => value.reports.at(-1)?.sourceUrl)).toBe(ADDRESS);
       }
       await page.evaluate(() => history.back());
       await expect.poll(title).toBe('ADOverride (inactive)');
@@ -229,12 +219,6 @@ test('Board toolbar lifecycle: native same-document navigation tracks filtered B
         await worker.evaluate(({ key, value }) => chrome.storage.local.set({ [key]: value }), {
           key: KEY, value: { ...original, enabled, revision: original.revision + (enabled ? 2 : 1) },
         });
-        await expect.poll(title).toBe(`ADOverride (${enabled ? 'active' : 'inactive'})`);
-        await expect.poll(icon).toBe(enabled ? 'icon/16.png' : 'icon-gray/16.png');
-        await worker.evaluate(async ({ tabId, type, version, effective }) => chrome.scripting.executeScript({
-          target: { tabId }, args: [type, version, effective],
-          func: async (type, version, effective) => chrome.runtime.sendMessage({ type, version, effective }),
-        }), { tabId, type: TOOLBAR_REPORT, version: TOOLBAR_VERSION, effective: !enabled });
         await expect.poll(title).toBe(`ADOverride (${enabled ? 'active' : 'inactive'})`);
         await expect.poll(icon).toBe(enabled ? 'icon/16.png' : 'icon-gray/16.png');
       }
@@ -345,9 +329,6 @@ test('Board toolbar: a late initial settings read cannot override a newer master
       },
     }), tabId);
     await expect(page.locator('html')).toHaveAttribute('data-fixture-settings-read', 'finished');
-    const state: unknown = await worker.evaluate(({ tabId, query, version }) =>
-      chrome.tabs.sendMessage(tabId, { type: query, version }), { tabId, query: TOOLBAR_QUERY, version: TOOLBAR_VERSION });
-    expect(state).toMatchObject({ effective: false });
     await expect.poll(() => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId)).toBe('ADOverride (inactive)');
   } finally { await context.close(); }
 });

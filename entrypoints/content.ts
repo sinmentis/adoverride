@@ -8,11 +8,9 @@ import { createSaveFeedbackUi } from '@/lib/save-feedback';
 import { createTicketVisibilityUi } from '@/lib/ticket-visibility';
 import { isObject, TICKET_PORT } from '@/lib/ticket';
 import { LAYOUT_MESSAGE } from '@/lib/layout-diagnostics';
-import { TOOLBAR_QUERY, TOOLBAR_REPORT, TOOLBAR_VERSION } from '@/lib/toolbar-icon';
 import { createBoardController } from '@/lib/board-controller';
 import { BOARD_PORT } from '@/lib/board';
 import { captureBoardLayout } from '@/lib/board-layout-report';
-import { parseAdoContext } from '@/lib/context';
 
 export default defineContentScript({
   matches: ['https://dev.azure.com/*', 'https://*.visualstudio.com/*'],
@@ -26,35 +24,12 @@ export default defineContentScript({
       createDragUi: (commit, trace, reportError) => createTicketDragUi(context, commit, trace, reportError),
     });
     const board = createBoardController(document, () => location.href);
-    let enabled = false;
     let settingsRevision = -1;
     let settingsGeneration = 0;
-    const effective = () => {
-      const page = parseAdoContext(location.href);
-      return Boolean(context.isValid && enabled && page && (page.pageKind !== 'other' || controller.snapshot.token));
-    };
-    let reported: boolean | undefined;
-    let reportSequence = 0;
-    const reportToolbar = () => {
-      const active = effective();
-      if (active === reported) return;
-      reported = active;
-      const sequence = ++reportSequence;
-      void browser.runtime.sendMessage({ type: TOOLBAR_REPORT, version: TOOLBAR_VERSION, effective: active }).then((reply: unknown) => {
-        if (!isObject(reply) || reply.ok !== true) throw new Error('Toolbar activity was not acknowledged.');
-      }).catch(reason => {
-        if (context.isValid && sequence === reportSequence) {
-          reported = undefined;
-          console.error('[ADOverride] Could not report toolbar activity.', reason);
-        }
-      });
-    };
-    const unsubscribeToolbar = controller.subscribe(reportToolbar);
-    const unsubscribeBoardToolbar = board.subscribe(reportToolbar);
     const applySettings = (value: Preferences) => {
       if (value.revision < settingsRevision) return;
-      settingsRevision = value.revision; enabled = value.enabled;
-      controller.setPreferences(value); board.setPreferences(value); reportToolbar();
+      settingsRevision = value.revision;
+      controller.setPreferences(value); board.setPreferences(value);
     };
     const loadSettings = () => {
       const generation = settingsGeneration;
@@ -63,10 +38,8 @@ export default defineContentScript({
       }).catch(reason => {
         console.error('[ADOverride] Ticket settings unavailable.', reason);
         if (context.isValid && generation === settingsGeneration) {
-          enabled = false;
           const message = reason instanceof Error ? reason.message : 'Settings unavailable.';
           controller.failSettings(message); board.failSettings(message);
-          reportToolbar();
         }
       });
     };
@@ -80,10 +53,8 @@ export default defineContentScript({
       }
       catch (reason) {
         console.error('[ADOverride] Invalid Ticket settings.', reason);
-        enabled = false;
         const message = reason instanceof Error ? reason.message : 'Invalid settings.';
         controller.failSettings(message); board.failSettings(message);
-        reportToolbar();
       }
     };
     browser.storage.onChanged.addListener(settingsListener);
@@ -100,10 +71,8 @@ export default defineContentScript({
       context.onInvalidated(() => { unsubscribe(); port.disconnect(); });
     };
     browser.runtime.onConnect.addListener(connectListener);
-    context.addEventListener(window, 'wxt:locationchange', () => { controller.refresh(); board.refresh(); reportToolbar(); });
+    context.addEventListener(window, 'wxt:locationchange', () => { controller.refresh(); board.refresh(); });
     context.onInvalidated(() => {
-      unsubscribeToolbar();
-      unsubscribeBoardToolbar();
       browser.storage.onChanged.removeListener(settingsListener);
       browser.runtime.onConnect.removeListener(connectListener);
       controller.dispose();
@@ -111,10 +80,6 @@ export default defineContentScript({
     });
     const listener: Parameters<typeof browser.runtime.onMessage.addListener>[0] = (message: unknown, sender, sendResponse) => {
       if (sender.id !== browser.runtime.id) return;
-      if (isObject(message) && message.type === TOOLBAR_QUERY) {
-        sendResponse({ version: TOOLBAR_VERSION, effective: effective() });
-        return;
-      }
       if (isObject(message) && message.type === LAYOUT_MESSAGE) {
         try {
           if (message.command === 'board') {

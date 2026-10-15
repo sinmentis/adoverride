@@ -88,6 +88,36 @@ for (const scenario of [
   });
 }
 
+test('Toolbar URL activity: a tab opened before the extension loads is blue without a page script and follows the URL', async ({}, testInfo) => {
+  const context = await chromium.launchPersistentContext(testInfo.outputPath('profile'), {
+    channel: 'chromium', headless: true, ignoreDefaultArgs: ['--disable-extensions'], args: ['--enable-unsafe-extension-debugging'],
+  });
+  try {
+    await context.route('https://dev.azure.com/**', route => route.fulfill({ contentType: 'text/html', body: '<title>ADO</title><p>Native page</p>' }));
+    const board = context.pages()[0] ?? await context.newPage();
+    await board.goto(ADDRESS);
+    const browser = context.browser();
+    if (!browser) throw new Error('The extension test requires a browser-level CDP connection.');
+    const cdp = await browser.newBrowserCDPSession();
+    await cdp.send('Extensions.loadUnpacked', { path: path.resolve('.output/chrome-mv3') });
+    const worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
+    const title = () => worker.evaluate(async () => {
+      const tab = (await chrome.tabs.query({ url: 'https://dev.azure.com/*' }))[0];
+      if (tab?.id === undefined) throw new Error('Missing ADO tab.');
+      return chrome.action.getTitle({ tabId: tab.id });
+    });
+    await expect.poll(title).toBe('ADOverride (active)');
+    await board.evaluate(() => history.pushState(null, '', '/example/Platform/_git/repo'));
+    await expect.poll(title).toBe('ADOverride (inactive)');
+    await board.evaluate(() => history.pushState(null, '', '/example/Platform/_git/repo?workitem=101'));
+    await expect.poll(title).toBe('ADOverride (active)');
+    await board.evaluate(() => history.pushState(null, '', '/example/Platform/_queries/query/example'));
+    await expect.poll(title).toBe('ADOverride (active)');
+  } finally {
+    await context.close();
+  }
+});
+
 test('installed extension counts tickets without altering the page and persists preferences', async ({}, testInfo) => {
   const extensionPath = path.resolve('.output/chrome-mv3');
   let context: BrowserContext | undefined;
