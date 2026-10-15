@@ -119,6 +119,8 @@ that must remain reachable.
 
 ## Privacy and permissions
 
+See the [privacy policy](../PRIVACY.md) for data handling, retention, and deletion.
+
 Settings stay in Chrome's local extension storage. There is no backend,
 telemetry, personal access token, or extension-owned work-item update.
 The ADOverride rename keeps the existing storage and configuration-format

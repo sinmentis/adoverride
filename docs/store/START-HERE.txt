@@ -1,0 +1,23 @@
+ADOverride - Chrome Web Store submission kit
+
+1. Open https://chrome.google.com/webstore/devconsole
+2. Verify your publisher contact email and complete account requirements.
+3. Add a new item. Upload only adoverride-0.11.10-chrome.zip.
+4. Follow SUBMISSION.md for listing copy, images, permissions and privacy fields.
+5. Review the data-use certifications and arrange a safe ADO reviewer demo.
+6. Save the draft. Submit for review only when those items are complete.
+
+Privacy policy:
+https://github.com/sinmentis/adoverride/blob/main/PRIVACY.md
+
+Screenshots: 01-board.jpg through 05-board-fields.jpg, all 1280x800.
+Required graphic assets: icon-128.png and promo-440x280.png.
+Optional graphic asset: marquee-1400x560.png.
+
+The ZIP and SHA256SUMS come from the published v0.11.10 GitHub release.
+The ZIP is unchanged. Screenshots use fictional ADO-style fixtures and real
+extension UI; popup views are composited onto the corresponding fixture.
+No Chrome Web Store item has been uploaded or submitted by this preparation.
+
+Source checklist:
+https://github.com/sinmentis/adoverride/blob/main/docs/chrome-web-store.md

@@ -3,7 +3,7 @@
 ## GitHub discoverability
 
 Repository: [sinmentis/adoverride](https://github.com/sinmentis/adoverride).
-Visibility remains private until public publication is explicitly approved.
+The repository is public. Store submissions remain a separate, manual approval.
 
 **Tagline**
 
@@ -23,11 +23,12 @@ The README title and introduction describe the implemented product in ordinary
 search terms. Keep feature claims specific. Do not advertise saved filter views,
 personal highlight rules, server-wide changes, or other research-only ideas.
 
-GitHub repository metadata and the social preview must be set after creating the
-repository. Preparing these files does not create or publish a public repository.
-Choose the repository owner explicitly before uploading source.
+Keep GitHub repository metadata and the social preview aligned with the listing.
 
 ## Chrome Web Store copy
+
+Use the [submission checklist](chrome-web-store.md) for upload assets, privacy
+declarations, permission explanations, and reviewer instructions.
 
 **Name**
 

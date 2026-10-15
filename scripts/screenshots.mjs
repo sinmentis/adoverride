@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { chromium, expect } from '@playwright/test';
@@ -7,6 +7,7 @@ import { createServer } from 'vite';
 
 const extension = path.resolve('.output/chrome-mv3');
 const origin = 'https://dev.azure.com';
+const store = process.argv.includes('--store');
 const loader = await createServer({
   configFile: false,
   optimizeDeps: { noDiscovery: true, include: [] },
@@ -54,6 +55,7 @@ function gallery(panels, width, height) {
 }
 
 try {
+  if (store) await mkdir('docs/store', { recursive: true });
   const { presentationBoardHtml } = await loader.ssrLoadModule('/tests/browser/board-presentation-fixture.ts');
   const { workspaceTicketHtml } = await loader.ssrLoadModule('/tests/browser/workspace-fixture.ts');
   const { TICKET_LAYOUT } = await loader.ssrLoadModule('/tests/browser/ticket-fixtures.ts');
@@ -65,7 +67,7 @@ try {
   context = await chromium.launchPersistentContext(profile, {
     channel: 'chromium',
     headless: true,
-    viewport: { width: 1536, height: 825 },
+    viewport: store ? { width: 1280, height: 800 } : { width: 1536, height: 825 },
     args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`],
   });
   const worker = context.serviceWorkers()[0] ?? await context.waitForEvent('serviceworker');
@@ -102,6 +104,32 @@ try {
     await popup.close();
     return image;
   };
+  const storeShot = async (name, popupImage) => {
+    const overlay = popupImage ? await page.evaluateHandle(data => {
+      const image = document.createElement('img');
+      image.src = `data:image/png;base64,${data}`;
+      image.alt = 'ADOverride popup';
+      Object.assign(image.style, {
+        position: 'fixed', top: '16px', right: '16px', width: '340px', height: '480px',
+        zIndex: '2147483647', boxShadow: '0 6px 24px #0004',
+        border: '1px solid #d0d7de', background: 'white',
+      });
+      document.body.append(image);
+      return image;
+    }, popupImage.toString('base64')) : null;
+    try {
+      if (overlay) await overlay.evaluate(image => image.decode());
+      await page.screenshot({
+        path: `docs/store/${name}.jpg`, type: 'jpeg', quality: 95,
+        animations: 'disabled', caret: 'hide',
+      });
+    } finally {
+      if (overlay) {
+        await overlay.evaluate(image => image.remove());
+        await overlay.dispose();
+      }
+    }
+  };
   await page.goto(`${origin}/example/Platform/_boards/board/t/Team/Stories`);
   await page.evaluate(() => {
     for (const row of document.querySelectorAll('.kanban-board-column-header-container,.kanban-board-content')) {
@@ -120,18 +148,26 @@ try {
     if (!row || !last) throw new Error('Missing screenshot Board geometry.');
     return row.getBoundingClientRect().right - last.getBoundingClientRect().right;
   });
-  expect(await boardGeometry()).toBeGreaterThan(250);
-  const boardClip = { x: 32, y: 32, width: 1504, height: 592 };
+  expect(await boardGeometry()).toBeGreaterThan(store ? 100 : 250);
+  const boardClip = store ? { x: 0, y: 0, width: 1280, height: 800 } : { x: 32, y: 32, width: 1504, height: 592 };
   const beforeBoard = await page.screenshot({ clip: boardClip, caret: 'initial', animations: 'disabled' });
   await enabled(true);
   await expect.poll(boardGeometry).toBeLessThanOrEqual(4.1);
   await expect(page.getByRole('tab', { name: 'Analytics', exact: true })).toBeHidden();
   const afterBoard = await page.screenshot({ clip: boardClip, caret: 'initial', animations: 'disabled' });
-  await writeFile('docs/images/board-before-after.png', comparison(beforeBoard, afterBoard, 1504, 592));
+  if (!store) await writeFile('docs/images/board-before-after.png', comparison(beforeBoard, afterBoard, 1504, 592));
   const libraryPopup = await popupShot(async popup => {
     await expect(popup.getByRole('tab', { name: 'Board layout', exact: true })).toHaveAttribute('aria-selected', 'true');
     await expect(popup.getByText(/^Equal widths\./)).toBeVisible();
   });
+  if (store) {
+    await storeShot('01-board', libraryPopup);
+    const fieldsPopup = await popupShot(async popup => {
+      await popup.getByRole('tab', { name: /^Card fields/ }).click();
+      await expect(popup.getByRole('button', { name: 'Assignee', exact: true })).toBeVisible();
+    });
+    await storeShot('05-board-fields', fieldsPopup);
+  }
 
   await enabled(false);
   html = workspaceTicketHtml(false, false);
@@ -142,7 +178,7 @@ try {
   const draftMarkup = await description.innerHTML();
   await page.getByRole('textbox', { name: 'Title', exact: true }).fill('Make the release workflow easier to use');
   await page.mouse.move(0, 0);
-  const ticketClip = { x: 0, y: 0, width: 1536, height: 800 };
+  const ticketClip = { x: 0, y: 0, width: store ? 1280 : 1536, height: 800 };
   const beforeTicket = await page.screenshot({ clip: ticketClip, caret: 'initial', animations: 'disabled' });
   await enabled(true);
   await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
@@ -150,7 +186,8 @@ try {
   await expect.poll(() => description.innerHTML()).toBe(draftMarkup);
   await page.mouse.move(0, 0);
   const afterTicket = await page.screenshot({ clip: ticketClip, caret: 'initial', animations: 'disabled' });
-  await writeFile('docs/images/ticket-before-after.png', comparison(beforeTicket, afterTicket, 1536, 800));
+  if (store) await storeShot('02-workspace');
+  else await writeFile('docs/images/ticket-before-after.png', comparison(beforeTicket, afterTicket, 1536, 800));
   const cardsPopup = await popupShot(async popup => {
     await popup.getByRole('button', { name: 'Details', exact: true }).click();
     await expect(popup.getByRole('button', { name: 'Show Description', exact: true })).toBeVisible();
@@ -159,12 +196,17 @@ try {
     await popup.getByRole('tab', { name: 'Layout', exact: true }).click();
     await expect(popup.getByRole('radio', { name: 'Workspace', exact: true })).toBeChecked();
   });
-  await writeFile('docs/images/popup.png', gallery([
-    { title: 'Ticket: cards &amp; fields', image: cardsPopup },
-    { title: 'Ticket: layout', image: layoutPopup },
-    { title: 'Board layout', image: libraryPopup },
-  ], 340, 480));
-  console.log('Updated Board, Ticket and popup images from the production extension and fictional fixtures.');
+  if (store) {
+    await storeShot('03-ticket-fields', cardsPopup);
+    await storeShot('04-ticket-layout', layoutPopup);
+  } else {
+    await writeFile('docs/images/popup.png', gallery([
+      { title: 'Ticket: cards &amp; fields', image: cardsPopup },
+      { title: 'Ticket: layout', image: layoutPopup },
+      { title: 'Board layout', image: libraryPopup },
+    ], 340, 480));
+  }
+  console.log(`Updated ${store ? 'Chrome Web Store' : 'README'} images from the production extension and fictional fixtures.`);
 } finally {
   await context?.close();
   await loader.close();

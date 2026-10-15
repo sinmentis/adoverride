@@ -10,8 +10,9 @@ const STABLE_VERSION = new RegExp(`^${VERSION}$`);
 const STABLE_TAG = new RegExp(`^v${VERSION}$`);
 export const REQUIRED_FILES = [
   'manifest.json', 'popup.html', 'background.js', 'content-scripts/content.js',
-  'LICENSE', 'README.md', 'THIRD-PARTY-NOTICES.txt', 'THIRD-PARTY-NOTICES-CONTENT.txt',
-  'docs/guide.md', 'docs/publishing.md', 'docs/images/board-before-after.png', 'docs/images/ticket-before-after.png', 'docs/images/popup.png',
+  'LICENSE', 'README.md', 'PRIVACY.md', 'THIRD-PARTY-NOTICES.txt', 'THIRD-PARTY-NOTICES-CONTENT.txt',
+  'docs/guide.md', 'docs/publishing.md', 'docs/chrome-web-store.md',
+  'docs/images/board-before-after.png', 'docs/images/ticket-before-after.png', 'docs/images/popup.png',
 ];
 const DOCUMENTATION = new Set([
   ...REQUIRED_FILES.filter(file => file.startsWith('docs/')),

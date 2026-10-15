@@ -39,6 +39,7 @@
     "test:browser": "playwright test",
     "media": "node scripts/media.mjs",
     "screenshots": "node scripts/screenshots.mjs",
+    "store:assets": "node scripts/screenshots.mjs --store && node scripts/store-media.mjs",
     "icons": "node scripts/icons.mjs",
     "postinstall": "wxt prepare"
   },

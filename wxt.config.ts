@@ -12,7 +12,7 @@ export default defineConfig({
     includeSources: [
       'entrypoints/**/*', 'lib/**/*', 'assets/**/*', 'public/**/*', 'scripts/**/*', 'tests/**/*', 'docs/**/*',
       '.github/workflows/ci.yml', '.gitignore', 'package.json', 'package-lock.json', 'wxt.config.ts', 'tsconfig.json',
-      'vitest.config.ts', 'playwright.config.ts', 'README.md', 'LICENSE',
+      'vitest.config.ts', 'playwright.config.ts', 'README.md', 'LICENSE', 'PRIVACY.md',
     ],
     excludeSources: [
       '**/.env*', '**/*.key', '**/*.pem', '**/*.pfx', '**/*.p12', '**/*.har',
@@ -23,7 +23,7 @@ export default defineConfig({
   },
   hooks: {
     'build:done': async wxt => {
-      for (const file of ['LICENSE', 'README.md', 'docs/guide.md', 'docs/publishing.md',
+      for (const file of ['LICENSE', 'README.md', 'PRIVACY.md', 'docs/guide.md', 'docs/publishing.md', 'docs/chrome-web-store.md',
         'docs/images/board-before-after.png', 'docs/images/ticket-before-after.png', 'docs/images/popup.png',
         'docs/images/social-preview.svg', 'docs/images/social-preview.png']) {
         const target = path.join(wxt.config.outDir, file);

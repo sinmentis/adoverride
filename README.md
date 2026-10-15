@@ -40,4 +40,4 @@ built-in **kiwifruit** preset or save your own.
 
 Settings stay local. No telemetry. No automatic work-item updates.
 
-[Guide](docs/guide.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [MIT](LICENSE)
+[Guide](docs/guide.md) | [Privacy](PRIVACY.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [MIT](LICENSE)
