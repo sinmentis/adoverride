@@ -1,0 +1,60 @@
+name: Bug report
+description: Something looks wrong or stopped working on a Board or work item.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please remove real work item content, names and organization URLs from text and screenshots.
+  - type: input
+    id: version
+    attributes:
+      label: ADOverride version
+      description: Shown under the name in the popup.
+      placeholder: 0.11.10
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where does it happen?
+      options:
+        - Kanban Board
+        - Work item page
+        - Work item opened from a Board
+        - Popup
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: type
+    attributes:
+      label: Work item type
+      placeholder: User Story, Bug, Task...
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Turn on ...
+        3. See ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect, and what happened?
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: Popup footer, info icon, then Copy diagnostics. It contains no work item content.
+      render: json
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and version
+      placeholder: Chrome 141, Edge 141

@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest a way to make ADO fit your workflow better.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What gets in your way today?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like ADOverride to do?
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where?
+      options:
+        - Kanban Board
+        - Work items
+        - Backlogs or queries
+        - Popup
+        - Other
