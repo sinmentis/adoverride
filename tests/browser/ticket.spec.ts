@@ -147,6 +147,27 @@ test('Bug discovery: repeated captions without native group IDs bind by their fi
   } finally { await context.close(); }
 });
 
+for (const bug of [false, true]) test(`Workspace header: the current ADO toolbar-role command bar keeps the Properties rail on ${bug ? 'a Bug form' : 'a User Story page'}`, async ({}, info) => {
+  const context = await launch(info.outputPath('profile'), true);
+  try {
+    // ADO now renders an outer role="toolbar" command bar wrapping an unlabelled inner button group.
+    const toolbar = (html: string) => html.replace(
+      '<div class="work-item-header-command-bar flex-row" role="menubar"><button type="button" data-native-save>Save</button><button type="button">Close</button></div>',
+      '<div class="work-item-header-command-bar flex-row bolt-header-commandbar" role="toolbar"><div class="work-item-header-command-bar flex-row bolt-header-commandbar-button-group"><button type="button" data-native-save>Save</button><button type="button">Close</button></div></div>');
+    const html = toolbar(bug ? bugTicketHtml({ extraGroups: false, headerless: false, ids: false }) : workspaceTicketHtml(false));
+    expect(html).toContain('role="toolbar"');
+    const { page } = await fixture(context, 'https://dev.azure.com', false, false, false, html,
+      bug ? { reference: 'Example.Bug', layout: BUG_LAYOUT } : undefined);
+    await page.setViewportSize({ width: 1536, height: 825 });
+    await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
+    await expect(page.locator('[data-ado-ticket-workspace-commands]')).toHaveAttribute('role', 'toolbar');
+    await page.locator('[data-native-save]').evaluate(button => button.addEventListener('click', () => button.setAttribute('data-native-clicked', 'yes')));
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page.locator('[data-native-save]')).toHaveAttribute('data-native-clicked', 'yes');
+  } finally { await context.close(); }
+});
+
 test('Bug discovery: pending form metadata does not disable a safely bound native field menu', async ({}, info) => {
   const context = await launch(info.outputPath('profile'), true);
   let release!: () => void;

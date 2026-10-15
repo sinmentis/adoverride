@@ -28,7 +28,8 @@ export function workspaceShell(root: HTMLElement, grid: HTMLElement): WorkspaceS
   const headers = [...root.querySelectorAll<HTMLElement>('.work-item-form-header')].filter(rendered);
   const header = unique(headers);
   const title = header?.querySelector<HTMLElement>('.work-item-title-textfield');
-  const commands = header?.querySelector<HTMLElement>('.work-item-header-command-bar[role="menubar"]');
+  // ADO used role=menubar; current builds use an outer role=toolbar around an unlabelled button group.
+  const commands = header ? unique([...header.querySelectorAll<HTMLElement>('.work-item-header-command-bar:is([role="menubar"],[role="toolbar"])')]) : null;
   const comments = header ? unique([...header.querySelectorAll<HTMLElement>('.wif-comment-count-link')].filter(rendered)) : null;
   const owner = header?.querySelector<HTMLElement>('.work-item-assignment-dropdown')?.closest<HTMLElement>('.bolt-identitypickerdropdown')?.parentElement;
   const tags = header?.querySelector<HTMLElement>('.work-item-tag-picker');
