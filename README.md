@@ -2,7 +2,8 @@
 
 **Your Azure DevOps. Your way.**
 
-A Chrome extension that declutters Azure DevOps Boards and work items.
+A Chrome extension that declutters Azure DevOps Boards and work items (tickets).
+Hide fields, rearrange cards, and widen your Kanban Board from one small popup.
 Your view changes. Your team's setup doesn't.
 
 ## Boards that use your screen
@@ -18,6 +19,16 @@ Equal-width columns, a compact header, fewer card fields, and automatic
 
 Hide optional fields, drag cards where you want them, and read in a wide
 Workspace with a Properties rail. Lock your layout or undo your last change.
+Works on User Stories, Bugs and any other work item type.
+
+## One popup, two layers
+
+![ADOverride popup: Ticket cards and fields, Ticket layout, and Board layout](docs/images/popup.png)
+
+**Cards & fields** turns any page, card or field on or off. **Layout** switches
+between ADO's own arrangement and Workspace. **Board layout** holds the Kanban
+switches, saved per board, project, organization or all of ADO. Start from the
+built-in **kiwifruit** preset or save your own.
 
 *Demo screenshots use fictional work items and replayed native layouts.*
 

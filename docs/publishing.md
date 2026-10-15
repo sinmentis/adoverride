@@ -11,12 +11,13 @@ Visibility remains private until public publication is explicitly approved.
 
 **Description**
 
-> Chrome extension for personal Azure DevOps Boards and work item layouts. Equal-width columns, compact headers, Ticket Workspace, and local presets.
+> Chrome extension to declutter Azure DevOps Boards and work items. Hide fields, rearrange cards, Ticket Workspace, equal-width Kanban columns, local presets.
 
 **Topics**
 
 `azure-devops`, `azure-boards`, `chrome-extension`, `browser-extension`, `kanban`,
-`work-items`, `ui-customization`, `wxt`, `react`, `typescript`
+`work-items`, `ui-customization`, `productivity`, `manifest-v3`, `wxt`, `react`,
+`typescript`
 
 The README title and introduction describe the implemented product in ordinary
 search terms. Keep feature claims specific. Do not advertise saved filter views,
@@ -34,7 +35,7 @@ Choose the repository owner explicitly before uploading source.
 
 **Short description**
 
-> Personal Azure DevOps Boards and work item layouts, compact cards, and local presets. Your Azure DevOps. Your way.
+> Declutter Azure DevOps Boards and work items: hide fields, rearrange cards, wider Kanban columns. Your Azure DevOps. Your way.
 
 **Overview**
 
@@ -42,9 +43,10 @@ ADOverride gives you a personal view of Azure DevOps without changing your
 team's process. Fill Kanban Boards with equal-width columns, reduce header
 spacing, choose visible card fields, and load native batches automatically.
 
-Use Ticket Workspace for a reading lane and Properties rail. Hide optional
-fields, arrange native cards, lock your layout, and undo your last Ticket
-presentation change. Save local presets or transfer settings with a previewed
+Everything sits in one small popup. On a work item, Cards & fields turns any
+page, card or field on or off, and Layout switches to Ticket Workspace for a
+reading lane and Properties rail. Drag native cards, lock your layout, and undo
+your last Ticket change. It works on User Stories, Bugs and other types. Save local presets or transfer settings with a previewed
 JSON import and a local backup.
 
 The kiwifruit preset starts with equal-width columns, a compact Board header,
@@ -63,7 +65,10 @@ Unknown native layouts remain unchanged with a notice.
 - Generate the PNG with `npm run media`.
 - `docs/images/board-before-after.png` and `docs/images/ticket-before-after.png`
   compare native and customized layouts with the same fictional content.
-- Generate the comparisons with `npm run build` then `npm run screenshots`.
+- `docs/images/popup.png` shows the real popup: Ticket cards & fields, Ticket
+  layout and Board layout.
+- Generate the comparisons and popup gallery with `npm run build` then
+  `npm run screenshots`.
 - Use fictional fixture screenshots for a public listing. Never use private
   tickets, people, organization URLs, or an authenticated browser profile.
 

@@ -34,6 +34,25 @@ function comparison(before, after, width, height) {
   return new Resvg(svg, { font: { loadSystemFonts: true } }).render().asPng();
 }
 
+function gallery(panels, width, height) {
+  const padding = 24;
+  const gap = 32;
+  const label = 40;
+  const totalWidth = panels.length * width + (panels.length - 1) * gap + padding * 2;
+  const totalHeight = height + label + padding * 2;
+  const body = panels.map(({ title, image }, index) => {
+    const x = padding + index * (width + gap);
+    return `<text x="${x}" y="${padding + 24}" font-size="18" font-weight="600">${title}</text>
+      <image x="${x}" y="${padding + label}" width="${width}" height="${height}" href="data:image/png;base64,${image.toString('base64')}"/>
+      <rect x="${x}" y="${padding + label}" width="${width}" height="${height}" rx="8" fill="none" stroke="#d0d7de"/>`;
+  }).join('');
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="${totalHeight}" viewBox="0 0 ${totalWidth} ${totalHeight}">
+    <rect width="100%" height="100%" fill="#f6f8fa"/>
+    <g font-family="DejaVu Sans" fill="#1f2328">${body}</g>
+  </svg>`;
+  return new Resvg(svg, { fitTo: { mode: 'zoom', value: 2 }, font: { loadSystemFonts: true } }).render().asPng();
+}
+
 try {
   const { presentationBoardHtml } = await loader.ssrLoadModule('/tests/browser/board-presentation-fixture.ts');
   const { workspaceTicketHtml } = await loader.ssrLoadModule('/tests/browser/workspace-fixture.ts');
@@ -69,6 +88,20 @@ try {
     return route.fulfill({ contentType: 'application/json', body: JSON.stringify(data) });
   });
   const page = context.pages()[0] ?? await context.newPage();
+  const popupUrl = `chrome-extension://${new URL(worker.url()).host}/popup.html`;
+  const popupShot = async setup => {
+    const popup = await context.newPage();
+    const cdp = await context.newCDPSession(popup);
+    await cdp.send('Emulation.setDeviceMetricsOverride', { width: 340, height: 480, deviceScaleFactor: 2, mobile: false });
+    await page.bringToFront();
+    await popup.goto(popupUrl);
+    await setup(popup);
+    await popup.mouse.move(339, 479);
+    await popup.waitForTimeout(300);
+    const image = await popup.locator('.popup').screenshot({ animations: 'disabled', caret: 'initial' });
+    await popup.close();
+    return image;
+  };
   await page.goto(`${origin}/example/Platform/_boards/board/t/Team/Stories`);
   await page.evaluate(() => {
     for (const row of document.querySelectorAll('.kanban-board-column-header-container,.kanban-board-content')) {
@@ -95,6 +128,10 @@ try {
   await expect(page.getByRole('tab', { name: 'Analytics', exact: true })).toBeHidden();
   const afterBoard = await page.screenshot({ clip: boardClip, caret: 'initial', animations: 'disabled' });
   await writeFile('docs/images/board-before-after.png', comparison(beforeBoard, afterBoard, 1504, 592));
+  const libraryPopup = await popupShot(async popup => {
+    await expect(popup.getByRole('tab', { name: 'Board layout', exact: true })).toHaveAttribute('aria-selected', 'true');
+    await expect(popup.getByText(/^Equal widths\./)).toBeVisible();
+  });
 
   await enabled(false);
   html = workspaceTicketHtml(false, false);
@@ -114,7 +151,20 @@ try {
   await page.mouse.move(0, 0);
   const afterTicket = await page.screenshot({ clip: ticketClip, caret: 'initial', animations: 'disabled' });
   await writeFile('docs/images/ticket-before-after.png', comparison(beforeTicket, afterTicket, 1536, 800));
-  console.log('Updated Board and Ticket Before/After images from the production extension and fictional fixtures.');
+  const cardsPopup = await popupShot(async popup => {
+    await popup.getByRole('button', { name: 'Details', exact: true }).click();
+    await expect(popup.getByRole('button', { name: 'Show Description', exact: true })).toBeVisible();
+  });
+  const layoutPopup = await popupShot(async popup => {
+    await popup.getByRole('tab', { name: 'Layout', exact: true }).click();
+    await expect(popup.getByRole('radio', { name: 'Workspace', exact: true })).toBeChecked();
+  });
+  await writeFile('docs/images/popup.png', gallery([
+    { title: 'Ticket: cards &amp; fields', image: cardsPopup },
+    { title: 'Ticket: layout', image: layoutPopup },
+    { title: 'Board layout', image: libraryPopup },
+  ], 340, 480));
+  console.log('Updated Board, Ticket and popup images from the production extension and fictional fixtures.');
 } finally {
   await context?.close();
   await loader.close();
