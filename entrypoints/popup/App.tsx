@@ -79,7 +79,6 @@ export default function App() {
   const [copyError, setCopyError] = useState('');
   const presetButton = useRef<HTMLButtonElement>(null);
   const masterLabel = useId();
-  const scopeLabel = useId();
 
   const key = preferences ? scopeKey(preferences.scope, context) : null;
   const view = key && preferences ? preferences.views[key] ?? defaultView() : defaultView();
@@ -215,13 +214,12 @@ export default function App() {
                 <SegmentedControl.Button selected={area === 'ticket'}>Ticket</SegmentedControl.Button>
               </SegmentedControl>
             </div>
-            <div className={`controls${area === 'ticket' ? ' single' : ''}`}>
+            <div className="controls single">
               <div className="control-field">
-                {area !== 'ticket' && <Text className="section-title">Preset</Text>}
                 <div className="preset-actions">
                   <ActionMenu open={menuOpen} onOpenChange={setMenuOpen}>
                     <ActionMenu.Button
-                      ref={presetButton} size="small" block={area !== 'ticket'} disabled={!available}
+                      ref={presetButton} size="small" disabled={!available}
                       leadingVisual={custom ? SlidersIcon : ProjectIcon}
                       aria-label={`Choose preset, current ${custom ? 'Custom view' : base?.name ?? 'Unavailable'}`}
                     >
@@ -270,21 +268,19 @@ export default function App() {
                       aria-pressed={preferences.ticket.layoutLocked} disabled={saving}
                       onClick={() => void update({ kind: 'ticket-layout-lock', locked: !preferences.ticket.layoutLocked })} />
                   </div>}
+                  {area === 'library' && <div className="ticket-history">
+                    <Select size="small" aria-label="Scope" value={preferences.scope}
+                      onChange={event => {
+                        const scope = SCOPES.find(item => item.value === event.target.value);
+                        if (scope) void update({ kind: 'patch', scope: scope.value });
+                      }}
+                    >
+                      {SCOPES.map(scope => <Select.Option key={scope.value} value={scope.value} disabled={scopeKey(scope.value, context) === null}>{scope.title}</Select.Option>)}
+                    </Select>
+                    <Help label="Scope" text="Where Library changes are saved. Board, project and organization settings override All ADO." />
+                  </div>}
                 </div>
               </div>
-              {area !== 'ticket' && <div className="control-field">
-                <div className="label-with-help"><Text id={scopeLabel} className="section-title">Scope</Text>
-                  <Help label="Scope" text="Choose where to save. Board, project and organization profiles override All ADO. Changing an inherited scope saves a complete Board profile." /></div>
-                <Select
-                  block size="small" aria-labelledby={scopeLabel} value={preferences.scope}
-                  onChange={event => {
-                    const scope = SCOPES.find(item => item.value === event.target.value);
-                    if (scope) void update({ kind: 'patch', scope: scope.value });
-                  }}
-                >
-                  {SCOPES.map(scope => <Select.Option key={scope.value} value={scope.value} disabled={scopeKey(scope.value, context) === null}>{scope.title}</Select.Option>)}
-                </Select>
-              </div>}
             </div>
 
             <main className="popup-body">

@@ -32,14 +32,18 @@ export function TicketPanel({ snapshot, preferences, saving, update }: {
   }
   function rows(parentId: string | null, depth = 0) {
     return snapshot.targets.filter(target => target.parentId === parentId && (!search || matches.has(target.id))).map(target => {
-      const children = snapshot.targets.filter(child => child.parentId === target.id);
+      let children = snapshot.targets.filter(child => child.parentId === target.id);
+      // A card holding one same-named field (Description, Repro Steps) is shown as a single row.
+      const [only] = children;
+      if (children.length === 1 && only && only.desiredVisible && only.label.trim().toLowerCase() === target.label.trim().toLowerCase() &&
+        !snapshot.targets.some(child => child.parentId === only.id)) children = [];
       const open = search.length > 0 || expanded.has(target.id);
       return (
         <section key={target.id} className="ticket-group" style={{ marginLeft: depth ? 8 : 0 }}>
           <div className="ticket-row">
             {children.length ? <Button size="small" variant="invisible" alignContent="start"
               leadingVisual={open ? ChevronDownIcon : ChevronRightIcon} aria-expanded={open}
-              onClick={() => toggleExpanded(target.id)}>{target.label}</Button> : <Text>{target.label}</Text>}
+              onClick={() => toggleExpanded(target.id)}>{target.label}</Button> : <Text className="ticket-leaf">{target.label}</Text>}
             <TargetToggle target={target} loading={snapshot.status === 'loading'} update={update} />
           </div>
           {(target.protected || !target.available || target.override === 'active-page' || target.override === 'validation' ||

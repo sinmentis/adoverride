@@ -257,30 +257,33 @@ test('Board toolbar lifecycle: a fresh Board reader activates without opening th
   } finally { await context.close(); }
 });
 
-test('Board Card fields: Ticket-style chevrons fold by mouse or keyboard with no Columns controls', async ({}, info) => {
+test('Board Card fields: a separate tab with a hidden count and no Columns controls', async ({}, info) => {
   const context = await launch(info.outputPath('profile'));
   try {
     const { page, popup } = await boardFixture(context, presentationBoardHtml());
-    const disclosure = popup.getByRole('button', { name: 'Card fields', exact: true });
-    await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
-    await expect(disclosure.locator('.octicon-chevron-right')).toHaveCount(1);
+    const layoutTab = popup.getByRole('tab', { name: 'Board layout', exact: true });
+    const fieldsTab = popup.getByRole('tab', { name: /^Card fields/ });
+    await expect(layoutTab).toHaveAttribute('aria-selected', 'true');
     await expect(popup.getByRole('button', { name: 'Assignee', exact: true })).toHaveCount(0);
     await expect(popup.getByRole('button', { name: 'Columns', exact: true })).toHaveCount(0);
     await expect(popup.getByRole('button', { name: 'Remember collapse', exact: true })).toHaveCount(0);
-    await disclosure.click();
-    await expect(disclosure).toHaveAttribute('aria-expanded', 'true');
-    await expect(disclosure.locator('.octicon-chevron-down')).toHaveCount(1);
+    await expect(popup.getByRole('heading', { name: 'Board layout', exact: true })).toHaveCount(0);
+    await expect(popup.getByText('Preset', { exact: true })).toHaveCount(0);
+    await expect(fieldsTab).not.toContainText(/\d/);
+    await fieldsTab.click();
     await expect(popup.getByRole('region', { name: 'Visible card fields', exact: true })).toBeVisible();
+    await expect(popup.getByRole('button', { name: 'Equal-width columns', exact: true })).toHaveCount(0);
     await popup.getByRole('button', { name: 'Assignee', exact: true }).click();
     await expect(page.locator('.owner-row').first()).toBeHidden();
-    await disclosure.focus();
-    await popup.keyboard.press('Enter');
-    await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+    await expect(fieldsTab).toContainText('1');
+    await fieldsTab.focus();
+    await popup.keyboard.press('ArrowLeft');
+    await expect(layoutTab).toHaveAttribute('aria-selected', 'true');
     await expect(popup.getByRole('region', { name: 'Visible card fields', exact: true })).toHaveCount(0);
-    await popup.keyboard.press('Space');
-    await expect(disclosure).toHaveAttribute('aria-expanded', 'true');
+    await expect(popup.getByRole('button', { name: 'Equal-width columns', exact: true })).toBeVisible();
+    await popup.keyboard.press('ArrowRight');
     await expect(popup.getByRole('button', { name: 'Assignee', exact: true })).toHaveAttribute('aria-pressed', 'false');
-    await popup.locator('.popup').screenshot({ path: info.outputPath('card-fields-foldable.png') });
+    await popup.locator('.popup').screenshot({ path: info.outputPath('card-fields-tab.png') });
   } finally { await context.close(); }
 });
 
@@ -377,7 +380,7 @@ test('Board card fields: each switch hides only the verified wrapper and never r
         Object.defineProperty(value, 'textContent', { configurable: true, get() { throw new Error('Native values must not be read.'); } });
       }
     });
-    await popup.getByRole('button', { name: 'Card fields', exact: true }).click();
+    await popup.getByRole('tab', { name: /^Card fields/ }).click();
     for (const [label, selector] of [
       ['Assignee', '.owner-row'], ['State', '.work-item-state-container'], ['Tags', '.wit-card .margin-top-8:has(.bolt-pill)'],
       ['Story Points', '.field-container'], ['Child & link counts', '.card-indicators'],
@@ -401,7 +404,7 @@ test('Board cards: inline drafts, changing schema labels and native card replace
     await card.locator('.owner-row').evaluate(row => row.insertAdjacentHTML('beforeend', '<input aria-label="Native owner draft">'));
     const draft = page.getByRole('textbox', { name: 'Native owner draft', exact: true });
     await draft.fill('Keep this native draft.');
-    await popup.getByRole('button', { name: 'Card fields', exact: true }).click();
+    await popup.getByRole('tab', { name: /^Card fields/ }).click();
     await popup.getByRole('button', { name: 'Assignee', exact: true }).click();
     await expect(draft).toBeVisible();
     await expect(draft).toHaveValue('Keep this native draft.');
@@ -505,7 +508,7 @@ test('Board popup: explanations use real hover/focus help instead of permanent p
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(340);
     expect(box.y + box.height).toBeLessThanOrEqual(480);
-    await popup.getByRole('heading', { name: 'Board layout', exact: true }).hover();
+    await popup.getByRole('tab', { name: 'Board layout', exact: true }).hover();
     await expect(tooltip).toBeHidden();
     await help.focus();
     await popup.keyboard.press('Tab');
@@ -520,7 +523,7 @@ test('Board popup: explanations use real hover/focus help instead of permanent p
     const body = await popup.locator('.popup-body').boundingBox();
     if (!bounds || !body) throw new Error('Missing compact popup geometry.');
     expect(bounds.y + bounds.height).toBeLessThanOrEqual(body.y + body.height);
-    await popup.getByRole('button', { name: 'Card fields', exact: true }).click();
+    await popup.getByRole('tab', { name: /^Card fields/ }).click();
     expect(await popup.locator('button[aria-labelledby],select[aria-labelledby],button[aria-expanded="true"][aria-controls]')
       .evaluateAll(controls => controls.flatMap(control => {
         const labels = control.getAttribute('aria-labelledby') ?? '';
@@ -528,7 +531,7 @@ test('Board popup: explanations use real hover/focus help instead of permanent p
         return `${labels} ${panel}`.trim().split(/\s+/).filter(Boolean)
           .filter(id => document.querySelectorAll(`#${CSS.escape(id)}`).length !== 1);
       }))).toEqual([]);
-    await popup.getByRole('button', { name: 'Card fields', exact: true }).click();
+    await popup.getByRole('tab', { name: 'Board layout', exact: true }).click();
     await expect(popup.getByRole('region', { name: 'Visible card fields', exact: true })).toHaveCount(0);
     await popup.locator('.popup').screenshot({ path: info.outputPath('compact-popup-help.png') });
   } finally { await context.close(); }
@@ -755,7 +758,7 @@ test('Board Library: real toggle fills columns, retains native controls and rest
     const cards = await page.locator('.kanban-board').evaluateHandle(root =>
       [...root.querySelectorAll<HTMLElement>('.wit-card')].map(node => ({ node, parent: node.parentElement,
         font: getComputedStyle(node).fontSize, markup: node.innerHTML })));
-    await expect(popup.getByRole('heading', { name: 'Board layout', exact: true })).toBeVisible();
+    await expect(popup.getByRole('tab', { name: 'Board layout', exact: true })).toBeVisible();
     await expect(popup.getByRole('button', { name: 'Hide unused services', exact: true })).toHaveCount(0);
     await expect(popup.getByText('Library settings are saved, not applied.', { exact: true })).toHaveCount(0);
     const ticket = (await settings(context)).ticket;
@@ -844,7 +847,7 @@ test('Board Library: scoped presets persist and export/import includes only actu
     await popup.getByRole('menuitemradio', { name: 'kiwifruit', exact: true }).click();
     await expect.poll(() => geometry(page).then(value => value.trailing)).toBeLessThanOrEqual(4.1);
     await popup.getByRole('button', { name: 'Compact cards', exact: true }).click();
-    await popup.getByRole('button', { name: 'Card fields', exact: true }).click();
+    await popup.getByRole('tab', { name: /^Card fields/ }).click();
     await popup.getByRole('button', { name: 'Assignee', exact: true }).click();
     await popup.getByRole('button', { name: 'Save as preset', exact: true }).click();
     await popup.getByRole('textbox', { name: /Preset name/ }).fill('Wide Board');
@@ -1121,7 +1124,7 @@ test('Board and Ticket: foreground Workspace and its native controls remain isol
     expect(await page.locator('html').getAttribute('data-native-requests')).toBe('1');
     await expect(draft).toHaveText('Board styles must not affect this native draft.');
     await page.locator('.work-item-form-dialog').evaluate(node => node.remove());
-    await expect(popup.getByRole('heading', { name: 'Board layout', exact: true })).toBeVisible();
+    await expect(popup.getByRole('tab', { name: 'Board layout', exact: true })).toBeVisible();
     await expect.poll(() => geometry(page).then(value => value.trailing)).toBeLessThanOrEqual(4.1);
     await expect.poll(() => page.locator('.wit-card').count()).toBe(16);
     await expect(page.locator('html')).toHaveAttribute('data-native-requests', '6');

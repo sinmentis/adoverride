@@ -988,9 +988,9 @@ for (const scenario of [
       await popup.getByRole('button', { name: 'Show all', exact: true }).click();
 
       await popup.getByRole('button', { name: 'Library', exact: true }).click();
-      await expect(popup.getByRole('heading', { name: 'Board layout', exact: true })).toBeVisible();
+      await expect(popup.getByRole('tab', { name: 'Board layout', exact: true })).toBeVisible();
       await page.locator('#sample\\.planning').evaluate(element => element.classList.add('rerender-check'));
-      await expect(popup.getByRole('heading', { name: 'Board layout', exact: true })).toBeVisible();
+      await expect(popup.getByRole('tab', { name: 'Board layout', exact: true })).toBeVisible();
       await popup.getByRole('button', { name: 'Ticket', exact: true }).click();
       await find(popup, 'Description');
       await popup.getByRole('button', { name: 'Show Description', exact: true }).first().click();
@@ -1019,7 +1019,8 @@ test('a form without a type attribute opens the native page hierarchy without a 
       await expect(popup.getByText('The form type was not identified. Showing detected cards only.', { exact: true })).toHaveCount(0);
       await popup.locator('.popup').screenshot({ path: info.outputPath('native-page-hierarchy.png') });
       await popup.getByRole('button', { name: 'Details', exact: true }).click();
-      await expect(popup.getByRole('button', { name: 'Description', exact: true })).toBeVisible();
+      await expect(popup.getByRole('button', { name: 'Show Description', exact: true })).toBeVisible();
+      await expect(popup.getByRole('button', { name: 'Description', exact: true })).toHaveCount(0);
       await popup.getByRole('button', { name: 'Planning', exact: true }).click();
       await expect(popup.getByRole('button', { name: 'Show Story Points', exact: true })).toBeVisible();
       await expect(popup.getByRole('button', { name: 'Show Priority', exact: true })).toBeVisible();
@@ -2621,6 +2622,24 @@ test('Ticket popup layers: one-row preset tools, Cards & fields first, and view 
     await expect.poll(async () => (await savedSettings(context)).ticket.viewMode).toBe('native');
     await expect(popup.getByRole('button', { name: 'Unlock layout', exact: true })).toBeVisible();
     await expect(popup.locator('.popup')).toHaveCSS('height', '480px');
+  } finally {
+    await context.close();
+  }
+});
+
+test('Ticket tree: a card whose only field has the same name is a single row', async ({}, info) => {
+  const context = await launch(info.outputPath('profile'));
+  try {
+    const { page, popup } = await fixture(context, 'https://dev.azure.com', false);
+    await popup.getByRole('button', { name: 'Details', exact: true }).click();
+    await expect(popup.getByRole('button', { name: 'Show Planning', exact: true })).toBeVisible();
+    await expect(popup.getByRole('button', { name: 'Description', exact: true })).toHaveCount(0);
+    await expect(popup.getByRole('button', { name: 'Show Description', exact: true })).toHaveCount(1);
+    await popup.getByRole('button', { name: 'Show Description', exact: true }).click();
+    await expect(page.locator('#sample\\.description')).not.toBeVisible();
+    await expect(popup.getByRole('button', { name: 'Show Description', exact: true })).toHaveAttribute('aria-pressed', 'false');
+    await find(popup, 'Description');
+    await expect(popup.getByRole('button', { name: 'Show Description', exact: true })).toHaveCount(1);
   } finally {
     await context.close();
   }

@@ -76,7 +76,9 @@ Load `.output/chrome-mv3` using the same Chrome steps above.
 
 ## Personalize your Board
 
-Open the extension's **Library** tab. **Scope** chooses where changes are saved.
+Open the extension's **Library** tab. The scope menu next to the preset chooses
+where changes are saved. **Board layout** holds the Board switches, and
+**Card fields** holds card field visibility; its number counts hidden fields.
 Runtime precedence is Board, project, organization, then All ADO. A narrower
 profile overrides the broader one; filters do not create new Board scopes.
 
@@ -84,10 +86,8 @@ profile overrides the broader one; filters do not create new Board scopes.
 native minimums. Collapsed columns retain their controls and width. Narrow
 windows keep native horizontal scrolling.
 
-**Card fields** folds open like the Ticket hierarchy. It controls Assignee,
-State, Tags, Story Points, and child/link counts. Folding the group does not
-change visibility preferences. Active inline editors and focused controls remain
-usable. There is no extension-managed column collapse or replay.
+**Card fields** controls Assignee, State, Tags, Story Points, and child/link
+counts. Active inline editors and focused controls remain usable. There is no extension-managed column collapse or replay.
 
 **Auto-load all items** activates native loading controls in expanded columns
 under the current filters. It is on in kiwifruit. Turn it off for large Boards
