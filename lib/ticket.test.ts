@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { activeTicketForm, decodeTicketSnapshot, decodeTicketVisibility, domTicketLayout, matchTicketLayout, normalizeProcessLayout, normalizeWebXml } from './ticket';
+import { activeTicketForm, decodeTicketSnapshot, decodeTicketVisibility, domTicketLayout, matchTicketLayout, normalizeProcessLayout, normalizeWebXml, reconcileTicketLayouts } from './ticket';
 import { createMetadataProvider } from './ticket-metadata';
 import { applyPreferenceAction, decodePreferences, defaultPreferences, defaultView } from './preferences';
 import { nativePreferences } from '../tests/preferences-fixture';
@@ -135,6 +135,29 @@ describe('Ticket contracts', () => {
     expect(JSON.stringify(native)).not.toContain('Secret value');
     expect(matchTicketLayout(native, [normalizeProcessLayout(layout)])?.source).toBe('process');
     expect(matchTicketLayout(native, [normalizeProcessLayout(layout), normalizeProcessLayout(layout)])).toBeNull();
+  });
+  it('reconciles matching native IDs before repeated captions without duplicating catalog identities', () => {
+    document.body.innerHTML = `<div class="work-item-form-page"><div class="wif-tabbar">
+      <button role="tab" id="example.details" aria-selected="true">Details</button></div>
+      <div class="work-item-form-group" id="example.markdown"><div class="work-item-form-collapsible-header">System Info</div>
+        <div class="work-item-form-control-wrapper" data-field-name="Microsoft.VSTS.TCM.SystemInfo"><label>System Info</label>
+          <div role="textbox">PRIVATE_MARKDOWN</div></div></div>
+      <div class="work-item-form-group" id="example.properties"><div class="work-item-form-collapsible-header">System Info</div>
+        <div class="work-item-form-control-wrapper" data-field-name="Custom.ExampleRegression"><label>Regression</label>
+          <input value="PRIVATE_REGRESSION"></div></div></div>`;
+    const root = document.querySelector<HTMLElement>('.work-item-form-page');
+    if (!root) throw new Error('Missing duplicate-caption fixture.');
+    const native = domTicketLayout(root);
+    const metadata = normalizeProcessLayout({ pages: [{ id: 'example.details', label: 'Details', pageType: 'custom',
+      sections: [{ groups: [
+        { id: 'example.markdown', label: 'System Info', controls: [{ id: 'Microsoft.VSTS.TCM.SystemInfo', label: 'System Info', controlType: 'HtmlFieldControl' }] },
+        { id: 'example.properties', label: 'System Info', controls: [{ id: 'Custom.ExampleRegression', label: 'Regression', controlType: 'FieldControl' }] },
+      ] }] }] });
+    expect(() => reconcileTicketLayouts(native, metadata)).not.toThrow();
+    const result = reconcileTicketLayouts(native, metadata);
+    expect(result.targets.filter(target => target.kind === 'group')).toHaveLength(2);
+    expect(new Set(result.targets.map(target => target.id)).size).toBe(result.targets.length);
+    expect(JSON.stringify(result)).not.toContain('PRIVATE_');
   });
   it('does not turn a readonly rich-text body into a field label or preference identity', () => {
     document.body.innerHTML = `<div class="work-item-form-page"><div class="work-item-form-group">

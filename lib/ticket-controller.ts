@@ -9,7 +9,8 @@ import { createLayoutRecorder, type LayoutReference, type LayoutTrace } from './
 import { createMetadataProvider } from './ticket-metadata';
 import {
   activeTicketForm, CONTROL_SELECTOR, domTicketLayout, emptyTicketSnapshot, GROUP_SELECTOR,
-  isProtectedField, nativeControlLabel, nativeTicketTabs, nativeTabLabel, normalizeLabel, reconcileTicketLayouts, rendered, workItemType,
+  isProtectedField, nativeControlLabel, nativeGroupHeader, nativeGroupLabel, nativeTicketTabs, nativeTabLabel, normalizeLabel,
+  reconcileTicketLayouts, rendered, RICH_EDITOR_SELECTOR, workItemType,
   type OverrideReason, type TargetState, type TicketLayout, type TicketSnapshot, type TicketTarget,
 } from './ticket';
 import css from './ticket-layout.css?inline';
@@ -57,6 +58,7 @@ export function createTicketController(document: Document, address: () => string
   const listeners = new Set<(snapshot: TicketSnapshot) => void>();
   const owned = new Map<Element, Set<string>>();
   const actionAnchors = new Map<HTMLElement, HTMLElement>();
+  const schemaHeaders = new Map<HTMLElement, HTMLElement>();
   const observedCards = new Set<HTMLElement>();
   let diagnosticBindings = new Map<Element, LayoutReference>();
   let diagnosticPage: string | null = null;
@@ -149,6 +151,26 @@ export function createTicketController(document: Document, address: () => string
   function clearActionAnchors(keep = new Set<HTMLElement>()) {
     for (const [header, anchor] of actionAnchors) if (!keep.has(anchor)) { anchor.remove(); actionAnchors.delete(header); }
   }
+  function clearSchemaHeaders(keep = new Set<HTMLElement>()) {
+    for (const [group, header] of schemaHeaders) if (!keep.has(group)) { header.remove(); schemaHeaders.delete(group); }
+  }
+  function cardHeader(group: HTMLElement, target: TicketTarget): HTMLElement | null {
+    const native = nativeGroupHeader(group);
+    if (native) {
+      schemaHeaders.get(group)?.remove(); schemaHeaders.delete(group);
+      return native;
+    }
+    if (!preferences?.enabled || !layout || target.opaque || !matchesId(group, target.nativeId)) return null;
+    const existing = schemaHeaders.get(group);
+    if (existing?.parentElement === group) return existing;
+    const header = document.createElement('div');
+    header.setAttribute(`${PREFIX}ui`, 'schema-heading');
+    Object.assign(header.style, { display: 'flex', alignItems: 'center', minHeight: '28px' });
+    const label = document.createElement('span');
+    label.setAttribute('role', 'heading'); label.textContent = target.label;
+    header.append(label); group.prepend(header); schemaHeaders.set(group, header);
+    return header;
+  }
   function clearWorkspaceHeading() { workspaceHeading?.remove(); workspaceHeading = null; }
   function rollback(preserveRoot = false) {
     const keepRoot = preserveRoot && root?.hasAttribute(`${PREFIX}root`);
@@ -168,7 +190,7 @@ export function createTicketController(document: Document, address: () => string
       if (node.hasAttribute(`${PREFIX}ui`)) return true;
       // Mapped controls are leaves so layout checks do not inspect their contents.
       if (node instanceof HTMLElement && items.has(node)) return true;
-      if (ignoreHeaders && node.matches('.work-item-form-collapsible-header')) return true;
+      if (ignoreHeaders && node === nativeGroupHeader(container)) return true;
       if (nativeHiddenLayout(node)) return true;
       if (!node.hasChildNodes()) return false;
       return [...node.childNodes].every(visit);
@@ -240,6 +262,7 @@ export function createTicketController(document: Document, address: () => string
       feedback?.clear();
       activeVisibilityScope = '';
       clearActionAnchors();
+      clearSchemaHeaders();
       rollback();
       style.remove();
       publish({ ...emptyTicketSnapshot(), revision, status: 'error', message: reason instanceof Error ? reason.message : 'Could not select the active form.' });
@@ -255,6 +278,7 @@ export function createTicketController(document: Document, address: () => string
       dragUi?.cancel();
       activeVisibilityScope = '';
       clearActionAnchors();
+      clearSchemaHeaders();
       abort?.abort();
       if (root) {
         resize.unobserve(root);
@@ -281,11 +305,13 @@ export function createTicketController(document: Document, address: () => string
       dragUi?.update(null);
       visibilityUi?.update(null);
       clearActionAnchors();
+      clearSchemaHeaders();
       for (const card of observedCards) resize.unobserve(card);
       observedCards.clear();
       publish({ ...emptyTicketSnapshot(), revision });
       return;
     }
+    if (!preferences.enabled) clearSchemaHeaders();
     const detected = workItemType(root);
     if (detected !== type) {
       abort?.abort();
@@ -319,7 +345,15 @@ export function createTicketController(document: Document, address: () => string
         schedule();
       });
     }
-    const allTargets = [...reconcileTicketLayouts(native, layout).targets];
+    let catalog: TicketLayout;
+    try { catalog = reconcileTicketLayouts(native, layout); } catch (reason) {
+      // A conflicting schema must surface as an error and fall back to the native catalog, not stall in loading.
+      console.error('[ADOverride] Form metadata conflicts with the native form.', reason);
+      error = reason instanceof Error ? reason.message : 'Form metadata conflicts with the native form.';
+      layout = null;
+      catalog = native;
+    }
+    const allTargets = [...catalog.targets];
     const subheader = root.querySelector<HTMLElement>('.work-item-form-subheader');
     const details = allTargets.find(target => target.kind === 'page' && target.key === 'page:details');
     if (subheader && details) {
@@ -355,7 +389,7 @@ export function createTicketController(document: Document, address: () => string
     if (subheader) bindings.set('system-header', subheader);
     for (const target of allTargets.filter(target => target.kind === 'group' && target.parentId === selected?.id)) {
       const element = one(groups.filter(group => matchesId(group, target.nativeId))) ?? one(groups.filter(group =>
-        normalizeLabel(group.querySelector('.work-item-form-collapsible-header')?.textContent ?? '') === normalizeLabel(target.label)));
+        normalizeLabel(nativeGroupLabel(group) ?? '') === normalizeLabel(target.label)));
       if (element) bindings.set(target.id, element);
     }
     for (const target of allTargets.filter(target => target.kind === 'field' || target.kind === 'region')) {
@@ -386,7 +420,7 @@ export function createTicketController(document: Document, address: () => string
     }
     if (preferences.enabled && (savedLayout || workspaceWanted)) for (const group of groups) {
       const bounds = group.getBoundingClientRect();
-      const richEditor = [...group.querySelectorAll('.html-editor, .rooster-editor')].some(rendered);
+      const richEditor = [...group.querySelectorAll(RICH_EDITOR_SELECTOR)].some(rendered);
       const paddingBottom = Number.parseFloat(getComputedStyle(group).paddingBottom);
       if (!Number.isFinite(paddingBottom)) throw new Error('Native card spacing measurements are unavailable.');
       nativeCardSizes.set(group, { width: bounds.width, minimumWidth: richEditor || bounds.width >= 480 ? 480 : 240,
@@ -477,7 +511,7 @@ export function createTicketController(document: Document, address: () => string
     const cards: DragCard[] = [];
     for (const target of states.filter(target => target.kind === 'group' && target.parentId === selected?.id && !target.protected)) {
       const element = bindings.get(target.id);
-      const header = element?.querySelector<HTMLElement>('.work-item-form-collapsible-header');
+      const header = element ? cardHeader(element, target) : null;
       if (!element || !header || !element.closest('.work-item-grid')) continue;
       const section = element.closest<HTMLElement>('.work-item-form-right > .work-item-form-section');
       const sections = section?.parentElement ? [...section.parentElement.children].filter(child => child.matches('.work-item-form-section')) : [];
@@ -493,9 +527,9 @@ export function createTicketController(document: Document, address: () => string
       const element = bindings.get(target.id);
       return element ? [element] : [];
     });
-    const missingHeaders = mappedGroups.filter(group => !group.querySelector('.work-item-form-collapsible-header')).length;
+    const missingHeaders = mappedGroups.filter(group => !nativeGroupHeader(group) && !schemaHeaders.has(group)).length;
     const hiddenHeaders = mappedGroups.filter(group => {
-      const header = group.querySelector('.work-item-form-collapsible-header');
+      const header = nativeGroupHeader(group) ?? schemaHeaders.get(group);
       return header && rendered(group) && !rendered(header);
     }).length;
     const dragBlocked = preferences.enabled && !preferences.ticket.layoutLocked && !pending && mappedGroups.length > 0 && !dragGrid;
@@ -686,7 +720,7 @@ export function createTicketController(document: Document, address: () => string
     const visibilityCards: VisibilityCard[] = [];
     for (const target of preferences.ticket.layoutLocked ? [] : availableGroups) {
       const element = bindings.get(target.id);
-      const header = element?.querySelector<HTMLElement>('.work-item-form-collapsible-header');
+      const header = element ? cardHeader(element, target) : null;
       if (!target.desiredVisible || !element || !header || !rendered(element) || !rendered(header)) continue;
       const anchor = preferences.enabled ? actionAnchor(header) : header;
       visibilityCards.push({ key: target.key, label: target.label, element, header, anchor });
@@ -710,6 +744,7 @@ export function createTicketController(document: Document, address: () => string
       ...(!preferences.ticket.layoutLocked && dragGrid && dragUi ? cards.filter(card => dragGrid.contains(card.element) && rendered(card.element)).map(card => card.anchor) : []),
     ] : []);
     clearActionAnchors(neededAnchors);
+    clearSchemaHeaders(new Set(cards.map(card => card.element)));
     const unmappedCurrentGroups = allTargets.some(target => target.kind === 'group' && target.parentId === selected?.id &&
       target.available && !target.opaque && !bindings.has(target.id));
     dragDiagnostics.mountedHandles = root.querySelectorAll('ado-ticket-drag-handle').length;
@@ -765,15 +800,16 @@ export function createTicketController(document: Document, address: () => string
         showFeedback({ status: 'saved', message: ticketChangeMessage(value.ticket.undo.kind), undoId: value.ticket.undo.id });
       } else if (previous && !value.ticket.undo) feedback?.clear();
     },
-    failSettings(message: string) { preferences = null; dragUi?.update(null); visibilityUi?.update(null); feedback?.clear(); clearActionAnchors(); clearWorkspaceHeading(); rollback(); style.remove(); publish({ ...snapshot, status: 'error', message }); },
+    failSettings(message: string) { preferences = null; dragUi?.update(null); visibilityUi?.update(null); feedback?.clear(); clearActionAnchors(); clearSchemaHeaders(); clearWorkspaceHeading(); rollback(); style.remove(); publish({ ...snapshot, status: 'error', message }); },
     subscribe(listener: (value: TicketSnapshot) => void) { listeners.add(listener); listener(snapshot); return () => listeners.delete(listener); },
-    refresh() { dragUi?.cancel(); error = null; layout = null; attempted = false; abort?.abort(); epoch++; pending = false; provider.clear(); schedule('refresh'); },
+    refresh() { dragUi?.cancel(); clearSchemaHeaders(); error = null; layout = null; attempted = false; abort?.abort(); epoch++; pending = false; provider.clear(); schedule('refresh'); },
     dispose() {
       disposed = true; abort?.abort(); epoch++; observer.disconnect(); resize.disconnect();
       diagnostics.dispose(); diagnosticBindings.clear();
       dragUi?.dispose();
       visibilityUi?.dispose();
       clearActionAnchors();
+      clearSchemaHeaders();
       clearWorkspaceHeading();
       feedback?.dispose();
       if (scheduled) window.cancelAnimationFrame(scheduled);

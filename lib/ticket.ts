@@ -3,6 +3,7 @@ export const TICKET_VERSION = 2;
 export const FORM_SELECTOR = '.work-item-form-dialog, .work-item-form-page';
 export const GROUP_SELECTOR = '.work-item-form-group, .work-item-form-discussion';
 export const CONTROL_SELECTOR = '.work-item-form-control-wrapper';
+export const RICH_EDITOR_SELECTOR = '.html-editor,.rooster-editor,.markdown-editor-placeholder,[contenteditable]';
 
 export type TicketArea = 'library' | 'ticket';
 export type TargetKind = 'page' | 'group' | 'field' | 'region';
@@ -86,6 +87,29 @@ function uniqueTargets(targets: TicketTarget[]): TicketTarget[] {
   return targets;
 }
 
+function distinguishGroups(targets: TicketTarget[]): TicketTarget[] {
+  const groups = targets.filter(target => target.kind === 'group');
+  for (const group of groups) {
+    const peers = groups.filter(peer => peer.parentId === group.parentId && peer.key === group.key);
+    if (peers.length < 2) continue;
+    const signatures = peers.map(peer => [...new Set(targets.filter(target => target.parentId === peer.id)
+      .map(target => target.fieldRef ? `field:${target.fieldRef.toLowerCase()}` : `label:${normalizeLabel(target.label)}`))].sort().join('|'));
+    if (signatures.some(signature => !signature) || new Set(signatures).size !== peers.length) continue;
+    for (const [index, peer] of peers.entries()) {
+      const previous = peer.key;
+      peer.key = `${previous}@${encodeURIComponent(signatures[index] ?? '')}`;
+      for (const child of targets.filter(target => target.parentId === peer.id && !target.fieldRef)) {
+        for (const prefix of ['field:label/', 'region:']) {
+          if (child.key.startsWith(`${prefix}${previous.slice(6)}/`)) {
+            child.key = `${prefix}${peer.key.slice(6)}${child.key.slice(prefix.length + previous.length - 6)}`;
+          }
+        }
+      }
+    }
+  }
+  return targets;
+}
+
 export function normalizeProcessLayout(value: unknown): TicketLayout {
   if (!isObject(value)) throw new Error('Invalid process form layout.');
   const targets: TicketTarget[] = [];
@@ -133,7 +157,7 @@ export function normalizeProcessLayout(value: unknown): TicketLayout {
       }
     }
   }
-  return { targets: uniqueTargets(targets), source: 'process' };
+  return { targets: distinguishGroups(uniqueTargets(targets)), source: 'process' };
 }
 
 export function normalizeWebXml(xml: string): TicketLayout {
@@ -218,7 +242,17 @@ export function nativeControlLabel(control: HTMLElement): string | null {
   if (explicit) return explicit;
   const group = control.closest<HTMLElement>(GROUP_SELECTOR);
   if (!group || group.querySelectorAll(CONTROL_SELECTOR).length !== 1) return null;
-  return group.querySelector('.work-item-form-collapsible-header')?.textContent?.trim() || null;
+  return nativeGroupLabel(group);
+}
+export function nativeGroupHeader(group: HTMLElement): HTMLElement | null {
+  const headers = [...group.querySelectorAll<HTMLElement>('.work-item-form-collapsible-header, [role="heading"]')]
+    .filter(header => header.closest(GROUP_SELECTOR) === group &&
+      !header.closest(`${CONTROL_SELECTOR},.work-item-form-control-content,.html-editor,.rooster-editor,[contenteditable],[role="textbox"],[data-ado-ticket-ui]`));
+  return headers.find(header => header.matches('.work-item-form-collapsible-header')) ??
+    (headers.length === 1 ? headers[0] ?? null : null);
+}
+export function nativeGroupLabel(group: HTMLElement): string | null {
+  return nativeGroupHeader(group)?.textContent?.trim() || (group.matches('.work-item-form-discussion') ? 'Discussion' : null);
 }
 export function domTicketLayout(root: HTMLElement): TicketLayout {
   const targets: TicketTarget[] = [];
@@ -242,8 +276,7 @@ export function domTicketLayout(root: HTMLElement): TicketLayout {
   if (!selectedPage) throw new Error('The native form has no identifiable page.');
   for (const group of root.querySelectorAll<HTMLElement>(GROUP_SELECTOR)) {
     if (group.parentElement?.closest(GROUP_SELECTOR)) continue;
-    const label = group.querySelector('.work-item-form-collapsible-header')?.textContent?.trim() ??
-      (group.matches('.work-item-form-discussion') ? 'Discussion' : '');
+    const label = nativeGroupLabel(group);
     if (!label) continue;
     const pageContainer = group.closest('[role="tabpanel"], [data-page-id]');
     const pageId = pageContainer?.getAttribute('data-page-id') ?? pageContainer?.getAttribute('aria-labelledby');
@@ -265,7 +298,7 @@ export function domTicketLayout(root: HTMLElement): TicketLayout {
       });
     }
   }
-  return { targets, source: 'dom' };
+  return { targets: distinguishGroups(targets), source: 'dom' };
 }
 
 export function matchTicketLayout(native: TicketLayout, candidates: TicketLayout[]): TicketLayout | null {
@@ -304,7 +337,7 @@ export function reconcileTicketLayouts(native: TicketLayout, metadata: TicketLay
     const metadataGroupIds = new Map<string, string>();
     for (const group of metadataGroups) {
       const occurrence = metadataGroups.slice(0, metadataGroups.indexOf(group)).filter(target => target.key === group.key).length;
-      const id = `${page.id}/group/${group.key}/${occurrence}`;
+      const id = `${page.id}/metadata-group/${group.key}/${occurrence}`;
       metadataGroupIds.set(group.id, id);
       targets.push({ ...group, id, parentId: page.id });
       for (const child of metadata.targets.filter(target => target.parentId === group.id)) {
@@ -312,9 +345,11 @@ export function reconcileTicketLayouts(native: TicketLayout, metadata: TicketLay
       }
     }
     for (const group of nativeGroups) {
-      const matching = metadataGroups.filter(candidate => candidate.nativeId === group.nativeId && Boolean(group.nativeId) ||
+      const exact = metadataGroups.filter(candidate => candidate.nativeId === group.nativeId && Boolean(group.nativeId));
+      const matching = exact.length ? exact : metadataGroups.filter(candidate => candidate.key === group.key);
+      const byLabel = matching.length ? matching : metadataGroups.filter(candidate =>
         normalizeLabel(candidate.label) === normalizeLabel(group.label));
-      const matched = matching.length === 1 ? matching[0] : undefined;
+      const matched = byLabel.length === 1 ? byLabel[0] : undefined;
       const parentId = matched ? metadataGroupIds.get(matched.id) ?? group.id : group.id;
       if (!matched) targets.push({ ...group, parentId: page.id });
       for (const child of native.targets.filter(target => target.parentId === group.id)) {
@@ -324,7 +359,7 @@ export function reconcileTicketLayouts(native: TicketLayout, metadata: TicketLay
       }
     }
   }
-  return { targets: uniqueTargets(targets), source: metadata.source };
+  return { targets: distinguishGroups(uniqueTargets(targets)), source: metadata.source };
 }
 
 export function decodeTicketSnapshot(value: unknown): TicketSnapshot {

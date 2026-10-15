@@ -96,7 +96,7 @@ function TargetToggle({ target, loading, update }: { target: TargetState; loadin
     <>
       <VisuallyHidden id={label}>Show {target.label}</VisuallyHidden>
       <ToggleSwitch size="small" aria-labelledby={label} checked={target.desiredVisible}
-        disabled={loading || target.protected || !target.available}
+        disabled={target.protected || !target.available || loading && (!target.mounted || !target.fieldRef)}
         onChange={checked => void update({ kind: 'ticket-target', key: target.key, hidden: !checked })} />
     </>
   );

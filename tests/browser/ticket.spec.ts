@@ -6,6 +6,7 @@ import { boardOpenedWorkspaceHtml, workspaceTicketHtml } from './workspace-fixtu
 import { decodePreferences, decodeTicketProfile, defaultPreferences, defaultView, portablePreferences } from '../../lib/preferences';
 import { CONFIGURATION_BACKUP_KEY, decodeConfigurationBackup, exportConfiguration, parseConfiguration } from '../../lib/configuration';
 import { nativePreferences } from '../preferences-fixture';
+import { BUG_LAYOUT, bugTicketHtml } from './bug-fixture';
 
 type ExtensionApi = (typeof import('wxt/browser'))['browser'];
 declare const chrome: Omit<ExtensionApi, 'extension'> & {
@@ -32,23 +33,25 @@ async function launch(profile: string, factoryDefaults = false) {
   }
   return context;
 }
-async function fixture(context: BrowserContext, origin: string, dialog: boolean, denied = false, unknownType = false, html = ticketHtml(dialog)) {
+async function fixture(context: BrowserContext, origin: string, dialog: boolean, denied = false, unknownType = false, html = ticketHtml(dialog),
+  metadata = { reference: 'Example.UserStory', layout: TICKET_LAYOUT }, beforeMetadata?: () => Promise<void>) {
   const calls: string[] = [];
-  await context.route(`${origin}/**`, route => {
+  await context.route(`${origin}/**`, async route => {
     const request = route.request();
     const url = new URL(request.url());
     if (url.pathname.includes('/_apis/')) {
       expect(request.method()).toBe('GET');
       calls.push(url.pathname);
+      if (beforeMetadata) await beforeMetadata();
       if (denied) return route.fulfill({ status: 403, contentType: 'application/json', body: '{}' });
       const unrelatedLayout = { pages: [{
         id: 'other.details', label: 'Details', pageType: 'custom', sections: [{
           id: 'other', groups: [{ id: 'other.repro', label: 'Repro Steps', controls: [] }],
         }],
       }] };
-      const data = url.pathname.includes('/workitemtypes/') ? { referenceName: 'Example.UserStory', xmlForm: '<FORM><Layout /></FORM>' } :
+      const data = url.pathname.includes('/workitemtypes/') ? { referenceName: metadata.reference, xmlForm: '<FORM><Layout /></FORM>' } :
         url.pathname.includes('/projects/') ? { capabilities: { processTemplate: { templateTypeId: 'process-fixture' } } } :
-          url.pathname.endsWith('/layout') ? url.pathname.includes('Example.UserStory') ? TICKET_LAYOUT : unrelatedLayout :
+          url.pathname.endsWith('/layout') ? url.pathname.includes(metadata.reference) ? metadata.layout : unrelatedLayout :
             url.pathname.endsWith('/workItemTypes') ? { value: [
               { name: 'User Story', referenceName: 'Example.UserStory' },
               { name: 'Bug', referenceName: 'Example.Bug' },
@@ -105,6 +108,49 @@ async function pausePreferenceWrites(context: BrowserContext) {
     return () => { chrome.storage.local.set = original; resolve(); };
   });
 }
+
+test('Bug discovery: repeated System Info captions and the captured header variant retain a complete usable Workspace', async ({}, info) => {
+  const context = await launch(info.outputPath('profile'), true);
+  try {
+    const { page, popup } = await fixture(context, 'https://dev.azure.com', false, false, false, bugTicketHtml({ extraGroups: false }),
+      { reference: 'Example.Bug', layout: BUG_LAYOUT });
+    await page.setViewportSize({ width: 2560, height: 1271 });
+    await expect(page.locator('.work-item-form-group,.work-item-form-discussion')).toHaveCount(8);
+    await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
+    await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
+    await popup.getByRole('searchbox', { name: 'Find a Ticket card or field' }).fill('System Info');
+    await expect(popup.getByRole('button', { name: 'System Info', exact: true })).toHaveCount(2);
+    const rows = popup.locator('.ticket-row').filter({ has: popup.getByRole('button', { name: 'System Info', exact: true }) });
+    const switches = rows.getByRole('button', { name: 'Show System Info', exact: true });
+    await expect(switches).toHaveCount(2);
+    await expect(switches.nth(0)).toBeEnabled();
+    await expect(switches.nth(1)).toBeEnabled();
+  } finally { await context.close(); }
+});
+
+test('Bug discovery: pending form metadata does not disable a safely bound native field menu', async ({}, info) => {
+  const context = await launch(info.outputPath('profile'), true);
+  let release!: () => void;
+  const barrier = new Promise<void>(resolve => { release = resolve; });
+  try {
+    const { popup } = await fixture(context, 'https://dev.azure.com', false, false, false, bugTicketHtml(),
+      { reference: 'Example.Bug', layout: BUG_LAYOUT }, () => barrier);
+    await expect(popup.getByLabel('Loading Ticket layout', { exact: true })).toBeVisible();
+    await popup.getByRole('searchbox', { name: 'Find a Ticket card or field' }).fill('Priority');
+    await expect(popup.getByRole('button', { name: 'Show Priority', exact: true })).toBeEnabled();
+  } finally { release(); await context.close(); }
+});
+
+test('Bug discovery: a schema-bound card without a native heading retains its fields in Workspace', async ({}, info) => {
+  const context = await launch(info.outputPath('profile'), true);
+  try {
+    const { page } = await fixture(context, 'https://dev.azure.com', false, false, false,
+      bugTicketHtml({ extraGroups: false, heading: false }), { reference: 'Example.Bug', layout: BUG_LAYOUT });
+    await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
+    await expect(page.getByRole('textbox', { name: 'Regression', exact: true })).toHaveValue('No');
+    await expect(page.getByRole('textbox', { name: 'How Found', exact: true })).toHaveValue('Testing');
+  } finally { await context.close(); }
+});
 
 test('Toolbar activity: actual icons follow Board Tickets, lock, master switch, reload and unrelated tabs', async ({}, info) => {
   const context = await launch(info.outputPath('profile'));
