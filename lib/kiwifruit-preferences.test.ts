@@ -33,7 +33,7 @@ describe('kiwifruit release defaults and template cleanup', () => {
     expect(current.version).toBe(11);
     expect(current.views.all).toMatchObject({ presetId: 'board:kiwifruit', board: kiwifruitBoard });
     expect(current.ticket.viewMode).toBe('workspace');
-    expect(current.ticket.hiddenTargets).toHaveLength(24);
+    expect(current.ticket.hiddenTargets).toHaveLength(36);
     expect(current.savedPresets).toEqual([]);
     expect(current.ticket.savedPresets).toEqual([]);
   });

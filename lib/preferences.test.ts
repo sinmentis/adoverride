@@ -13,9 +13,9 @@ describe('preferences', () => {
     expect(current.ticket).toEqual({ presetId: 'ticket:kiwifruit', ...preset?.ticket,
       savedPresets: [], layoutLocked: false, undo: null });
     expect(current.ticket.viewMode).toBe('workspace');
-    expect(current.ticket.hiddenTargets).toHaveLength(24);
+    expect(current.ticket.hiddenTargets).toHaveLength(36);
     expect(current.ticket.cardLayouts['page:details']?.map(column => column.length)).toEqual([6, 7, 3]);
-    expect(current.ticket.workspaceLayouts).toEqual({});
+    expect(current.ticket.workspaceLayouts['page:details']?.map(column => column.length)).toEqual([8, 15, 0]);
     expect(current.views).toEqual({ all: defaultView() });
     expect(decodePreferences(current)).toEqual(current);
   });
@@ -45,7 +45,7 @@ describe('preferences', () => {
     let native = applyPreferenceAction(applied, { kind: 'ticket-view', viewMode: 'native' });
     native = applyPreferenceAction(native, { kind: 'reset-ticket' });
     native = applyPreferenceAction(native, { kind: 'reset-ticket-layout' });
-    expect(decodeTicketProfile(native.ticket)).toEqual(defaultTicketProfile());
+    expect(decodeTicketProfile(native.ticket)).toEqual({ ...defaultTicketProfile(), workspaceLayouts: applied.ticket.workspaceLayouts });
     expect(native.ticket.layoutLocked).toBe(true);
   });
 

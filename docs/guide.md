@@ -35,9 +35,11 @@ and **Reset all** use it. Each area's preset changes only that area.
 | Auto-load all items | On |
 | Card fields | All visible |
 
-Ticket kiwifruit enables Workspace, uses automatic Workspace placement, and
-includes structural hiding rules for optional content. Missing fields or groups
-are simply absent; unknown content stays native. You can change every supported
+Ticket kiwifruit enables Workspace with a saved card arrangement for the
+Details page, and hides optional cards and fields from common User Story and Bug
+forms. Missing fields or groups are simply absent; unknown content stays native.
+Existing installs keep their current Ticket setup. Pick kiwifruit from the preset
+menu to switch to it. You can change every supported
 setting and save new personal presets.
 
 **Upgrading to 0.11.0:** old built-ins and previously saved templates are retired.
