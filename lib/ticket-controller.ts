@@ -387,10 +387,31 @@ export function createTicketController(document: Document, address: () => string
     diagnosticPage = selected?.key ?? null;
     const groups = [...root.querySelectorAll<HTMLElement>(GROUP_SELECTOR)].filter(group => !group.parentElement?.closest(GROUP_SELECTOR));
     if (subheader) bindings.set('system-header', subheader);
+    const containsChild = (group: HTMLElement, child: TicketTarget) => [...group.querySelectorAll<HTMLElement>(CONTROL_SELECTOR)].some(control =>
+      matchesId(control, child.nativeId) || [...control.querySelectorAll('[id], [data-field-name], [data-control-id]')].some(node => matchesId(node, child.nativeId)) ||
+      normalizeLabel(nativeControlLabel(control) ?? '') === normalizeLabel(child.label));
+    const usedGroups = new Set<HTMLElement>();
     for (const target of allTargets.filter(target => target.kind === 'group' && target.parentId === selected?.id)) {
-      const element = one(groups.filter(group => matchesId(group, target.nativeId))) ?? one(groups.filter(group =>
-        normalizeLabel(nativeGroupLabel(group) ?? '') === normalizeLabel(target.label)));
-      if (element) bindings.set(target.id, element);
+      const byLabel = groups.filter(group => !usedGroups.has(group) && normalizeLabel(nativeGroupLabel(group) ?? '') === normalizeLabel(target.label));
+      let element = one(groups.filter(group => matchesId(group, target.nativeId))) ?? one(byLabel);
+      if (!element && byLabel.length > 1) {
+        // Real ADO cards carry no process group ID, so repeated captions are told apart by their fields.
+        const children = allTargets.filter(child => child.parentId === target.id && (child.kind === 'field' || child.kind === 'region'));
+        const scores = byLabel.map(group => children.filter(child => containsChild(group, child)).length);
+        const best = Math.max(0, ...scores);
+        if (best > 0 && scores.filter(score => score === best).length === 1) element = byLabel[scores.indexOf(best)] ?? null;
+      }
+      if (element) { bindings.set(target.id, element); usedGroups.add(element); }
+    }
+    const displayLabels = new Map<string, string>();
+    const pageGroups = allTargets.filter(target => target.kind === 'group' && target.parentId === selected?.id);
+    for (const target of pageGroups) {
+      const element = bindings.get(target.id);
+      const peers = pageGroups.filter(peer => normalizeLabel(peer.label) === normalizeLabel(target.label));
+      if (!element || peers.length < 2) continue;
+      const side = (group: HTMLElement | undefined) => group?.closest('.work-item-form-right') ? 'side' : 'main';
+      const sameSide = peers.filter(peer => side(bindings.get(peer.id)) === side(element));
+      displayLabels.set(target.id, `${target.label} (${side(element)}${sameSide.length > 1 ? ` ${sameSide.indexOf(target) + 1}` : ''})`);
     }
     for (const target of allTargets.filter(target => target.kind === 'field' || target.kind === 'region')) {
       const parent = target.parentId ? bindings.get(target.parentId) : null;
@@ -449,7 +470,7 @@ export function createTicketController(document: Document, address: () => string
       else if (!nativeVisible && desiredVisible) { effectiveVisible = false; override = 'native-hidden'; }
       if (element && preferences.enabled && !protectedTarget && !validation && !effectiveVisible && nativeVisible &&
         (!desiredVisible || override === 'parent-hidden')) mark(element, 'hidden');
-      const state = { ...target, protected: protectedTarget, mounted: Boolean(element), desiredVisible, effectiveVisible, override };
+      const state = { ...target, label: displayLabels.get(target.id) ?? target.label, protected: protectedTarget, mounted: Boolean(element), desiredVisible, effectiveVisible, override };
       states.push(state);
       stateMap.set(target.id, state);
     }

@@ -53,7 +53,7 @@ function markdownCard(id: string, label: string, field: string) {
   </div>`;
 }
 
-export function bugTicketHtml({ extraGroups = true, headerless = true, heading = true } = {}) {
+export function bugTicketHtml({ extraGroups = true, headerless = true, heading = true, ids = true } = {}) {
   const fields = `<div class="flex-column work-item-form-group" id="sample.system-info-fields">
     ${heading ? `<div class="${headerless ? 'sample-group-heading' : 'work-item-form-collapsible-header'}" role="heading">System Info</div>` : ''}
     <div class="work-item-form-control-wrapper" data-field-name="Custom.ExampleRegression">
@@ -68,7 +68,7 @@ export function bugTicketHtml({ extraGroups = true, headerless = true, heading =
     <div class="work-item-form-control-wrapper" data-field-name="${group.controls[0]?.id}">
       <label class="work-item-control-label">${group.controls[0]?.label}</label><input value="Fictional value">
     </div></div>`).join('');
-  return workspaceTicketHtml(false, true)
+  const html = workspaceTicketHtml(false, true)
     .replaceAll('data-work-item-type="User Story"', 'data-work-item-type="Bug"')
     .replace('<span>User Story</span>', '<span>Bug</span>')
     .replace('<div class="work-item-form-first-section">', `<div class="work-item-form-first-section">
@@ -82,4 +82,6 @@ export function bugTicketHtml({ extraGroups = true, headerless = true, heading =
       .sample-group-heading{font-weight:600;padding:4px 0}
       .work-item-form-section{grid-template-rows:none!important;min-height:0!important}
       </style>`);
+  // Real ADO cards do not expose process group IDs, so only captions and fields can identify them.
+  return ids ? html : html.replace(' id="sample.system-info-markdown"', '').replace(' id="sample.system-info-fields"', '');
 }

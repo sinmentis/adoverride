@@ -119,12 +119,31 @@ test('Bug discovery: repeated System Info captions and the captured header varia
     await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
     await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
     await popup.getByRole('searchbox', { name: 'Find a Ticket card or field' }).fill('System Info');
-    await expect(popup.getByRole('button', { name: 'System Info', exact: true })).toHaveCount(2);
-    const rows = popup.locator('.ticket-row').filter({ has: popup.getByRole('button', { name: 'System Info', exact: true }) });
-    const switches = rows.getByRole('button', { name: 'Show System Info', exact: true });
-    await expect(switches).toHaveCount(2);
-    await expect(switches.nth(0)).toBeEnabled();
-    await expect(switches.nth(1)).toBeEnabled();
+    for (const name of ['System Info (main)', 'System Info (side)']) {
+      await expect(popup.getByRole('button', { name, exact: true })).toHaveCount(1);
+      await expect(popup.getByRole('button', { name: `Show ${name}`, exact: true })).toBeEnabled();
+    }
+  } finally { await context.close(); }
+});
+
+test('Bug discovery: repeated captions without native group IDs bind by their fields and keep drag handles', async ({}, info) => {
+  const context = await launch(info.outputPath('profile'), true);
+  try {
+    const { page, popup } = await fixture(context, 'https://dev.azure.com', false, false, false,
+      bugTicketHtml({ extraGroups: false, headerless: false, ids: false }), { reference: 'Example.Bug', layout: BUG_LAYOUT });
+    await page.setViewportSize({ width: 2560, height: 1271 });
+    await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
+    for (const name of ['System Info (main)', 'System Info (side)']) {
+      await expect(page.getByRole('button', { name: `Move ${name}`, exact: true })).toHaveCount(1);
+    }
+    await expect(page.getByRole('button', { name: 'Move Planning', exact: true })).toHaveCount(1);
+    await popup.getByRole('searchbox', { name: 'Find a Ticket card or field' }).fill('System Info');
+    for (const name of ['System Info (main)', 'System Info (side)']) {
+      await expect(popup.getByRole('button', { name: `Show ${name}`, exact: true })).toBeEnabled();
+    }
+    await popup.getByRole('button', { name: 'Show System Info (side)', exact: true }).click();
+    await expect(page.getByRole('textbox', { name: 'Regression', exact: true })).toBeHidden();
+    await expect(page.getByRole('textbox', { name: 'System Info draft', exact: true })).toBeVisible();
   } finally { await context.close(); }
 });
 
