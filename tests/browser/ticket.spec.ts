@@ -73,6 +73,23 @@ async function fixture(context: BrowserContext, origin: string, dialog: boolean,
   await popup.goto(`chrome-extension://${id}/popup.html`);
   return { page, popup, calls };
 }
+async function inLayoutTab(popup: Page, action: () => Promise<void>) {
+  await popup.getByRole('tab', { name: 'Layout', exact: true }).click();
+  await action();
+  await popup.getByRole('tab', { name: /^Cards & fields/ }).click();
+}
+async function toggleWorkspace(popup: Page) {
+  await inLayoutTab(popup, async () => {
+    const workspace = popup.getByRole('radio', { name: 'Workspace', exact: true });
+    await (await workspace.isChecked() ? popup.getByRole('radio', { name: 'Original', exact: true }) : workspace).click();
+  });
+}
+async function expectWorkspace(popup: Page, on: boolean) {
+  await inLayoutTab(popup, () => expect(popup.getByRole('radio', { name: 'Workspace', exact: true })).toBeChecked({ checked: on }));
+}
+async function resetPositions(popup: Page) {
+  await inLayoutTab(popup, () => popup.getByRole('button', { name: /^Reset (Workspace|original) positions$/ }).click());
+}
 async function find(popup: Page, name: string) {
   await popup.getByRole('searchbox', { name: 'Find a Ticket card or field' }).fill(name);
 }
@@ -272,7 +289,7 @@ test('Toolbar activity: actual icons follow Board Tickets, lock, master switch, 
       await page.getByRole('button', { name: 'Open Ticket', exact: true }).click();
       await expect.poll(title).toBe('ADOverride (active)');
       await expect.poll(icon).toBe('icon/16.png');
-      await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+      await toggleWorkspace(popup);
       await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
       const native = await page.locator('#sample\\.planning .work-item-form-section-controls').evaluateHandle(controls =>
         [...controls.querySelectorAll<HTMLButtonElement>(':scope > button')].map(node => ({
@@ -350,7 +367,7 @@ test('kiwifruit built-in: fresh installs have one template and Show all remains 
           </div>`);
     const { page, popup } = await fixture(context, 'https://dev.azure.com', false, false, false, html);
     await expect(popup.getByRole('button', { name: 'Choose preset, current kiwifruit', exact: true })).toBeVisible();
-    await expect(popup.getByRole('button', { name: 'Workspace view', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expectWorkspace(popup, true);
     await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
     await expect(page.locator('#sample\\.risk')).not.toBeVisible();
     await expect(page.locator('[data-field-name="Microsoft.VSTS.Scheduling.RemainingWork"]')).not.toBeVisible();
@@ -401,7 +418,7 @@ test('kiwifruit built-in: an existing profile survives restart and application p
     await context.close();
     context = await launch(profile, true);
     const { page, popup } = await fixture(context, 'https://dev.azure.com', false, false, false, workspaceTicketHtml());
-    await expect(popup.getByRole('button', { name: 'Workspace view', exact: true })).toHaveAttribute('aria-pressed', 'false');
+    await expectWorkspace(popup, false);
     await expect(page.locator('#sample\\.review')).not.toBeVisible();
     expect((await savedSettings(context)).ticket).toEqual(existing.ticket);
     await popup.getByRole('button', { name: 'Choose preset, current Custom view', exact: true }).click();
@@ -432,7 +449,7 @@ for (const dialog of [false, true]) {
       const native = await page.locator('.work-item-grid').evaluate(grid => ({ width: grid.getBoundingClientRect().width, top: grid.getBoundingClientRect().top }));
       const nativePlanning = await page.locator('#sample\\.planning').evaluate(element => element.getBoundingClientRect().height);
       const font = await description.evaluate(element => getComputedStyle(element).fontSize);
-      await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+      await toggleWorkspace(popup);
       await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
       await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
       await expect(page.locator('.work-item-grid')).toHaveAttribute('data-ado-ticket-manual', '');
@@ -471,7 +488,7 @@ for (const dialog of [false, true]) {
       await page.locator('[data-native-save]').evaluate(button => button.addEventListener('click', () => button.setAttribute('data-native-clicked', 'yes')));
       await page.getByRole('button', { name: 'Save', exact: true }).click();
       await expect(page.locator('[data-native-save]')).toHaveAttribute('data-native-clicked', 'yes');
-      await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+      await toggleWorkspace(popup);
       await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(0);
       await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toHaveCount(0);
       await expect(description).toHaveText('Workspace must preserve this unsaved draft.');
@@ -491,7 +508,7 @@ test('Board-opened Workspace: native navigation does not push Properties below r
       if (!description || !planning) throw new Error('Missing minimized Board navigation fixture.');
       grid.replaceChildren(description, planning);
     });
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
     const geometry = await page.evaluate(() => {
       const props = document.querySelector('[data-ado-ticket-ui="workspace-properties"]');
@@ -513,7 +530,7 @@ test('Board-opened Workspace: native actions do not overlap the Back to Board na
   try {
     const { page, popup } = await fixture(context, 'https://dev.azure.com', true, false, false, boardOpenedWorkspaceHtml());
     await page.setViewportSize({ width: 1920, height: 1031 });
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
     const boxes = await page.evaluate(() => {
       const nav = document.querySelector('.work-item-form-nav-bar');
@@ -552,7 +569,7 @@ for (const dialog of [false, true]) {
       const nativeNav = await page.locator('.work-item-form-nav-bar').evaluate(node => ({
         font: getComputedStyle(node).fontSize, buttonHeight: node.querySelector('button')?.getBoundingClientRect().height,
       }));
-      await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+      await toggleWorkspace(popup);
       await expect(page.locator('[data-ado-ticket-workspace-form-navigation]')).toHaveCount(1);
       const measure = () => page.evaluate(() => {
         const heading = document.querySelector('[data-ado-ticket-ui="workspace-properties"]');
@@ -622,7 +639,7 @@ for (const dialog of [false, true]) {
       await expect.poll(measure).toMatchObject({ gap: expect.closeTo(0, 2), commandOffset: expect.closeTo(8, 2), overflow: 0, overlaps: false });
       await expect(draft).toHaveText('Preserve the Board-opened Ticket draft.');
       expect((await savedSettings(context)).ticket).toEqual(before.ticket);
-      await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+      await toggleWorkspace(popup);
       await expect(page.locator('[data-ado-ticket-workspace-form-navigation]')).toHaveCount(0);
       if (dialog) await expect(page.locator('.kanban-board')).not.toHaveAttribute('data-ado-ticket-root', '');
     } finally { await context.close(); }
@@ -639,7 +656,7 @@ test('Workspace density: title uses available width and the header does not rese
       if (!description) throw new Error('Missing minimal density fixture.');
       grid.replaceChildren(description);
     });
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
     const metrics = await page.evaluate(() => {
       const root = document.querySelector('.work-item-form-page');
@@ -668,7 +685,7 @@ test('Workspace density: captured nested short fields use compact rows without s
       if (!(node instanceof HTMLInputElement)) throw new Error('Missing native short-field input.');
       return { font: getComputedStyle(node).fontSize, height: node.getBoundingClientRect().height, value: node.value };
     }));
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
     await expect(fields.locator('[data-ado-ticket-workspace-field]')).toHaveCount(2);
     const rows = await fields.evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect().toJSON()));
@@ -695,7 +712,7 @@ test('Workspace density: long labels and native targets remain usable on narrow 
     const original = await input.evaluate(node => ({
       font: getComputedStyle(node).fontSize, height: node.getBoundingClientRect().height,
     }));
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
     for (const width of [960, 640]) {
       await page.setViewportSize({ width, height: 825 });
@@ -768,7 +785,7 @@ test('Workspace view: scrolling survives hover reconciliation and transfers betw
       return element.scrollTop;
     });
     expect(nativeTop).toBeGreaterThan(50);
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(1);
     const scroller = page.locator('.work-item-form-page');
     await expect.poll(() => scroller.evaluate(element => element.scrollTop)).toBeGreaterThan(50);
@@ -791,7 +808,7 @@ test('Workspace view: scrolling survives hover reconciliation and transfers betw
     await scroller.evaluate((element, top) => { element.scrollTop = top; element.querySelector('.work-item-title-textfield')?.classList.add('native-user-scroll'); }, userTop);
     await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
     expect(await scroller.evaluate(element => element.scrollTop)).toBeCloseTo(userTop, 0);
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(0);
     expect(await page.locator('.work-item-form-page-content').evaluate(element => element.scrollTop)).toBeGreaterThan(0);
   } finally { await context.close(); }
@@ -804,7 +821,7 @@ test('Workspace view: dragging, hiding, Undo, presets and lock keep the original
     await page.setViewportSize({ width: 1536, height: 825 });
     await dragToDevelopment(page);
     const original = (await savedSettings(context)).ticket.cardLayouts;
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
     await page.locator('#sample\\.planning').hover();
     const source = await page.getByRole('button', { name: 'Move Planning', exact: true }).boundingBox();
@@ -829,7 +846,7 @@ test('Workspace view: dragging, hiding, Undo, presets and lock keep the original
     await popup.getByRole('button', { name: 'Save as preset', exact: true }).click();
     await popup.getByRole('textbox', { name: /Preset name/ }).fill('Workspace');
     await popup.getByRole('button', { name: 'Save preset', exact: true }).click();
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toHaveCount(0);
     expect((await savedSettings(context)).ticket.cardLayouts).toEqual(original);
     expect((await savedSettings(context)).ticket.layoutLocked).toBe(true);
@@ -840,7 +857,7 @@ test('Workspace view: unsupported headers and unknown grid widgets remain explic
   const context = await launch(info.outputPath('profile'));
   try {
     const { page, popup } = await fixture(context, 'https://dev.azure.com', false, false, false, nativeActionsTicketHtml());
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await toggleWorkspace(popup);
     await expect(page.locator('.work-item-grid')).toHaveAttribute('data-ado-ticket-manual', '');
     await expect(popup.getByText(/this header retains its native layout/)).toBeVisible();
     await expect(page.locator('[data-ado-ticket-workspace-shell]')).toHaveCount(0);
@@ -874,8 +891,8 @@ test('Workspace view: v5 recovery preserves the original layout and Workspace pe
     await page.reload();
     await page.bringToFront();
     await popup.reload();
-    await expect(popup.getByRole('button', { name: 'Workspace view', exact: true })).toHaveAttribute('aria-pressed', 'false');
-    await popup.getByRole('button', { name: 'Workspace view', exact: true }).click();
+    await expectWorkspace(popup, false);
+    await toggleWorkspace(popup);
     await expect(page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
     await popup.getByRole('button', { name: 'Lock layout', exact: true }).click();
     expect((await savedSettings(context)).ticket.cardLayouts).toEqual(original.ticket.cardLayouts);
@@ -884,7 +901,7 @@ test('Workspace view: v5 recovery preserves the original layout and Workspace pe
     await context.close();
     context = await launch(profile);
     const reopened = await fixture(context, 'https://example.visualstudio.com', false, false, false, workspaceTicketHtml());
-    await expect(reopened.popup.getByRole('button', { name: 'Workspace view', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expectWorkspace(reopened.popup, true);
     await expect(reopened.page.getByRole('heading', { name: 'Properties', exact: true })).toBeVisible();
     await expect(reopened.page.locator('#sample\\.review')).not.toBeVisible();
     expect((await savedSettings(context)).ticket.cardLayouts).toEqual(original.ticket.cardLayouts);
@@ -1264,7 +1281,7 @@ test('native hover handle moves a card across grid columns without reparenting e
     await popup.getByRole('button', { name: 'Show all', exact: true }).click();
     await expect(page.locator('.work-item-grid')).toHaveAttribute('data-ado-ticket-manual', '');
     await expect(page.locator('#sample\\.review')).toBeVisible();
-    await popup.getByRole('button', { name: 'Reset layout', exact: true }).click();
+    await resetPositions(popup);
     await expect(page.locator('[data-ado-ticket-manual]')).toHaveCount(0);
     await expect(draft).toHaveValue('Keep this native draft');
     await popup.getByRole('button', { name: 'Choose preset, current Custom view', exact: true }).click();
@@ -1574,7 +1591,7 @@ test('manual movement preserves native Description width and flex rich-text edit
     await expect.poll(() => description.evaluate(card => card.getBoundingClientRect().width)).toBeGreaterThanOrEqual(480);
     await expect.poll(() => editor.evaluate(node => node.getBoundingClientRect().height)).toBeGreaterThan(250);
     await expect.poll(() => page.locator('.work-item-form-page').evaluate(form => form.scrollWidth - form.clientWidth)).toBeLessThanOrEqual(1);
-    await popup.getByRole('button', { name: 'Reset layout', exact: true }).click();
+    await resetPositions(popup);
     await expect(page.locator('[data-ado-ticket-manual]')).toHaveCount(0);
     await expect(editor).toHaveText('This rich-text draft must remain readable after dragging.');
   } finally { await context.close(); }
@@ -2567,3 +2584,43 @@ for (const scenario of [
     } finally { await context.close(); }
   });
 }
+
+test('Ticket popup layers: Undo and Lock stay global while view and visibility controls live in their own tabs', async ({}, info) => {
+  const context = await launch(info.outputPath('profile'));
+  try {
+    const { page, popup } = await fixture(context, 'https://dev.azure.com', false, false, false, ticketHtml(false, true));
+    const cardsTab = popup.getByRole('tab', { name: /^Cards & fields/ });
+    await expect(cardsTab).toHaveAttribute('aria-selected', 'true');
+    await expect(cardsTab).not.toContainText('hidden');
+    await expect(popup.getByRole('searchbox', { name: 'Find a Ticket card or field', exact: true })).toBeVisible();
+    await expect(popup.getByRole('button', { name: 'Show all', exact: true })).toBeVisible();
+    await expect(popup.getByRole('radio')).toHaveCount(0);
+
+    await find(popup, 'Review');
+    await popup.getByRole('button', { name: 'Show Review', exact: true }).click();
+    await expect(page.locator('#sample\\.review')).not.toBeVisible();
+    await expect(cardsTab).toContainText('1 hidden');
+
+    await popup.getByRole('tab', { name: 'Layout', exact: true }).click();
+    await expect(popup.getByRole('searchbox')).toHaveCount(0);
+    await expect(popup.getByRole('button', { name: 'Show all', exact: true })).toHaveCount(0);
+    await expect(popup.getByRole('radio', { name: 'Original', exact: true })).toBeChecked();
+    await expect(popup.getByRole('button', { name: 'Reset original positions', exact: true })).toBeVisible();
+    await popup.getByRole('radio', { name: 'Workspace', exact: true }).click();
+    await expect.poll(async () => (await savedSettings(context)).ticket.viewMode).toBe('workspace');
+    await expect(popup.getByRole('button', { name: 'Reset Workspace positions', exact: true })).toBeVisible();
+
+    const lock = popup.getByRole('button', { name: 'Lock layout', exact: true });
+    await lock.click();
+    await expect(popup.getByRole('button', { name: 'Unlock layout', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('[data-ado-ticket-ui="card-actions"]')).toHaveCount(0);
+    await cardsTab.click();
+    await expect(popup.getByRole('button', { name: 'Unlock layout', exact: true })).toBeVisible();
+    await popup.getByRole('button', { name: 'Undo last Ticket change', exact: true }).click();
+    await expect.poll(async () => (await savedSettings(context)).ticket.viewMode).toBe('native');
+    await expect(popup.getByRole('button', { name: 'Unlock layout', exact: true })).toBeVisible();
+    await expect(popup.locator('.popup')).toHaveCSS('height', '480px');
+  } finally {
+    await context.close();
+  }
+});

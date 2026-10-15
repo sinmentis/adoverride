@@ -6,9 +6,9 @@ import {
 } from '@primer/react';
 import { ThemeProvider } from '@primer/react/next';
 import {
-  ArrowLeftIcon, GearIcon, InfoIcon,
+  ArrowLeftIcon, GearIcon, InfoIcon, LockIcon,
   MoonIcon, PlusIcon, ProjectIcon, SlidersIcon,
-  SunIcon, SyncIcon,
+  SunIcon, SyncIcon, UndoIcon, UnlockIcon,
 } from '@primer/octicons-react';
 import { scopeKey, type Scope } from '@/lib/context';
 import { extensionVersion } from '@/lib/extension';
@@ -215,9 +215,11 @@ export default function App() {
                 <SegmentedControl.Button selected={area === 'ticket'}>Ticket</SegmentedControl.Button>
               </SegmentedControl>
             </div>
-            <div className="controls">
+            <div className={`controls${area === 'ticket' ? ' single' : ''}`}>
               <div className="control-field">
-                <Text className="section-title">Preset</Text>
+                {area === 'ticket' ? <div className="label-with-help"><Text className="section-title">Preset</Text>
+                  <Help label="Ticket scope" text="Ticket settings are global. They apply to every Ticket type in this browser profile." /></div> :
+                  <Text className="section-title">Preset</Text>}
                 <div className="preset-actions">
                   <ActionMenu open={menuOpen} onOpenChange={setMenuOpen}>
                     <ActionMenu.Button
@@ -260,13 +262,22 @@ export default function App() {
                     </ActionMenu.Overlay>
                   </ActionMenu>
                   {custom && !saveOpen && <IconButton size="small" variant="invisible" icon={PlusIcon} aria-label="Save as preset" onClick={startSave} />}
+                  {area === 'ticket' && <div className="ticket-history">
+                    <IconButton size="small" icon={UndoIcon} aria-label="Undo last Ticket change" disabled={saving || !preferences.ticket.undo}
+                      onClick={() => { if (preferences.ticket.undo) void update({ kind: 'undo-ticket', id: preferences.ticket.undo.id }); }} />
+                    <IconButton size="small" className="lock-toggle" icon={preferences.ticket.layoutLocked ? LockIcon : UnlockIcon}
+                      aria-label={preferences.ticket.layoutLocked ? 'Unlock layout' : 'Lock layout'}
+                      description={preferences.ticket.layoutLocked ? 'Layout locked. Drag and hide buttons are off on the page.' :
+                        'Lock the layout. Removes drag and hide buttons from the page; saved positions stay.'}
+                      aria-pressed={preferences.ticket.layoutLocked} disabled={saving}
+                      onClick={() => void update({ kind: 'ticket-layout-lock', locked: !preferences.ticket.layoutLocked })} />
+                  </div>}
                 </div>
               </div>
-              <div className="control-field">
+              {area !== 'ticket' && <div className="control-field">
                 <div className="label-with-help"><Text id={scopeLabel} className="section-title">Scope</Text>
-                  <Help label="Scope" text={area === 'ticket' ? 'Ticket settings apply across this browser profile.' :
-                    'Choose where to save. Board, project and organization profiles override All ADO. Changing an inherited scope saves a complete Board profile.'} /></div>
-                {area === 'ticket' ? <Text className="ticket-scope">Global</Text> : <Select
+                  <Help label="Scope" text="Choose where to save. Board, project and organization profiles override All ADO. Changing an inherited scope saves a complete Board profile." /></div>
+                <Select
                   block size="small" aria-labelledby={scopeLabel} value={preferences.scope}
                   onChange={event => {
                     const scope = SCOPES.find(item => item.value === event.target.value);
@@ -274,8 +285,8 @@ export default function App() {
                   }}
                 >
                   {SCOPES.map(scope => <Select.Option key={scope.value} value={scope.value} disabled={scopeKey(scope.value, context) === null}>{scope.title}</Select.Option>)}
-                </Select>}
-              </div>
+                </Select>
+              </div>}
             </div>
 
             <main className="popup-body">

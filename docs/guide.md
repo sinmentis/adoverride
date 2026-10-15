@@ -95,16 +95,22 @@ Native/server limits still apply; loaded counts are not a server-side total.
 
 ## Personalize a Ticket
 
-The popup selects **Ticket** over an active native editor. Expand its hierarchy
-or search for a card or field. Visibility rules apply across the browser profile,
-and hiding a parent preserves its children's choices.
+The popup selects **Ticket** over an active native editor. Ticket settings are
+global across the browser profile and every Ticket type. The Preset row holds
+two icon buttons: **Undo** reverts the last Ticket change, and **Lock** removes
+the on-page hand and Hide controls while keeping saved presentation active.
+
+**Layout** picks the view, **Original** or **Workspace** (reading lane and
+Properties rail). Each view keeps its own card positions. **Reset positions**
+clears positions for the active view only.
+
+**Cards & fields** lists pages, cards and fields with their switches. Search to
+filter, and use **Show all** to restore visibility. The tab shows how many items
+on this Ticket are hidden. Hiding a parent keeps its children's choices.
 
 Hover or focus a mapped card header to use the hand and Hide controls. Dragging
 changes visual placement, not native editor nodes or parents. Escape cancels.
-**Lock layout** removes those controls while keeping saved presentation active.
 
-**Show all** restores visibility. **Reset layout** clears positions for the active
-view only. Turning **Workspace view** off restores the saved native arrangement.
 The master switch temporarily restores native presentation without deleting
 preferences. Native navigation and validation can temporarily protect content
 that must remain reachable.

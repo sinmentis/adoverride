@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
-import { Button, Flash, Spinner, Text, TextInput, ToggleSwitch, VisuallyHidden } from '@primer/react';
-import { ChevronDownIcon, ChevronRightIcon, LockIcon, SearchIcon, UnlockIcon } from '@primer/octicons-react';
+import { Button, Flash, FormControl, Radio, RadioGroup, Spinner, Text, TextInput, ToggleSwitch, VisuallyHidden } from '@primer/react';
+import { UnderlinePanels } from '@primer/react/experimental';
+import { ChevronDownIcon, ChevronRightIcon, SearchIcon, SyncIcon } from '@primer/octicons-react';
 import type { PreferenceAction, Preferences } from '@/lib/preferences';
 import type { TargetState, TicketSnapshot } from '@/lib/ticket';
 import { Help } from './Help';
@@ -9,6 +10,7 @@ export function TicketPanel({ snapshot, preferences, saving, update }: {
   snapshot: TicketSnapshot; preferences: Preferences; saving: boolean; update: (action: PreferenceAction) => Promise<boolean>;
 }) {
   const [query, setQuery] = useState('');
+  const [tab, setTab] = useState<'layout' | 'cards'>('cards');
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const search = query.trim().toLowerCase();
   const matches = new Set(snapshot.targets.filter(target => target.label.toLowerCase().includes(search)).map(target => target.id));
@@ -55,37 +57,51 @@ export function TicketPanel({ snapshot, preferences, saving, update }: {
       );
     });
   }
+  const workspace = preferences.ticket.viewMode === 'workspace';
+  const hidden = snapshot.targets.filter(target => !target.desiredVisible).length;
   return (
     <>
       {snapshot.message && <Flash variant={snapshot.status === 'error' ? 'danger' : 'warning'} className="notice">{snapshot.message}</Flash>}
       {snapshot.status === 'loading' && <Spinner size="small" aria-label="Loading Ticket layout" />}
-      <TextInput size="small" block leadingVisual={SearchIcon} type="search"
-        aria-label="Find a Ticket card or field" placeholder="Find a card or field..." value={query}
-        onChange={event => setQuery(event.target.value)} />
-      <div className="ticket-toolbar">
-        <div className="label-with-help"><Text id="workspace-view-label">Workspace view</Text>
-          <Help label="Workspace view" text="Use a reading lane and Properties rail. Original controls and both saved arrangements stay intact." /></div>
-        <ToggleSwitch size="small" aria-labelledby="workspace-view-label" checked={preferences.ticket.viewMode === 'workspace'}
-          disabled={saving} onChange={checked => void update({ kind: 'ticket-view', viewMode: checked ? 'workspace' : 'native' })} />
-      </div>
-      <div className="ticket-toolbar">
-        <Help label="Layout lock" text="Lock hides inline Hide and drag controls. Saved positions and popup visibility switches remain active." />
-        <Button size="small" variant="invisible" leadingVisual={preferences.ticket.layoutLocked ? UnlockIcon : LockIcon}
-          aria-pressed={preferences.ticket.layoutLocked} disabled={saving}
-          onClick={() => void update({ kind: 'ticket-layout-lock', locked: !preferences.ticket.layoutLocked })}>
-          {preferences.ticket.layoutLocked ? 'Unlock layout' : 'Lock layout'}
-        </Button>
-      </div>
-      <div className="ticket-toolbar">
-        <Button size="small" variant="invisible" aria-label="Undo last Ticket change" disabled={saving || !preferences.ticket.undo}
-          onClick={() => { if (preferences.ticket.undo) void update({ kind: 'undo-ticket', id: preferences.ticket.undo.id }); }}>Undo</Button>
-        <Button size="small" variant="invisible" disabled={saving} title={`Reset ${preferences.ticket.viewMode === 'workspace' ? 'Workspace' : 'original'} positions only`}
-          onClick={() => void update({ kind: 'reset-ticket-layout' })}>Reset layout</Button>
-        <Button size="small" variant="invisible" disabled={saving} onClick={() => void update({ kind: 'reset-ticket' })}>Show all</Button>
-      </div>
-      {snapshot.status === 'none' ? <Text as="p" className="caption">Open a ticket page or dialog to discover its layout.</Text> :
-        snapshot.targets.length ? rows(null) : <Text as="p" className="caption">No supported form structure is available.</Text>}
-      {search && !matches.size && <Text as="p" className="caption">No matching cards or fields.</Text>}
+      <UnderlinePanels aria-label="Ticket settings" className="ticket-tabs" value={tab}
+        onChange={({ value }) => setTab(value === 'layout' ? 'layout' : 'cards')}>
+        <UnderlinePanels.Tab value="layout">Layout</UnderlinePanels.Tab>
+        <UnderlinePanels.Tab value="cards" counter={hidden ? `${hidden} hidden` : undefined}>Cards &amp; fields</UnderlinePanels.Tab>
+        <UnderlinePanels.Panel value="layout">
+          <RadioGroup name="ticket-view" className="ticket-view" disabled={saving}
+            onChange={value => { if (value) void update({ kind: 'ticket-view', viewMode: value === 'workspace' ? 'workspace' : 'native' }); }}>
+            <RadioGroup.Label className="section-title">View</RadioGroup.Label>
+            <FormControl>
+              <Radio value="native" checked={!workspace} />
+              <FormControl.Label>Original</FormControl.Label>
+              <FormControl.Caption>ADO&apos;s own arrangement</FormControl.Caption>
+            </FormControl>
+            <FormControl>
+              <Radio value="workspace" checked={workspace} />
+              <FormControl.Label>Workspace</FormControl.Label>
+              <FormControl.Caption>Reading lane and Properties rail</FormControl.Caption>
+            </FormControl>
+          </RadioGroup>
+          <div className="label-with-help">
+            <Button size="small" leadingVisual={SyncIcon} disabled={saving}
+              onClick={() => void update({ kind: 'reset-ticket-layout' })}>
+              Reset {workspace ? 'Workspace' : 'original'} positions
+            </Button>
+            <Help label="Reset positions" text={`Moves cards back to their ${workspace ? 'Workspace' : 'original'} places. Hidden items stay hidden and the other view keeps its positions.`} />
+          </div>
+        </UnderlinePanels.Panel>
+        <UnderlinePanels.Panel value="cards">
+          <div className="ticket-search">
+            <TextInput size="small" block leadingVisual={SearchIcon} type="search"
+              aria-label="Find a Ticket card or field" placeholder="Find a card or field..." value={query}
+              onChange={event => setQuery(event.target.value)} />
+            <Button size="small" variant="invisible" disabled={saving} onClick={() => void update({ kind: 'reset-ticket' })}>Show all</Button>
+          </div>
+          {snapshot.status === 'none' ? <Text as="p" className="caption">Open a ticket page or dialog to discover its layout.</Text> :
+            snapshot.targets.length ? rows(null) : <Text as="p" className="caption">No supported form structure is available.</Text>}
+          {search && !matches.size && <Text as="p" className="caption">No matching cards or fields.</Text>}
+        </UnderlinePanels.Panel>
+      </UnderlinePanels>
     </>
   );
 }
