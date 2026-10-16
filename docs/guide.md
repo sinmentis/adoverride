@@ -128,7 +128,7 @@ profile; **Reset to kiwifruit** turns every option back on.
 
 | Overview option | What it does |
 | --- | --- |
-| Split Overview into tabs | Overview becomes **Activity** (the feed at full width), followed by **Description** (with tags and work items) and **Checks** (merge status with reviewers). Checks shows a red **N failed** or **N pending** badge. The last tab you used is remembered; clicking Activity always opens the feed |
+| Split Overview into tabs | Overview becomes **Activity** (the feed at full width), followed by **Description** (with tags and work items) and **Checks** (merge status with reviewers). On those two tabs each block spans the full width, one under another. Checks shows a red **N failed** or **N pending** badge. The last tab you used is remembered; clicking Activity always opens the feed |
 | Compact header | Tighter title, tab bar and Files toolbar on every PR tab |
 | Hide header avatars | Removes the reviewer avatar strip next to the title; the sidebar Reviewers list stays |
 | Merge status in sidebar | When Overview is not split, moves the checks and policies card to the top of the right sidebar; work items are listed before tags. **Expand** widens the card over the left column so long check names fit on one line; **Collapse** puts it back |

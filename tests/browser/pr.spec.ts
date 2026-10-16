@@ -426,6 +426,15 @@ test('PR split overview: Activity, Description and Checks tabs show their parts,
       await expect(page.locator(selector)).toBeHidden();
     }
     expect(await page.locator('#__bolt-tab-overview .bolt-tab-inner-container').evaluate(node => getComputedStyle(node).borderBottomColor)).toBe('rgba(0, 0, 0, 0)');
+    // Blocks stack, each spanning the row.
+    {
+      const row = await box(page, '.page-content > .flex-row');
+      const card = await box(page, '.repos-pr-description-card');
+      const items = await box(page, '[data-fixture="workitems"]');
+      expect(card.width).toBeGreaterThan(row.width - 16);
+      expect(items.width).toBeGreaterThan(row.width - 16);
+      expect(items.y).toBeGreaterThanOrEqual(card.y + card.height);
+    }
     // The description is not folded on its own tab.
     await expect(page.getByRole('button', { name: 'Show more', exact: true })).toHaveCount(0);
     // Checks: merge status with reviewers.
@@ -435,7 +444,14 @@ test('PR split overview: Activity, Description and Checks tabs show their parts,
     for (const selector of ['[data-fixture="workitems"]', '[data-fixture="tags"]', '.repos-pr-description-card', 'table.activity-feed-list']) {
       await expect(page.locator(selector)).toBeHidden();
     }
-    expect((await box(page, '[data-fixture="status"]')).width).toBeGreaterThan(600);
+    {
+      const row = await box(page, '.page-content > .flex-row');
+      const status = await box(page, '[data-fixture="status"]');
+      const reviewers = await box(page, '[data-fixture="reviewers"]');
+      expect(status.width).toBeGreaterThan(row.width - 16);
+      expect(reviewers.width).toBeGreaterThan(row.width - 16);
+      expect(reviewers.y).toBeGreaterThanOrEqual(status.y + status.height);
+    }
     await page.screenshot({ path: info.outputPath('pr-split-checks.png') });
     expect(await nativesIntact(page)).toBe(true);
     // The last tab is remembered across loads.
@@ -460,6 +476,7 @@ test('PR split overview: Activity, Description and Checks tabs show their parts,
     await expect(page.locator('table.activity-feed-list')).toBeVisible();
     await expect(page.locator('.repos-overview-right-pane')).toBeVisible();
     await expect(page.locator('[data-ado-pr-view],[data-ado-pr-part]')).toHaveCount(0);
+    expect((await box(page, '.repos-overview-right-pane')).width).toBe(340);
     expect(await page.locator('#__bolt-tab-overview .bolt-tab-text').evaluate(node => getComputedStyle(node, '::before').content)).toBe('"Overview"');
   } finally { await context.close(); }
 });

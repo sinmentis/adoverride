@@ -69,6 +69,8 @@ ${levels.map(level => `[${ROOT}~="compact-tree"] .repos-changes-explorer-tree tr
 [${VIEW}="checks"] [${PART}="left"]>:not([${PART}="status"]){display:none!important;}
 [${VIEW}="checks"] [${PART}="rail"]>:not([${PART}="reviewers"]){display:none!important;}
 [${VIEW}="checks"] [${PART}="rail"]>[${PART}="reviewers"]{margin-top:0!important;}
+[${VIEW}="description"] [${PART}="row"],[${VIEW}="checks"] [${PART}="row"]{flex-direction:column!important;}
+[${VIEW}="description"] [${PART}="rail"],[${VIEW}="checks"] [${PART}="rail"]{width:auto!important;margin-left:0!important;margin-top:24px!important;}
 [${FOLD}]{max-height:${DESCRIPTION_FOLD_HEIGHT}px!important;overflow:hidden!important;
   -webkit-mask-image:linear-gradient(to bottom,#000 65%,transparent);mask-image:linear-gradient(to bottom,#000 65%,transparent);}
 [${UI}]{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;margin:6px 12px;padding:2px 8px;border:1px solid transparent;border-radius:4px;
@@ -371,7 +373,7 @@ export function createPrController(document: Document, address: () => string) {
           if (row && left && rail) {
             splitLayout = true;
             mark(root, VIEW, overviewTab);
-            mark(left, PART, 'left'); mark(rail, PART, 'rail');
+            mark(row, PART, 'row'); mark(left, PART, 'left'); mark(rail, PART, 'rail');
             if (card) mark(card, PART, 'status');
             const description = left.querySelector(':scope > .repos-pr-description-card');
             if (description) mark(description, PART, 'description');
