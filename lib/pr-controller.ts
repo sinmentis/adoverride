@@ -107,6 +107,9 @@ export function createPrController(document: Document, address: () => string) {
   const filters = new Map<string, PrFilterState>();
   const touched = new Set<string>();
   let filterBusy = false;
+  // Thread authors seen during this page session, so filters and lazy loading don't shrink the list.
+  let knownKey = '';
+  const known = new Map<string, { name: string; threads: number }>();
   const style = document.createElement('style');
   style.setAttribute(STYLE, '');
   style.textContent = PR_CSS;
@@ -427,8 +430,14 @@ export function createPrController(document: Document, address: () => string) {
       const filter = profile.activeComments && pr.view === 'overview' ? filters.get(pr.key) ?? 'waiting' : 'off';
       const relevant = [...EVERY_TAB, ...(pr.view === 'overview' ? OVERVIEW : pr.view === 'files' ? FILES : [])];
       const missing = unsupported.filter(feature => relevant.includes(feature));
-      const blockedAll = [...authors.values()];
-      for (const name of profile.blockedAuthors) if (!authors.has(authorKey(name))) blockedAll.push({ name, threads: 0, blocked: true });
+      if (knownKey !== pr.key) { known.clear(); knownKey = pr.key; }
+      for (const [key, item] of authors) {
+        const previous = known.get(key);
+        if (previous) previous.threads = Math.max(previous.threads, item.threads);
+        else if (known.size < 200) known.set(key, { name: item.name, threads: item.threads });
+      }
+      const blockedAll: PrAuthorState[] = [...known].map(([key, item]) => ({ name: item.name, threads: item.threads, blocked: blocked.has(key) }));
+      for (const name of profile.blockedAuthors) if (!known.has(authorKey(name))) blockedAll.push({ name, threads: 0, blocked: true });
       publish({ version: 2, status: applied.length || tabs.some(tab => tab.hidden) ? 'active' : 'original', view: pr.view, applied, unsupported: missing,
         passedChecks, silentReviewers, treeComments, foldedUpdates, blockedThreads, descriptionFolded, filter, tabs,
         authors: blockedAll.slice(0, 200),

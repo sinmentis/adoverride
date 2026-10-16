@@ -328,3 +328,27 @@ test('PR files: blocked authors leave the tree and their inline threads fold', a
     expect((await stored(context)).pr.blockedAuthors).toEqual(['sample bot']);
   } finally { await context.close(); }
 });
+
+test('PR blocked list: authors of threads hidden by the native filter appear once they load, and stay listed', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    const page = await open(context, { overview: prOverviewHtml({ filter: 'active_comments' }) });
+    const trigger = page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])');
+    await expect(trigger).toHaveText('Active comments (3)');
+    const popup = await popupFor(context, page);
+    await popup.getByRole('tab', { name: 'Blocked' }).click();
+    const list = popup.getByRole('region', { name: 'Blocked comment authors' });
+    await expect(list.getByRole('button', { name: 'Sample Bot', exact: true })).toBeVisible();
+    // Sample Author only has a resolved thread, which the Active comments filter does not render.
+    await expect(list.getByRole('button', { name: 'Sample Author', exact: true })).toHaveCount(0);
+    await page.bringToFront();
+    await trigger.click();
+    await page.locator('#__bolt-everything').click();
+    await expect(trigger).toHaveText('Show everything (11)');
+    await trigger.click();
+    await page.locator('#__bolt-active_comments').click();
+    await expect(trigger).toHaveText('Active comments (3)');
+    await expect(list.getByRole('button', { name: 'Sample Author', exact: true })).toBeVisible();
+    await expect(list.getByRole('button', { name: 'Sample Bot', exact: true })).toBeVisible();
+  } finally { await context.close(); }
+});

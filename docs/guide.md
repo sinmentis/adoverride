@@ -151,8 +151,10 @@ stays visible, so a direct link still works.
 display name, and threads they started fold behind one **N from blocked
 authors** button next to the activity filter. In **Files** their rows leave the
 file tree and their inline threads fold to a one-line button. Matching uses the
-display name, case-insensitive. Agents that post under a person's account look
-like that person and can't be told apart.
+display name, case-insensitive, so bot accounts such as review agents can be
+blocked by name. The list collects thread authors as they appear while the page
+is open, including after you switch the activity filter or scroll; type a name
+to block someone who hasn't appeared yet.
 
 kiwifruit turns every option on and hides Updates, Test Results Hub, Agency
 Sessions, PR Standard Questionnaire and Risk Assessment, including for installs

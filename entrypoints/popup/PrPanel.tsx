@@ -95,12 +95,12 @@ export function PrPanel({ preferences, snapshot, saving, update }: {
           {authors.map((author, index) => (
             <div className="ticket-row" key={authorKey(author.name)}>
               <div className="pr-list-label"><Text id={`${id}-author-${index}`} title={author.name}>{author.name}</Text>
-                <Text className="caption">{author.threads ? `${author.threads} ${author.threads === 1 ? 'thread' : 'threads'}` : 'not on this PR'}</Text></div>
+                <Text className="caption">{author.threads ? `${author.threads} ${author.threads === 1 ? 'thread' : 'threads'}` : 'not seen yet'}</Text></div>
               <ToggleSwitch size="small" aria-labelledby={`${id}-author-${index}`} checked={blockedKeys.has(authorKey(author.name))}
                 disabled={saving} onChange={value => void update({ kind: 'pr-author', name: author.name, blocked: value })} />
             </div>
           ))}
-          <Text as="p" className="caption">Threads started by a blocked author fold away. Matching uses the display name, so agents posting under a person's account are not caught.</Text>
+          <Text as="p" className="caption">Threads started by a blocked author fold away. Matching uses the display name. Authors appear here as their threads load; switch the activity filter to Show everything to list them all.</Text>
         </section>
       </UnderlinePanels.Panel>
     </UnderlinePanels>
