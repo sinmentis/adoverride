@@ -4,18 +4,20 @@ import { isObject } from './ticket';
 export const PR_PORT = 'ado-customize/pr/v2';
 
 export const PR_FEATURES = {
+  splitOverview: { title: 'Split Overview into tabs', tab: 'overview',
+    help: 'Overview becomes Activity (full-width feed), plus Description (with work items and tags) and Checks (with reviewers) tabs. The last tab you used is remembered.' },
   compactHeader: { title: 'Compact header', tab: 'overview',
     help: 'Tighter title, tab bar and Files toolbar. Applies to every PR tab.' },
   hideHeaderReviewers: { title: 'Hide header avatars', tab: 'overview',
     help: 'Remove the reviewer avatar strip next to the title. The Reviewers list in the sidebar stays.' },
   railStatus: { title: 'Merge status in sidebar', tab: 'overview',
-    help: 'Move the checks and policies card to the top of the right sidebar, and list work items before tags.' },
+    help: 'When Overview is not split: move the checks and policies card to the top of the right sidebar, and list work items before tags.' },
   hidePassedChecks: { title: 'Collapse passed checks', tab: 'overview',
     help: 'Only failing and pending policies stay open. Passed ones fold into an "N passed" button.' },
   collapseReviewers: { title: 'Collapse silent reviewers', tab: 'overview',
     help: 'Optional reviewers without a vote fold into a "+N with no vote" button. Required reviewers always stay.' },
   foldDescription: { title: 'Fold long description', tab: 'overview',
-    help: 'Descriptions taller than about 12 lines show a preview with Show more. Editing always shows the full text.' },
+    help: 'When Overview is not split: descriptions taller than about 12 lines show a preview with Show more. Editing always shows the full text.' },
   activeComments: { title: 'Start on active comments', tab: 'overview',
     help: 'Pick the native "Active comments" activity filter once when a PR opens. Your own choice is never overridden.' },
   foldUpdates: { title: 'Fold update runs', tab: 'overview',

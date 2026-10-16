@@ -66,8 +66,9 @@ describe('read-only work item inspector', () => {
     const result = inspectPage(document, `https://dev.azure.com/example/Platform/${hub}`);
     expect(result).toMatchObject({ kind: 'rows', renderedItems: 3, uniqueTickets: 2, hiddenItems: 1, matchedRows: 4 });
     expect(document.body.innerHTML).toBe(before);
-    expect(JSON.stringify(result)).not.toContain('Private title');
-    expect(JSON.stringify(result)).not.toContain('101');
+    const { scannedAt: _, ...content } = result;
+    expect(JSON.stringify(content)).not.toContain('Private title');
+    expect(JSON.stringify(content)).not.toContain('101');
   });
 
   it('reads the ID column when titles are buttons and ignores related-item links', () => {

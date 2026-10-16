@@ -20,7 +20,9 @@ svg.bolt-status{width:24px;height:24px;flex-shrink:0;} svg.repos-reviewer-vote-i
 .app{height:100vh;} .repos-pr-details-page{height:100vh;overflow-y:auto;}
 .repos-pr-header{padding:20px 20px 0 12px;margin:0 12px 8px;} .repos-pr-title{font-size:20px;line-height:34px;min-height:34px;}
 .pr-secondary-title-row{margin:4px 0 0 8px;color:#605e5c;} .bolt-pill{padding:0 8px;border-radius:11px;background:#e1dfdd;color:#201f1e;}
-.repos-pr-details-page-tabbar{height:48px;padding:0 32px 0 24px;} .bolt-tabbar-tabs.tall{height:48px;} .bolt-tab{height:48px;padding:0 8px;display:flex;align-items:center;color:inherit;text-decoration:none;}
+.repos-pr-details-page-tabbar{height:48px;padding:0 32px 0 24px;} .bolt-tabbar-tabs.tall{height:48px;} .bolt-tab{height:48px;padding:0 8px;display:flex;align-items:center;color:inherit;text-decoration:none;font-size:14px;}
+.bolt-tab-inner-container{display:flex;align-items:center;height:40px;border-bottom:2px solid transparent;} .bolt-tab.selected .bolt-tab-inner-container{border-bottom-color:#0078d4;font-weight:600;}
+.bolt-tab-text::before,.bolt-tab-text::after{content:attr(data-content);display:block;height:0;visibility:hidden;font-weight:600;overflow:hidden;}
 .page-content{padding:16px 32px;} .repos-overview-right-pane{width:340px;margin-left:28px;}
 .repos-reviewer{padding:10px 8px 10px 12px;min-height:55px;} .repos-pr-no-items-well{padding:12px;}
 .bolt-button{font:inherit;padding:6px 12px;border:1px solid #8a8886;border-radius:2px;background:transparent;color:inherit;}
@@ -66,7 +68,7 @@ function header(selected = 'overview') {
   </div>
   <div class="repos-pr-details-page-tabbar bolt-tabbar flex-row flex-center flex-noshrink sticky">
     <div class="bolt-tabbar-tabs flex-grow flex-wrap bolt-tabs flex-row tall" role="tablist">
-      ${TABS.map(([id, label]) => `<a class="bolt-tab${id === selected ? ' selected' : ''}" role="tab" id="__bolt-tab-${id}" aria-selected="${id === selected}" href="?_a=${id}">${label}</a>`).join('')}
+      ${TABS.map(([id, label]) => `<a class="bolt-tab focus-treatment flex-noshrink${id === selected ? ' selected' : ''}" role="tab" id="__bolt-tab-${id}" aria-selected="${id === selected}" href="?_a=${id}"><span class="bolt-tab-inner-container"><span class="bolt-tab-text" data-content="${label}">${label}</span></span></a>`).join('')}
     </div>
   </div>`;
 }

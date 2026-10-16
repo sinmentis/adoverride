@@ -56,18 +56,21 @@ function box(page: Page, selector: string) {
 }
 async function tagNatives(page: Page) {
   await page.evaluate(() => {
-    const nodes = [...document.querySelectorAll('[data-fixture],[data-fixture-reviewer],.repos-activity-filter-dropdown>button,tr.bolt-timeline-row,[role="tab"],.repos-pr-description')];
+    const nodes = [...document.querySelectorAll('[data-fixture],[data-fixture-reviewer],.repos-activity-filter-dropdown>button,tr.bolt-timeline-row,[role="tab"]:not([data-ado-pr-tab]),.repos-pr-description')];
     (window as unknown as { __natives: [Element, Element | null][] }).__natives = nodes.map(node => [node, node.parentElement]);
   });
 }
-function nativesIntact(page: Page) {
-  return page.evaluate(() => (window as unknown as { __natives: [Element, Element | null][] }).__natives
-    .every(([node, parent]) => node.isConnected && node.parentElement === parent));
+async function nativesIntact(page: Page) {
+  const broken = await page.evaluate(() => (window as unknown as { __natives: [Element, Element | null][] }).__natives
+    .filter(([node, parent]) => !node.isConnected || node.parentElement !== parent).map(([node]) => node.outerHTML.slice(0, 120)));
+  if (broken.length) console.log('moved natives', broken);
+  return broken.length === 0;
 }
 
 test('PR overview: kiwifruit defaults fold noise, move merge status to the sidebar and keep native nodes', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
+    await setPr(context, { splitOverview: false });
     const page = await open(context, { overview: prOverviewHtml() }, '', 360);
     await tagNatives(page);
     await expect(page.locator('[data-ado-pr]')).toHaveAttribute('data-ado-pr', /rail/);
@@ -159,6 +162,7 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
 test('PR overview: a filter that is already not "Show everything" is kept, and dark theme buttons stay readable', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
+    await setPr(context, { splitOverview: false });
     const page = await open(context, { overview: prOverviewHtml({ dark: true, filter: 'all_comments' }) });
     await expect(page.getByRole('button', { name: '2 passed', exact: true })).toBeVisible();
     await expect(page.locator('.bolt-callout')).toHaveCount(0);
@@ -181,6 +185,7 @@ test('PR overview: a filter that is already not "Show everything" is kept, and d
 test('PR overview: unknown structures stay native and are reported', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
+    await setPr(context, { splitOverview: false });
     const page = await open(context, { overview: prOverviewHtml({ unknownStatus: true }) });
     await expect(page.locator('[data-ado-pr]')).toHaveAttribute('data-ado-pr', /reviewers/);
     await expect(page.locator('[data-ado-pr-placed],[data-ado-pr-passed]')).toHaveCount(0);
@@ -250,6 +255,7 @@ test('PR tabs and header: kiwifruit hides chosen tabs and avatars, the current t
 test('PR description: long text folds behind Show more and opens fully while editing', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
+    await setPr(context, { splitOverview: false });
     const page = await open(context);
     const body = '.repos-pr-description';
     await expect(page.getByRole('button', { name: 'Show more', exact: true })).toBeVisible();
@@ -389,5 +395,71 @@ test('PR blocked list: authors of threads hidden by the native filter appear onc
     await expect(trigger).toHaveText('Active comments (2)');
     await expect(list.getByRole('button', { name: 'Sample Author', exact: true })).toBeVisible();
     await expect(list.getByRole('button', { name: 'Sample Bot', exact: true })).toBeVisible();
+  } finally { await context.close(); }
+});
+
+test('PR split overview: Activity, Description and Checks tabs show their parts, remember the last tab, and restore', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    const page = await open(context);
+    await tagNatives(page);
+    const tablist = page.locator('.repos-pr-details-page-tabbar [role="tablist"]');
+    // Native order with ours right after Overview, which reads Activity.
+    await expect(tablist.locator(':scope > [role="tab"]').nth(1)).toHaveText('Description');
+    await expect(tablist.locator(':scope > [role="tab"]').nth(2)).toHaveText(/^Checks/);
+    expect(await page.locator('#__bolt-tab-overview .bolt-tab-text').evaluate(node => getComputedStyle(node, '::before').content)).toBe('"Activity"');
+    const checksTab = tablist.getByRole('tab', { name: /^Checks/ });
+    await expect(checksTab.locator('.ado-pr-badge')).toHaveText('1 failed');
+    // Activity: the feed takes the full row; description, checks and sidebar are hidden.
+    await expect(page.locator('.repos-overview-right-pane')).toBeHidden();
+    await expect(page.locator('[data-fixture="status"]')).toBeHidden();
+    await expect(page.locator('.repos-pr-description-card')).toBeHidden();
+    const row = await box(page, '.page-content > .flex-row');
+    expect((await box(page, 'table.activity-feed-list')).width).toBeGreaterThan(row.width - 40);
+    // Description: description with work items and tags.
+    await tablist.getByRole('tab', { name: 'Description' }).click();
+    await expect(tablist.getByRole('tab', { name: 'Description' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('.repos-pr-description-card')).toBeVisible();
+    await expect(page.locator('[data-fixture="workitems"]')).toBeVisible();
+    await expect(page.locator('[data-fixture="tags"]')).toBeVisible();
+    for (const selector of ['[data-fixture="reviewers"]', '[data-fixture="status"]', 'table.activity-feed-list', '.repos-activity-filter-dropdown']) {
+      await expect(page.locator(selector)).toBeHidden();
+    }
+    expect(await page.locator('#__bolt-tab-overview .bolt-tab-inner-container').evaluate(node => getComputedStyle(node).borderBottomColor)).toBe('rgba(0, 0, 0, 0)');
+    // The description is not folded on its own tab.
+    await expect(page.getByRole('button', { name: 'Show more', exact: true })).toHaveCount(0);
+    // Checks: merge status with reviewers.
+    await checksTab.click();
+    await expect(page.locator('[data-fixture="status"]')).toBeVisible();
+    await expect(page.locator('[data-fixture="reviewers"]')).toBeVisible();
+    for (const selector of ['[data-fixture="workitems"]', '[data-fixture="tags"]', '.repos-pr-description-card', 'table.activity-feed-list']) {
+      await expect(page.locator(selector)).toBeHidden();
+    }
+    expect((await box(page, '[data-fixture="status"]')).width).toBeGreaterThan(600);
+    await page.screenshot({ path: info.outputPath('pr-split-checks.png') });
+    expect(await nativesIntact(page)).toBe(true);
+    // The last tab is remembered across loads.
+    await page.reload();
+    await expect(page.locator('[data-fixture="status"]')).toBeVisible();
+    await expect(page.locator('table.activity-feed-list')).toBeHidden();
+    // The native tab returns to Activity.
+    await page.locator('#__bolt-tab-overview').click();
+    await expect(page.locator('table.activity-feed-list')).toBeVisible();
+    await expect(page.locator('[data-fixture="status"]')).toBeHidden();
+    // From Files, Description goes to Overview on the Description tab.
+    await page.goto(`${ADDRESS}?_a=files`);
+    await expect(page.getByRole('tab', { name: 'Description' })).toHaveAttribute('aria-selected', 'false');
+    await page.getByRole('tab', { name: 'Description' }).click();
+    await expect(page).toHaveURL(/_a=overview/);
+    await expect(page.locator('.repos-pr-description-card')).toBeVisible();
+    await expect(page.locator('table.activity-feed-list')).toBeHidden();
+    // Turning the option off restores the native layout and removes our tabs.
+    const popup = await popupFor(context, page);
+    await popup.getByRole('button', { name: 'Split Overview into tabs', exact: true }).click();
+    await expect(page.locator('[data-ado-pr-tab]')).toHaveCount(0);
+    await expect(page.locator('table.activity-feed-list')).toBeVisible();
+    await expect(page.locator('.repos-overview-right-pane')).toBeVisible();
+    await expect(page.locator('[data-ado-pr-view],[data-ado-pr-part]')).toHaveCount(0);
+    expect(await page.locator('#__bolt-tab-overview .bolt-tab-text').evaluate(node => getComputedStyle(node, '::before').content)).toBe('"Overview"');
   } finally { await context.close(); }
 });

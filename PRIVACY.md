@@ -22,7 +22,8 @@ extension.
   once to select Active comments. It reads comment author display names to
   match your blocked list and to list authors in the popup. It does not read or
   store pull request code, descriptions, or comments, and never votes,
-  completes, or resolves anything.
+  completes, or resolves anything. The last Overview tab you used (Activity,
+  Description or Checks) is kept in the Azure DevOps site's local storage.
 - **Interactions and preferences:** pull request layout options, hidden pull
   request tabs, blocked comment author names, visibility choices, card positions, view
   mode, presets, scope, theme, layout lock, and the last undoable Ticket change

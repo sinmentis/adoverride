@@ -60,8 +60,9 @@ WORK ITEMS
 - Lock on-page layout controls or undo the last Ticket customization.
 
 PULL REQUESTS
-- Move merge status to the top of the sidebar and fold passed checks.
-- Fold optional reviewers who haven't voted, and long descriptions.
+- Split Overview into Activity, Description and Checks tabs, with a failed
+  checks badge, so the activity feed gets the full width.
+- Fold passed checks and optional reviewers who haven't voted.
 - Open the activity feed on Active comments, fold runs of pushes, and show
   each push as one "pushed N commits" line.
 - Block bot accounts so their resolved threads fold away.

@@ -18,9 +18,9 @@ process or saving work items. Built with WXT, React, TypeScript, and GitHub Prim
 | Automatic native **Show more items** loading | Layout lock and one-step Undo |
 | Per-board, project, organization, or global settings | Standalone tickets and tickets opened from a Board |
 
-Pull request pages get a cleaner Overview (merge status in the sidebar, passed
-checks and silent reviewers folded, Active comments first) and a tighter Files
-tree. See [Tidy a pull request](#tidy-a-pull-request).
+Pull request pages get a cleaner Overview (Activity, Description and Checks
+tabs, passed checks and silent reviewers folded, Active comments first) and a
+tighter Files tree. See [Tidy a pull request](#tidy-a-pull-request).
 
 Board and Ticket support local presets, light/dark popup themes, and configuration
 export/import with a preview and pre-import backup. Native values, drafts, Save
@@ -128,12 +128,13 @@ profile; **Reset to kiwifruit** turns every option back on.
 
 | Overview option | What it does |
 | --- | --- |
+| Split Overview into tabs | Overview becomes **Activity** (the feed at full width), followed by **Description** (with tags and work items) and **Checks** (merge status with reviewers). Checks shows a red **N failed** or **N pending** badge. The last tab you used is remembered; clicking Activity always opens the feed |
 | Compact header | Tighter title, tab bar and Files toolbar on every PR tab |
 | Hide header avatars | Removes the reviewer avatar strip next to the title; the sidebar Reviewers list stays |
-| Merge status in sidebar | Moves the checks and policies card to the top of the right sidebar; work items are listed before tags. **Expand** widens the card over the left column so long check names fit on one line; **Collapse** puts it back |
+| Merge status in sidebar | When Overview is not split, moves the checks and policies card to the top of the right sidebar; work items are listed before tags. **Expand** widens the card over the left column so long check names fit on one line; **Collapse** puts it back |
 | Collapse passed checks | Folds passed policies into an **N passed** button; failing and pending ones stay |
 | Collapse silent reviewers | Folds optional reviewers without a vote into **+N with no vote**; required reviewers and anyone who voted stay |
-| Fold long description | Descriptions taller than about 12 lines show a preview with **Show more**; editing always shows the full text |
+| Fold long description | When Overview is not split, descriptions taller than about 12 lines show a preview with **Show more**; editing always shows the full text |
 | Start on active comments | Picks the native **Active comments** activity filter once when a PR opens |
 | Fold update runs | Two or more pushes or system events in a row fold behind the first one (**+N more updates**); comments stay in place |
 | Compact pushes | Push cards show only "pushed N commits"; **Show commits** opens the commit list |

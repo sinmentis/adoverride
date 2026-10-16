@@ -24,9 +24,10 @@ Works on User Stories, Bugs and any other work item type.
 
 ## Pull requests that answer "can this merge?"
 
-Merge status moves to the top of the sidebar with passed checks folded away.
-Reviewers who haven't voted collapse into one line, long descriptions fold, and
-the activity feed opens on **Active comments**. Runs of pushes fold into one
+Overview splits into **Activity**, **Description** and **Checks** tabs, so the
+feed gets the full width and failing checks show as a badge on the tab. Passed
+checks fold away, reviewers who haven't voted collapse into one line, and the
+feed opens on **Active comments**. Runs of pushes fold into one
 line with each push reduced to "pushed N commits", and resolved threads from
 authors you block (bots, say) fold away. Hide the
 extension tabs you never open. In **Files**, comment threads leave the file

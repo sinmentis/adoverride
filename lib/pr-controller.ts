@@ -14,10 +14,17 @@ const OPEN = 'data-ado-pr-open';
 const HIDE = 'data-ado-pr-hide';
 const FOLD = 'data-ado-pr-fold';
 const WIDE = 'data-ado-pr-wide';
+const VIEW = 'data-ado-pr-view';
+const PART = 'data-ado-pr-part';
+const TAB_UI = 'data-ado-pr-tab';
+const VIEW_KEY = 'adoverride.pr.overviewTab';
+export type OverviewTab = 'activity' | 'description' | 'checks';
+const OVERVIEW_TABS: { id: Exclude<OverviewTab, 'activity'>; label: string }[] = [
+  { id: 'description', label: 'Description' }, { id: 'checks', label: 'Checks' }];
 export const DESCRIPTION_FOLD_HEIGHT = 240;
 const UI = 'data-ado-pr-ui';
 const STYLE = 'data-ado-pr-style';
-const OWNED = [ROOT, ROW, STATUS, PLACED, PASSED, SILENT, ORDER, OPEN, HIDE, FOLD, WIDE];
+const OWNED = [ROOT, ROW, STATUS, PLACED, PASSED, SILENT, ORDER, OPEN, HIDE, FOLD, WIDE, VIEW, PART];
 
 const levels = Array.from({ length: 16 }, (_, index) => index + 1);
 export const PR_CSS = `
@@ -46,6 +53,22 @@ export const PR_CSS = `
 [${ROOT}~="compact-tree"] .repos-changes-explorer-tree .bolt-tree-cell .padding-vertical-8{padding-top:4px!important;padding-bottom:4px!important;}
 ${levels.map(level => `[${ROOT}~="compact-tree"] .repos-changes-explorer-tree tr[aria-level="${level}"] .bolt-tree-expand-button{margin-left:${(level - 1) * 8}px!important;}`).join('\n')}
 [${HIDE}]{display:none!important;}
+[${ROOT}~="split"] #__bolt-tab-overview .bolt-tab-text{font-size:0!important;}
+[${ROOT}~="split"] #__bolt-tab-overview .bolt-tab-text::before,[${ROOT}~="split"] #__bolt-tab-overview .bolt-tab-text::after{content:"Activity"!important;font-size:var(--ado-pr-tab-font,14px);}
+[${ROOT}~="split"] #__bolt-tab-overview .bolt-tab-text::before{visibility:visible!important;height:auto!important;}
+[${ROOT}~="split"][${VIEW}="description"] #__bolt-tab-overview .bolt-tab-inner-container,
+[${ROOT}~="split"][${VIEW}="checks"] #__bolt-tab-overview .bolt-tab-inner-container{border-bottom-color:transparent!important;font-weight:inherit!important;}
+[${TAB_UI}]{cursor:pointer;user-select:none;}
+[${TAB_UI}] .ado-pr-badge{display:inline-block;margin-left:6px;padding:0 6px;border-radius:9px;font-size:12px;line-height:18px;font-weight:600;
+  background:rgba(128,128,128,.25);color:inherit;}
+[${TAB_UI}] .ado-pr-badge[data-state="failed"]{background:#c4314b;color:#fff;}
+[${VIEW}="activity"] [${PART}="left"]>[${PART}="status"],[${VIEW}="activity"] [${PART}="left"]>[${PART}="description"],
+[${VIEW}="activity"] [${PART}="rail"]{display:none!important;}
+[${VIEW}="description"] [${PART}="left"]>:not([${PART}="description"]){display:none!important;}
+[${VIEW}="description"] [${PART}="rail"]>[${PART}="reviewers"]{display:none!important;}
+[${VIEW}="checks"] [${PART}="left"]>:not([${PART}="status"]){display:none!important;}
+[${VIEW}="checks"] [${PART}="rail"]>:not([${PART}="reviewers"]){display:none!important;}
+[${VIEW}="checks"] [${PART}="rail"]>[${PART}="reviewers"]{margin-top:0!important;}
 [${FOLD}]{max-height:${DESCRIPTION_FOLD_HEIGHT}px!important;overflow:hidden!important;
   -webkit-mask-image:linear-gradient(to bottom,#000 65%,transparent);mask-image:linear-gradient(to bottom,#000 65%,transparent);}
 [${UI}]{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;margin:6px 12px;padding:2px 8px;border:1px solid transparent;border-radius:4px;
@@ -57,9 +80,9 @@ ${levels.map(level => `[${ROOT}~="compact-tree"] .repos-changes-explorer-tree tr
 const TOKENS: Record<PrFeature, string> = {
   compactHeader: 'compact-header', railStatus: 'rail', hidePassedChecks: 'passed', collapseReviewers: 'reviewers',
   activeComments: '', hideTreeComments: 'tree-comments', compactTree: 'compact-tree',
-  hideHeaderReviewers: '', foldDescription: '', foldUpdates: '', compactPushes: '',
+  hideHeaderReviewers: '', foldDescription: '', foldUpdates: '', compactPushes: '', splitOverview: '',
 };
-const EVERY_TAB: PrFeature[] = ['compactHeader', 'hideHeaderReviewers'];
+const EVERY_TAB: PrFeature[] = ['splitOverview', 'compactHeader', 'hideHeaderReviewers'];
 const OVERVIEW: PrFeature[] = ['railStatus', 'hidePassedChecks', 'collapseReviewers', 'foldDescription', 'activeComments', 'foldUpdates', 'compactPushes'];
 const FILES: PrFeature[] = ['hideTreeComments', 'compactTree'];
 
@@ -113,6 +136,46 @@ export function createPrController(document: Document, address: () => string) {
   let disposed = false;
   let scheduled = 0;
   const listeners = new Set<(value: PrSnapshot) => void>();
+  const tabElements = new Map<string, HTMLElement>();
+  let overviewTab: OverviewTab = 'activity';
+  try {
+    const saved = window.localStorage.getItem(VIEW_KEY);
+    if (saved === 'description' || saved === 'checks') overviewTab = saved;
+  } catch { /* storage unavailable: start on Activity */ }
+  function chooseTab(tab: OverviewTab, overview: HTMLElement | null, onOverview: boolean) {
+    overviewTab = tab;
+    try { window.localStorage.setItem(VIEW_KEY, tab); } catch { /* keep the choice for this page only */ }
+    // From Files or another PR tab, go to Overview first; the native router handles the click.
+    if (!onOverview && overview) overview.click();
+    schedule();
+  }
+  const tabHandlers = new Map<string, () => void>();
+  function tabElement(id: string) {
+    let element = tabElements.get(id);
+    if (!element) {
+      element = document.createElement('div');
+      element.setAttribute(TAB_UI, id);
+      element.setAttribute('role', 'tab');
+      element.tabIndex = 0;
+      element.className = 'bolt-tab focus-treatment flex-noshrink';
+      const inner = document.createElement('span');
+      inner.className = 'bolt-tab-inner-container';
+      const text = document.createElement('span');
+      text.className = 'bolt-tab-text';
+      inner.append(text);
+      element.append(inner);
+      element.addEventListener('click', event => { event.preventDefault(); event.stopPropagation(); tabHandlers.get(id)?.(); });
+      element.addEventListener('keydown', event => {
+        if (event.key !== 'Enter' && event.key !== ' ') return;
+        event.preventDefault(); event.stopPropagation(); tabHandlers.get(id)?.();
+      });
+      tabElements.set(id, element);
+    }
+    return element;
+  }
+  function removeTabs(keep = new Set<string>()) {
+    for (const [id, element] of tabElements) if (!keep.has(id)) { element.remove(); tabElements.delete(id); }
+  }
   const marked = new Set<Element>();
   const buttons = new Map<string, HTMLButtonElement>();
   const opened = new Set<string>();
@@ -146,6 +209,7 @@ export function createPrController(document: Document, address: () => string) {
         element.style.removeProperty('--ado-pr-rail-width');
         element.style.removeProperty('--ado-pr-wide-width');
       }
+      if (!attributes?.has(ROOT) && element instanceof HTMLElement) element.style.removeProperty('--ado-pr-tab-font');
       if (!attributes) marked.delete(element);
     }
   }
@@ -153,7 +217,7 @@ export function createPrController(document: Document, address: () => string) {
     for (const [id, button] of buttons) if (!keep.has(id)) { button.remove(); buttons.delete(id); }
   }
   function reset() {
-    sync(); removeButtons(); style.remove();
+    sync(); removeButtons(); removeTabs(); style.remove();
     if (resized) { resize.unobserve(resized); resized = null; }
   }
   function button(id: string, parent: Element, text: string, expanded: boolean, toggle: () => void, label?: string) {
@@ -251,6 +315,12 @@ export function createPrController(document: Document, address: () => string) {
       let foldedUpdates = 0;
       let blockedThreads = 0;
       let descriptionFolded = false;
+      let checksFailed = 0;
+      let checksPending = 0;
+      const nativeOverview = root.querySelector<HTMLElement>(':scope > .repos-pr-details-page-tabbar #__bolt-tab-overview');
+      const split = profile.splitOverview && Boolean(nativeOverview?.querySelector('.bolt-tab-inner-container .bolt-tab-text'));
+      if (profile.splitOverview && !split) unsupported.push('splitOverview');
+      let splitLayout = false;
       const tabs: PrTabState[] = [];
       const authors = new Map<string, PrAuthorState>();
       const blocked = new Set(profile.blockedAuthors.map(authorKey));
@@ -295,7 +365,21 @@ export function createPrController(document: Document, address: () => string) {
         const sections = card ? statusSections(card) : null;
         const status = sections ? card : null;
         if (status) mark(status, STATUS);
-        if (profile.railStatus) {
+        checksFailed = sections?.filter(item => item.state === 'failed').length ?? 0;
+        checksPending = sections?.filter(item => item.state === 'active').length ?? 0;
+        if (split) {
+          if (row && left && rail) {
+            splitLayout = true;
+            mark(root, VIEW, overviewTab);
+            mark(left, PART, 'left'); mark(rail, PART, 'rail');
+            if (card) mark(card, PART, 'status');
+            const description = left.querySelector(':scope > .repos-pr-description-card');
+            if (description) mark(description, PART, 'description');
+            const reviewers = [...rail.children].find(block => block.querySelector('.pr-required-reviewers-section, .pr-optional-reviewers-section'));
+            if (reviewers) mark(reviewers, PART, 'reviewers');
+          } else unsupported.push('splitOverview');
+        }
+        if (profile.railStatus && !splitLayout) {
           const railBounds = rail && rendered(rail) ? rail.getBoundingClientRect() : null;
           const leftBounds = left?.getBoundingClientRect();
           const sideBySide = railBounds && leftBounds && railBounds.left >= leftBounds.right - 1;
@@ -357,7 +441,7 @@ export function createPrController(document: Document, address: () => string) {
             }
           } else unsupported.push('collapseReviewers');
         }
-        if (profile.foldDescription) {
+        if (profile.foldDescription && !splitLayout) {
           const card = root.querySelector<HTMLElement>('.repos-pr-description-card');
           const body = card?.querySelector<HTMLElement>('.repos-pr-description');
           if (card && body) {
@@ -462,8 +546,38 @@ export function createPrController(document: Document, address: () => string) {
           button(id, discussion, open ? 'Hide comment from blocked author' : 'Comment from a blocked author', open, () => toggle(id));
         });
       }
+      const keepTabs = new Set<string>();
+      if (split && nativeOverview) {
+        tokens.push('split'); applied.push('splitOverview');
+        const sample = root.querySelector('.repos-pr-details-page-tabbar .bolt-tab:not(#__bolt-tab-overview) .bolt-tab-text');
+        const font = sample ? getComputedStyle(sample).fontSize : '';
+        if (font && root.style.getPropertyValue('--ado-pr-tab-font') !== font) root.style.setProperty('--ado-pr-tab-font', font);
+        const onOverview = pr.view === 'overview';
+        let anchor: Element = nativeOverview;
+        for (const { id, label } of OVERVIEW_TABS) {
+          keepTabs.add(id);
+          const element = tabElement(id);
+          tabHandlers.set(id, () => chooseTab(id, nativeOverview, onOverview));
+          const selected = onOverview && overviewTab === id;
+          element.classList.toggle('selected', selected);
+          setAttribute(element, 'aria-selected', String(selected));
+          const text = element.querySelector<HTMLElement>('.bolt-tab-text');
+          if (text && text.textContent !== label) { text.textContent = label; text.setAttribute('data-content', label); }
+          const badge = id === 'checks' && onOverview ? checksFailed ? `${checksFailed} failed` : checksPending ? `${checksPending} pending` : '' : '';
+          let pill = element.querySelector<HTMLElement>('.ado-pr-badge');
+          if (badge) {
+            if (!pill) { pill = document.createElement('span'); pill.className = 'ado-pr-badge'; element.querySelector('.bolt-tab-inner-container')?.append(pill); }
+            if (pill.textContent !== badge) pill.textContent = badge;
+            setAttribute(pill, 'data-state', checksFailed ? 'failed' : 'pending');
+          } else pill?.remove();
+          if (anchor.nextElementSibling !== element) anchor.after(element);
+          anchor = element;
+        }
+      }
+      removeTabs(keepTabs);
+      if (!split) root.style.removeProperty('--ado-pr-tab-font');
       if (tokens.length) mark(root, ROOT, tokens.join(' '));
-      if (desired.size || keepButtons.size) { if (!style.isConnected) (document.head ?? document.documentElement).append(style); }
+      if (desired.size || keepButtons.size || keepTabs.size) { if (!style.isConnected) (document.head ?? document.documentElement).append(style); }
       else style.remove();
       sync(desired);
       removeButtons(keepButtons);
@@ -495,9 +609,9 @@ export function createPrController(document: Document, address: () => string) {
     if (!parsePullRequest(address())) return;
     if (changes.some(change => {
       const target = change.target instanceof Element ? change.target : change.target.parentElement;
-      if (target?.closest(`[${UI}],[${STYLE}]`)) return false;
+      if (target?.closest(`[${UI}],[${STYLE}],[${TAB_UI}]`)) return false;
       if (change.type === 'attributes') return !change.attributeName?.startsWith('data-ado-');
-      return [...change.addedNodes, ...change.removedNodes].some(node => !(node instanceof Element && (node.hasAttribute(UI) || node.hasAttribute(STYLE))));
+      return [...change.addedNodes, ...change.removedNodes].some(node => !(node instanceof Element && (node.hasAttribute(UI) || node.hasAttribute(STYLE) || node.hasAttribute(TAB_UI))));
     })) schedule();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true,
@@ -511,6 +625,15 @@ export function createPrController(document: Document, address: () => string) {
   };
   document.addEventListener('pointerdown', interaction, true);
   document.addEventListener('keydown', interaction, true);
+  // The native Overview tab now reads Activity; a real click on it returns to the feed.
+  const nativeOverviewClick = (event: Event) => {
+    if (!event.isTrusted || !(event.target instanceof Element) || !event.target.closest('#__bolt-tab-overview')) return;
+    if (!preferences?.enabled || !preferences.pr.splitOverview || !parsePullRequest(address())) return;
+    overviewTab = 'activity';
+    try { window.localStorage.setItem(VIEW_KEY, 'activity'); } catch { /* page-only choice */ }
+    schedule();
+  };
+  document.addEventListener('click', nativeOverviewClick, true);
   const focusChange = (event: Event) => {
     if (event.target instanceof Element && event.target.closest('.repos-pr-description-card')) schedule();
   };
@@ -531,6 +654,7 @@ export function createPrController(document: Document, address: () => string) {
       if (scheduled) window.cancelAnimationFrame(scheduled);
       document.removeEventListener('pointerdown', interaction, true);
       document.removeEventListener('keydown', interaction, true);
+      document.removeEventListener('click', nativeOverviewClick, true);
       document.removeEventListener('focusin', focusChange);
       document.removeEventListener('focusout', focusChange);
       reset(); listeners.clear();
