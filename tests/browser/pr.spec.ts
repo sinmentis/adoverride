@@ -92,6 +92,16 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     // The description now starts at the top of the left column.
     const description = await box(page, '.repos-pr-description-card');
     expect(Math.abs(description.top - status.top)).toBeLessThanOrEqual(8);
+    // Expand grows the card leftward to the full content width; Collapse puts it back.
+    await page.getByRole('button', { name: 'Expand merge status to full width', exact: true }).click();
+    const row = await box(page, '[data-ado-pr-row]');
+    await expect.poll(async () => (await box(page, '[data-fixture="status"]')).width).toBeGreaterThan(row.width - 2);
+    const wide = await box(page, '[data-fixture="status"]');
+    expect(Math.abs(wide.left - row.left)).toBeLessThanOrEqual(1);
+    expect(Math.abs(wide.right - rail.right)).toBeLessThanOrEqual(1);
+    expect(Math.abs(wide.top - status.top)).toBeLessThanOrEqual(1);
+    await page.getByRole('button', { name: 'Show merge status in the sidebar', exact: true }).click();
+    await expect.poll(async () => Math.round((await box(page, '[data-fixture="status"]')).width)).toBe(Math.round(rail.width));
     // Work items before tags.
     expect((await box(page, '[data-fixture="workitems"]')).top).toBeLessThan((await box(page, '[data-fixture="tags"]')).top);
     // Passed checks fold into a button; failing and pending stay.
@@ -136,7 +146,7 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     // The master switch restores the native page completely.
     await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
     await expect.poll(async () => (await stored(context)).enabled).toBe(false);
-    await expect(page.locator('[data-ado-pr],[data-ado-pr-status],[data-ado-pr-passed],[data-ado-pr-silent],[data-ado-pr-order]')).toHaveCount(0);
+    await expect(page.locator('[data-ado-pr],[data-ado-pr-status],[data-ado-pr-passed],[data-ado-pr-silent],[data-ado-pr-order],[data-ado-pr-wide]')).toHaveCount(0);
     await expect(page.locator('[data-ado-pr-ui],style[data-ado-pr-style]')).toHaveCount(0);
     await expect(page.locator('[data-fixture-reviewer="Sample Reviewer A"]')).toBeVisible();
     expect((await box(page, '.repos-pr-details-page-tabbar')).height).toBeGreaterThanOrEqual(47.5);

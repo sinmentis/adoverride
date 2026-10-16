@@ -130,7 +130,7 @@ profile; **Reset to kiwifruit** turns every option back on.
 | --- | --- |
 | Compact header | Tighter title, tab bar and Files toolbar on every PR tab |
 | Hide header avatars | Removes the reviewer avatar strip next to the title; the sidebar Reviewers list stays |
-| Merge status in sidebar | Moves the checks and policies card to the top of the right sidebar; work items are listed before tags |
+| Merge status in sidebar | Moves the checks and policies card to the top of the right sidebar; work items are listed before tags. **Expand** widens the card over the left column so long check names fit on one line; **Collapse** puts it back |
 | Collapse passed checks | Folds passed policies into an **N passed** button; failing and pending ones stay |
 | Collapse silent reviewers | Folds optional reviewers without a vote into **+N with no vote**; required reviewers and anyone who voted stay |
 | Fold long description | Descriptions taller than about 12 lines show a preview with **Show more**; editing always shows the full text |

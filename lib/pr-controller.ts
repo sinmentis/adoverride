@@ -13,10 +13,11 @@ const ORDER = 'data-ado-pr-order';
 const OPEN = 'data-ado-pr-open';
 const HIDE = 'data-ado-pr-hide';
 const FOLD = 'data-ado-pr-fold';
+const WIDE = 'data-ado-pr-wide';
 export const DESCRIPTION_FOLD_HEIGHT = 240;
 const UI = 'data-ado-pr-ui';
 const STYLE = 'data-ado-pr-style';
-const OWNED = [ROOT, ROW, STATUS, PLACED, PASSED, SILENT, ORDER, OPEN, HIDE, FOLD];
+const OWNED = [ROOT, ROW, STATUS, PLACED, PASSED, SILENT, ORDER, OPEN, HIDE, FOLD, WIDE];
 
 const levels = Array.from({ length: 16 }, (_, index) => index + 1);
 export const PR_CSS = `
@@ -33,6 +34,9 @@ export const PR_CSS = `
 [${ROOT}~="rail"] [${STATUS}][${PLACED}]+*{margin-top:0!important;}
 [${ROOT}~="rail"] [${STATUS}][${PLACED}] .proof-of-presence-container>.flex-row{flex-wrap:wrap;row-gap:8px;}
 [${ROOT}~="rail"] [${STATUS}][${PLACED}] .proof-of-presence-container>.flex-row>.bolt-expandable-button{margin-left:40px!important;}
+[${ROOT}~="rail"] [${STATUS}][${PLACED}][${WIDE}]{width:var(--ado-pr-wide-width,var(--ado-pr-rail-width,340px))!important;z-index:3;
+  box-shadow:0 8px 28px rgba(0,0,0,.35)!important;}
+[${ROOT}~="rail"] [${STATUS}][${PLACED}]>[${UI}="widen"]{position:absolute;top:6px;right:6px;margin:0;z-index:1;}
 [${ROOT}~="rail"] [${ROW}]>.repos-overview-right-pane{padding-top:calc(var(--ado-pr-status-height,0px) + 20px)!important;}
 [${ROOT}~="rail"] [${ORDER}="workitems"]{order:1;}
 [${ROOT}~="rail"] [${ORDER}="tags"]{order:2;}
@@ -140,6 +144,7 @@ export function createPrController(document: Document, address: () => string) {
       if (!attributes?.has(ROW) && element instanceof HTMLElement) {
         element.style.removeProperty('--ado-pr-status-height');
         element.style.removeProperty('--ado-pr-rail-width');
+        element.style.removeProperty('--ado-pr-wide-width');
       }
       if (!attributes) marked.delete(element);
     }
@@ -151,7 +156,7 @@ export function createPrController(document: Document, address: () => string) {
     sync(); removeButtons(); style.remove();
     if (resized) { resize.unobserve(resized); resized = null; }
   }
-  function button(id: string, parent: Element, text: string, expanded: boolean, toggle: () => void) {
+  function button(id: string, parent: Element, text: string, expanded: boolean, toggle: () => void, label?: string) {
     let element = buttons.get(id);
     if (!element) {
       element = document.createElement('button');
@@ -161,6 +166,7 @@ export function createPrController(document: Document, address: () => string) {
       buttons.set(id, element);
     }
     if (element.textContent !== text) element.textContent = text;
+    if (label) setAttribute(element, 'aria-label', label); else element.removeAttribute('aria-label');
     setAttribute(element, 'aria-expanded', String(expanded));
     if (element.parentElement !== parent || parent.lastElementChild !== element) parent.append(element);
     return element;
@@ -299,6 +305,17 @@ export function createPrController(document: Document, address: () => string) {
             const width = `${Math.round(railBounds.width)}px`;
             if (row.style.getPropertyValue('--ado-pr-status-height') !== height) row.style.setProperty('--ado-pr-status-height', height);
             if (row.style.getPropertyValue('--ado-pr-rail-width') !== width) row.style.setProperty('--ado-pr-rail-width', width);
+            // Widening grows the card leftward over the left column so long check names fit on one line.
+            const wideId = `${pr.key}:wide`;
+            const wide = opened.has(wideId);
+            if (wide) {
+              mark(status, WIDE);
+              const full = `${Math.round(row.getBoundingClientRect().width)}px`;
+              if (row.style.getPropertyValue('--ado-pr-wide-width') !== full) row.style.setProperty('--ado-pr-wide-width', full);
+            }
+            keepButtons.add('widen');
+            button('widen', status, wide ? '\u2192\u2190 Collapse' : '\u2190\u2192 Expand', wide, () => toggle(wideId),
+              wide ? 'Show merge status in the sidebar' : 'Expand merge status to full width');
             if (resized !== status) { if (resized) resize.unobserve(resized); resize.observe(status); resized = status; }
             const blocks = [...rail.children];
             const tags = blocks.find((block, index) => index > 0 && block.matches('.flex-column.rhythm-vertical-8') && !block.matches('.region-pullRequestDetailsOverviewExtensions'));
