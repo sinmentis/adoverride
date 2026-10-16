@@ -20,6 +20,8 @@ export const PR_FEATURES = {
     help: 'Pick the native "Active comments" activity filter once when a PR opens. Your own choice is never overridden.' },
   foldUpdates: { title: 'Fold update runs', tab: 'overview',
     help: 'Two or more pushes or system events in a row fold behind the first one. Comments stay where they are.' },
+  compactPushes: { title: 'Compact pushes', tab: 'overview',
+    help: 'Push cards show only "pushed N commits". Show commits opens the commit list.' },
   hideTreeComments: { title: 'Hide comments in file tree', tab: 'files',
     help: 'Comment threads stop showing as rows in the changed-files tree. Comments stay in the diff.' },
   compactTree: { title: 'Compact file tree', tab: 'files',

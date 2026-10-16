@@ -27,7 +27,8 @@ Works on User Stories, Bugs and any other work item type.
 Merge status moves to the top of the sidebar with passed checks folded away.
 Reviewers who haven't voted collapse into one line, long descriptions fold, and
 the activity feed opens on **Active comments**. Runs of pushes fold into one
-line, and threads from authors you block (bots, say) fold away. Hide the
+line with each push reduced to "pushed N commits", and resolved threads from
+authors you block (bots, say) fold away. Hide the
 extension tabs you never open. In **Files**, comment threads leave the file
 tree and the tree gets tighter indentation so long paths fit.
 

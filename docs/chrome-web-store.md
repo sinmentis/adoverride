@@ -62,8 +62,9 @@ WORK ITEMS
 PULL REQUESTS
 - Move merge status to the top of the sidebar and fold passed checks.
 - Fold optional reviewers who haven't voted, and long descriptions.
-- Open the activity feed on Active comments and fold runs of pushes.
-- Block bot accounts so their threads fold away.
+- Open the activity feed on Active comments, fold runs of pushes, and show
+  each push as one "pushed N commits" line.
+- Block bot accounts so their resolved threads fold away.
 - Hide PR tabs you never use.
 - Hide comment rows in the Files tree and tighten its indentation.
 

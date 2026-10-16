@@ -53,10 +53,10 @@ ${levels.map(level => `[${ROOT}~="compact-tree"] .repos-changes-explorer-tree tr
 const TOKENS: Record<PrFeature, string> = {
   compactHeader: 'compact-header', railStatus: 'rail', hidePassedChecks: 'passed', collapseReviewers: 'reviewers',
   activeComments: '', hideTreeComments: 'tree-comments', compactTree: 'compact-tree',
-  hideHeaderReviewers: '', foldDescription: '', foldUpdates: '',
+  hideHeaderReviewers: '', foldDescription: '', foldUpdates: '', compactPushes: '',
 };
 const EVERY_TAB: PrFeature[] = ['compactHeader', 'hideHeaderReviewers'];
-const OVERVIEW: PrFeature[] = ['railStatus', 'hidePassedChecks', 'collapseReviewers', 'foldDescription', 'activeComments', 'foldUpdates'];
+const OVERVIEW: PrFeature[] = ['railStatus', 'hidePassedChecks', 'collapseReviewers', 'foldDescription', 'activeComments', 'foldUpdates', 'compactPushes'];
 const FILES: PrFeature[] = ['hideTreeComments', 'compactTree'];
 
 function setAttribute(element: Element, name: string, value: string) {
@@ -87,6 +87,14 @@ export function feedRowKind(row: Element): FeedRowKind {
   // Card-less timeline rows are system events (reviewer added, policy changes, status updates).
   if (!row.querySelector('.bolt-card') && (row.textContent ?? '').trim()) return 'update';
   return 'unknown';
+}
+// Active and Pending threads are open. Unknown states count as open so nothing unresolved is hidden.
+export function threadOpen(thread: Element): boolean {
+  const label = thread.querySelector('[aria-label^="State button "]')?.getAttribute('aria-label') ?? '';
+  const state = /^State button (.+) mode$/.exec(label)?.[1]?.trim().toLowerCase();
+  if (state) return state === 'active' || state === 'pending';
+  const actions = [...thread.querySelectorAll('button')].map(button => button.textContent?.trim());
+  return !actions.includes('Reactivate') || actions.includes('Resolve');
 }
 export function threadAuthor(element: Element): string | null {
   const name = element.querySelector('.repos-discussion-comment-header .font-weight-semibold')?.textContent ??
@@ -360,7 +368,7 @@ export function createPrController(document: Document, address: () => string) {
           if (feedRowKind(row) !== 'comment') continue;
           const name = threadAuthor(row);
           seen(name);
-          if (name && blocked.has(authorKey(name))) blockedRows.push(row);
+          if (name && blocked.has(authorKey(name)) && !threadOpen(row)) blockedRows.push(row);
         }
         if (blockedRows.length && dropdownHost) {
           blockedThreads = blockedRows.length;
@@ -388,6 +396,24 @@ export function createPrController(document: Document, address: () => string) {
             }
           } else unsupported.push('foldUpdates');
         }
+        if (profile.compactPushes) {
+          if (feed) {
+            applied.push('compactPushes');
+            for (const row of feedRows) {
+              const iteration = row.querySelector('.activity-feed-timeline-iteration')?.textContent?.trim();
+              const column = row.querySelector<HTMLElement>('.bolt-table-card > .bolt-card-content > .flex-column');
+              const header = column?.querySelector(':scope > .iteration-card-header');
+              if (!iteration || !column || !header) continue;
+              const details = [...column.children].filter(child => child !== header && !child.hasAttribute(UI));
+              if (!details.length) continue;
+              const id = `${pr.key}:commits:${iteration}`;
+              const open = opened.has(id);
+              if (!open) for (const child of details) mark(child, HIDE, 'commits');
+              keepButtons.add(id);
+              button(id, column, open ? 'Hide commits' : 'Show commits', open, () => toggle(id));
+            }
+          } else unsupported.push('compactPushes');
+        }
         if (profile.activeComments) {
           const dropdown = root.querySelector<HTMLElement>('.repos-activity-filter-dropdown');
           const ready = dropdown && rendered(dropdown) && root.querySelector('table.activity-feed-list');
@@ -404,18 +430,16 @@ export function createPrController(document: Document, address: () => string) {
         for (const item of tree?.querySelectorAll('tr.bolt-tree-row .repos-file-explorer-tree-thread-item') ?? []) {
           const name = normalizeAuthor(item.querySelector('.bolt-coin')?.getAttribute('aria-label') ?? '') || null;
           seen(name);
-          const row = item.closest('tr');
-          if (row && name && blocked.has(authorKey(name))) { mark(row, HIDE, 'blocked'); blockedThreads++; }
         }
         const inline = [...root.querySelectorAll<HTMLElement>('.repos-editor-discussion')];
         inline.forEach((discussion, index) => {
           const thread = discussion.querySelector<HTMLElement>(':scope > .repos-discussion-thread, .repos-discussion-thread');
           const name = thread ? threadAuthor(thread) : null;
           if (!tree) seen(name);
-          if (!thread || !name || !blocked.has(authorKey(name))) return;
+          if (!thread || !name || !blocked.has(authorKey(name)) || threadOpen(thread)) return;
           const id = `${pr.key}:inline:${index}`;
           const open = opened.has(id);
-          if (!tree) blockedThreads++;
+          blockedThreads++;
           if (!open) mark(thread, HIDE, 'blocked');
           keepButtons.add(id);
           button(id, discussion, open ? 'Hide comment from blocked author' : 'Comment from a blocked author', open, () => toggle(id));

@@ -125,28 +125,41 @@ function rail() {
   </div>`;
 }
 
-type RowKind = 'composer' | 'push' | 'active' | 'resolved' | 'system' | 'placeholder';
+type RowKind = 'composer' | 'push' | 'active' | 'resolved' | 'closed' | 'system' | 'placeholder';
 const ROWS: { kind: RowKind; author?: string; iteration?: number }[] = [
   { kind: 'composer' }, { kind: 'push', iteration: 12 }, { kind: 'active', author: 'Sample Reviewer' }, { kind: 'push', iteration: 11 },
   { kind: 'resolved', author: 'Sample Author' }, { kind: 'active', author: 'Sample Bot' }, { kind: 'push', iteration: 10 }, { kind: 'system' },
-  { kind: 'push', iteration: 9 }, { kind: 'active', author: 'Sample Bot' }, { kind: 'push', iteration: 8 }, { kind: 'push', iteration: 7 },
+  { kind: 'push', iteration: 9 }, { kind: 'closed', author: 'Sample Bot' }, { kind: 'push', iteration: 8 }, { kind: 'push', iteration: 7 },
   { kind: 'placeholder' },
 ];
-export function commentThread(author: string, text: string, state: 'Resolve' | 'Reactivate' = 'Resolve') {
+export function commentThread(author: string, text: string, state: 'Active' | 'Resolved' | 'Closed' = 'Active') {
   return `<div class="flex-grow repos-discussion-thread flex-column"><div class="repos-comment-viewer"><div class="repos-discussion-comment flex-column">
     <div class="flex-row"><div><div class="bolt-coin repos-comment-header-persona size24" aria-label="${author}"></div></div>
     <div class="repos-comment-editor-fit flex-column flex-grow"><div class="repos-discussion-comment-header flex-row"><div class="scroll-hidden flex-column">
-      <div class="font-weight-semibold padding-right-8 text-ellipsis">${author}</div></div></div>
+      <div class="font-weight-semibold padding-right-8 text-ellipsis">${author}</div></div>
+      <div class="flex-row flex-grow justify-end"><button class="bolt-button" data-mutating="state" aria-label="State button ${state} mode">${state}</button></div></div>
       <div class="markdown-content markdown-editor-preview">${text}</div></div></div></div></div>
-    <button class="bolt-button" data-mutating="resolve">${state}</button></div>`;
+    <button class="bolt-button" data-mutating="resolve">${state === 'Active' ? 'Resolve' : 'Reactivate'}</button></div>`;
 }
 function feedRow({ kind, author, iteration }: (typeof ROWS)[number], index: number) {
   const body = kind === 'composer' ? `<div class="repos-comment-card bolt-card"><div class="padding-vertical-8 padding-horizontal-20">Add a comment</div></div>` :
-    kind === 'push' ? `<div class="bolt-table-card bolt-card iteration-card"><a class="activity-feed-timeline-iteration" href="?_a=files&iteration=${iteration}">${iteration}</a> Sample Author pushed 1 commit</div>` :
+    kind === 'push' ? pushCard(iteration ?? 0) :
     kind === 'system' ? `<div class="flex-row flex-center"><span>Sample Reviewer joined as a reviewer</span></div>` :
     kind === 'placeholder' ? `<div class="shimmer" style="height:40px"></div>` :
-    commentThread(author ?? 'Sample Reviewer', `A fictional review comment ${index}`, kind === 'active' ? 'Resolve' : 'Reactivate');
-  return `<tr class="bolt-timeline-row" data-fixture-kind="${kind}" data-fixture-row="${index}"><td>${body}</td></tr>`;
+    commentThread(author ?? 'Sample Reviewer', `A fictional review comment ${index}`, kind === 'active' ? 'Active' : kind === 'closed' ? 'Closed' : 'Resolved');
+  const sequence = kind === 'push' ? `<div class="activity-feed-sequence bolt-timeline-sequence flex-column flex-center flex-noshrink">
+    <span class="activity-feed-timeline-iteration body-s font-weight-semibold">${iteration}</span></div>` : '';
+  return `<tr class="bolt-timeline-row" data-fixture-kind="${kind}" data-fixture-row="${index}"><td class="bolt-timeline-cell flex-row">${sequence}
+    <div class="bolt-timeline-cell-content flex-row flex-grow">${body}</div></td></tr>`;
+}
+// Real ADO shows the commit table only on recent pushes; older ones are header-only.
+function pushCard(iteration: number) {
+  const commits = iteration >= 11 ? [1, 2, 3].map(n => `<tr class="bolt-table-row" role="row"><td>Fictional commit ${iteration}.${n}</td></tr>`).join('') : '';
+  return `<div class="bolt-table-card bolt-card flex-column iteration-card" data-fixture-push="${iteration}"><div class="bolt-card-content flex-row flex-grow"><div class="flex-column flex-grow scroll-hidden">
+    <a class="iteration-card-header bolt-link" href="?_a=files&iteration=${iteration}"><div class="flex-row iteration-header"><span class="font-weight-semibold">Sample Author pushed ${commits ? 3 : 1} commits</span></div></a>
+    ${commits ? `<div class="bolt-table-container flex-grow" data-fixture-commits="${iteration}"><table class="iteration-commits-table bolt-table" role="grid"><tbody>${commits}</tbody></table></div>
+    <a class="margin-16 bolt-link" href="?_a=commits" data-fixture-all-commits="${iteration}">View all commits</a>` : ''}
+  </div></div></div>`;
 }
 function activity() {
   return `<table class="activity-feed-list"><tbody>${ROWS.map(feedRow).join('')}</tbody></table>`;
@@ -156,9 +169,9 @@ const DROPDOWN_SCRIPT = (initial: string) => `
 (() => {
   const OPTIONS = [['everything', 'Show everything'], ['all_comments', 'All comments'], ['new', "What's new"], ['my_comments', 'My comments/replies'], ['active_comments', 'Active comments'], ['resolved_comments', 'Resolved comments']];
   const rows = () => [...document.querySelectorAll('tr.bolt-timeline-row')];
-  const comment = kind => kind === 'active' || kind === 'resolved';
+  const comment = kind => kind === 'active' || kind === 'resolved' || kind === 'closed';
   const match = (id, row) => { const kind = row.dataset.fixtureKind;
-    return kind === 'composer' || id === 'everything' || id === 'all_comments' && comment(kind) || id === 'active_comments' && kind === 'active' || id === 'resolved_comments' && kind === 'resolved'; };
+    return kind === 'composer' || id === 'everything' || id === 'all_comments' && comment(kind) || id === 'active_comments' && kind === 'active' || id === 'resolved_comments' && (kind === 'resolved' || kind === 'closed'); };
   const count = id => id === 'new' ? 0 : id === 'my_comments' ? 1 : rows().filter(row => row.dataset.fixtureKind !== 'composer' && row.dataset.fixtureKind !== 'placeholder' && match(id, row)).length;
   let selected = '${initial}';
   const button = document.querySelector('.repos-activity-filter-dropdown > button');
@@ -246,7 +259,9 @@ export function prFilesHtml({ dark = false } = {}) {
           </div></div></div>
           <div class="flex-grow v-scroll-auto">${TREE.filter(row => !row.folder && !row.comment).map(row => `<div class="diff">${row.name}</div>`).join('')}
             ${TREE.filter(row => row.comment).map(row => `<div class="monaco-zone" data-fixture-inline="${row.author}"><div class="repos-monaco-discussion-host repos-editor-discussion-host">
-              <div class="repos-editor-discussion margin-vertical-8">${commentThread(row.author ?? '', row.name)}</div></div></div>`).join('')}</div>
+              <div class="repos-editor-discussion margin-vertical-8">${commentThread(row.author ?? '', row.name, row.author === 'Sample Bot' ? 'Closed' : 'Active')}</div></div></div>`).join('')}
+            <div class="monaco-zone" data-fixture-inline="Sample Bot active"><div class="repos-monaco-discussion-host repos-editor-discussion-host">
+              <div class="repos-editor-discussion margin-vertical-8">${commentThread('Sample Bot', 'A fictional active bot comment')}</div></div></div></div>
         </div>
       </div></div>
     </div>

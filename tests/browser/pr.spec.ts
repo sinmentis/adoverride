@@ -72,7 +72,7 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     await tagNatives(page);
     await expect(page.locator('[data-ado-pr]')).toHaveAttribute('data-ado-pr', /rail/);
     // The native filter is switched to Active comments once, without scrolling the page to the dropdown.
-    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Active comments (3)');
+    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Active comments (2)');
     expect(await page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])').evaluate(node =>
       node.getBoundingClientRect().top + document.querySelector('.repos-pr-details-page')!.scrollTop)).toBeGreaterThan(360);
     await expect(page.locator('tr[data-fixture-kind="push"]').first()).toBeHidden();
@@ -142,7 +142,7 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     expect((await box(page, '.repos-pr-details-page-tabbar')).height).toBeGreaterThanOrEqual(47.5);
     expect(await nativesIntact(page)).toBe(true);
     // The filter is a one-time default; it is not reverted.
-    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Active comments (3)');
+    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Active comments (2)');
   } finally { await context.close(); }
 });
 
@@ -255,6 +255,32 @@ test('PR description: long text folds behind Show more and opens fully while edi
   } finally { await context.close(); }
 });
 
+test('PR feed: pushes show only their header until Show commits', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { activeComments: false, foldUpdates: false });
+    const page = await open(context);
+    await tagNatives(page);
+    const push = page.locator('[data-fixture-push="12"]');
+    await expect(push.getByText('Sample Author pushed 3 commits')).toBeVisible();
+    await expect(page.locator('[data-fixture-commits="12"]')).toBeHidden();
+    await expect(page.locator('[data-fixture-all-commits="12"]')).toBeHidden();
+    // Header-only pushes get no button.
+    await expect(page.locator('[data-fixture-push="10"]').getByRole('button')).toHaveCount(0);
+    await push.getByRole('button', { name: 'Show commits', exact: true }).click();
+    await expect(page.locator('[data-fixture-commits="12"]')).toBeVisible();
+    await expect(page.locator('[data-fixture-all-commits="12"]')).toBeVisible();
+    await expect(page.locator('[data-fixture-commits="11"]')).toBeHidden();
+    await push.getByRole('button', { name: 'Hide commits', exact: true }).click();
+    await expect(page.locator('[data-fixture-commits="12"]')).toBeHidden();
+    expect(await nativesIntact(page)).toBe(true);
+    const popup = await popupFor(context, page);
+    await popup.getByRole('button', { name: 'Compact pushes', exact: true }).click();
+    await expect(page.locator('[data-fixture-commits="12"]')).toBeVisible();
+    await expect(push.getByRole('button', { name: /commits/ })).toHaveCount(0);
+  } finally { await context.close(); }
+});
+
 test('PR feed: update runs fold, blocked authors fold behind one button, and runs join across hidden threads', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
@@ -278,14 +304,16 @@ test('PR feed: update runs fold, blocked authors fold behind one button, and run
     await expect(list.getByText('2 threads')).toBeVisible();
     await list.getByRole('button', { name: 'Sample Bot', exact: true }).click();
     await expect.poll(async () => (await stored(context)).pr.blockedAuthors).toEqual(['Sample Bot']);
-    for (const index of [5, 9]) await expect.poll(() => hidden(page, row(index))).toBe(true);
-    const summary = page.getByRole('button', { name: '2 from blocked authors', exact: true });
+    // Only the closed bot thread folds; its active thread stays visible.
+    await expect.poll(() => hidden(page, row(9))).toBe(true);
+    expect(await hidden(page, row(5))).toBe(false);
+    const summary = page.getByRole('button', { name: '1 from blocked authors', exact: true });
     await expect(summary).toBeVisible();
-    // With both bot threads folded, rows 6-11 are one run behind the first push.
+    // With the closed bot thread folded, rows 6-11 are one run behind the first push.
     await expect(page.getByRole('button', { name: '+4 more updates', exact: true })).toBeVisible();
     await summary.click();
-    await expect.poll(() => hidden(page, row(5))).toBe(false);
-    await expect(page.getByRole('button', { name: 'Hide 2 from blocked authors', exact: true })).toBeVisible();
+    await expect.poll(() => hidden(page, row(9))).toBe(false);
+    await expect(page.getByRole('button', { name: 'Hide 1 from blocked authors', exact: true })).toBeVisible();
     // Our button inside the filter wrapper does not count as choosing a filter.
     await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Show everything (11)');
     await popup.locator('.popup').screenshot({ path: info.outputPath('pr-popup-blocked.png') });
@@ -311,10 +339,11 @@ test('PR files: blocked authors leave the tree and their inline threads fold', a
     await popup.getByRole('textbox', { name: 'Author display name' }).fill('  sample   bot ');
     await popup.getByRole('button', { name: 'Block', exact: true }).click();
     await expect.poll(async () => (await stored(context)).pr.blockedAuthors).toEqual(['sample bot']);
-    await expect(page.locator('tr[data-fixture-tree="comment"]').first()).toBeHidden();
-    await expect(page.locator('tr[data-fixture-tree="comment"]').nth(1)).toBeVisible();
     const bot = page.locator('[data-fixture-inline="Sample Bot"]');
     await expect(bot.locator('.repos-discussion-thread')).toBeHidden();
+    // Tree rows carry no thread state, so blocking leaves them; the active bot thread stays too.
+    await expect(page.locator('tr[data-fixture-tree="comment"]').first()).toBeVisible();
+    await expect(page.locator('[data-fixture-inline="Sample Bot active"] .repos-discussion-thread')).toBeVisible();
     await expect(page.locator('[data-fixture-inline="Sample Reviewer"] .repos-discussion-thread')).toBeVisible();
     await bot.getByRole('button', { name: 'Comment from a blocked author', exact: true }).click();
     await expect(bot.locator('.repos-discussion-thread')).toBeVisible();
@@ -334,7 +363,7 @@ test('PR blocked list: authors of threads hidden by the native filter appear onc
   try {
     const page = await open(context, { overview: prOverviewHtml({ filter: 'active_comments' }) });
     const trigger = page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])');
-    await expect(trigger).toHaveText('Active comments (3)');
+    await expect(trigger).toHaveText('Active comments (2)');
     const popup = await popupFor(context, page);
     await popup.getByRole('tab', { name: 'Blocked' }).click();
     const list = popup.getByRole('region', { name: 'Blocked comment authors' });
@@ -347,7 +376,7 @@ test('PR blocked list: authors of threads hidden by the native filter appear onc
     await expect(trigger).toHaveText('Show everything (11)');
     await trigger.click();
     await page.locator('#__bolt-active_comments').click();
-    await expect(trigger).toHaveText('Active comments (3)');
+    await expect(trigger).toHaveText('Active comments (2)');
     await expect(list.getByRole('button', { name: 'Sample Author', exact: true })).toBeVisible();
     await expect(list.getByRole('button', { name: 'Sample Bot', exact: true })).toBeVisible();
   } finally { await context.close(); }

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { decodePrProfile, decodePrSnapshot, emptyPrSnapshot, KIWIFRUIT_HIDDEN_TABS, kiwifruitPrProfile, parsePullRequest, PR_FEATURE_IDS, updateRuns } from './pr';
 import { applyPreferenceAction, decodePreferenceAction, decodePreferences, defaultPreferences } from './preferences';
-import { feedRowKind, statusSections, threadAuthor } from './pr-controller';
+import { feedRowKind, statusSections, threadAuthor, threadOpen } from './pr-controller';
 
 describe('pull request pages', () => {
   it('parses the PR key and tab from both hosts', () => {
@@ -51,6 +51,14 @@ describe('pull request pages', () => {
     expect(threadAuthor(thread)).toBe('Sample Bot');
     expect(threadAuthor(row('<div class="repos-comment-header-persona" aria-label="Sample Reviewer"></div>'))).toBe('Sample Reviewer');
     expect(threadAuthor(row('<div></div>'))).toBeNull();
+    const state = (html: string) => threadOpen(row(html));
+    expect(state('<button aria-label="State button Active mode">Active</button>')).toBe(true);
+    expect(state('<button aria-label="State button Pending mode">Pending</button>')).toBe(true);
+    expect(state('<button aria-label="State button Closed mode">Closed</button><button>Reactivate</button>')).toBe(false);
+    expect(state('<button aria-label="State button Resolved mode">Resolved</button>')).toBe(false);
+    expect(state('<button>Reactivate</button>')).toBe(false);
+    expect(state('<button>Resolve</button>')).toBe(true);
+    expect(state('<div>No state</div>')).toBe(true);
   });
 });
 

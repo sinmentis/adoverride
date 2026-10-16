@@ -136,6 +136,7 @@ profile; **Reset to kiwifruit** turns every option back on.
 | Fold long description | Descriptions taller than about 12 lines show a preview with **Show more**; editing always shows the full text |
 | Start on active comments | Picks the native **Active comments** activity filter once when a PR opens |
 | Fold update runs | Two or more pushes or system events in a row fold behind the first one (**+N more updates**); comments stay in place |
+| Compact pushes | Push cards show only "pushed N commits"; **Show commits** opens the commit list |
 
 | Files option | What it does |
 | --- | --- |
@@ -148,9 +149,10 @@ their stable id, so they stay hidden on every PR. The tab you are on always
 stays visible, so a direct link still works.
 
 **Blocked** lists the comment authors seen on this PR. Block one, or type a
-display name, and threads they started fold behind one **N from blocked
-authors** button next to the activity filter. In **Files** their rows leave the
-file tree and their inline threads fold to a one-line button. Matching uses the
+display name, and resolved or closed threads they started fold behind one
+**N from blocked authors** button next to the activity filter. Active and
+pending threads always stay visible, so nothing that still needs an answer is
+hidden. In **Files** their resolved inline threads fold to a one-line button. Matching uses the
 display name, case-insensitive, so bot accounts such as review agents can be
 blocked by name. The list collects thread authors as they appear while the page
 is open, including after you switch the activity filter or scroll; type a name

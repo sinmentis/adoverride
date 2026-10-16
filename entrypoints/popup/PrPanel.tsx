@@ -100,7 +100,7 @@ export function PrPanel({ preferences, snapshot, saving, update }: {
                 disabled={saving} onChange={value => void update({ kind: 'pr-author', name: author.name, blocked: value })} />
             </div>
           ))}
-          <Text as="p" className="caption">Threads started by a blocked author fold away. Matching uses the display name. Authors appear here as their threads load; switch the activity filter to Show everything to list them all.</Text>
+          <Text as="p" className="caption">Resolved and closed threads started by a blocked author fold away; active ones stay. Matching uses the display name. Authors appear here as their threads load; switch the activity filter to Show everything to list them all.</Text>
         </section>
       </UnderlinePanels.Panel>
     </UnderlinePanels>
