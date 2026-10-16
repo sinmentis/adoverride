@@ -114,6 +114,7 @@ export function ConfigurationPanel({ preferences, saving, update, onBack }: {
           ['Ticket view', preferences.ticket.viewMode, preview.configuration.preferences.ticket.viewMode],
           ['Ticket presets', preferences.ticket.savedPresets.length, preview.configuration.preferences.ticket.savedPresets.length],
           ['Library presets', preferences.savedPresets.length, preview.configuration.preferences.savedPresets.length],
+          ['PR options on', Object.values(preferences.pr).filter(Boolean).length, Object.values(preview.configuration.preferences.pr).filter(Boolean).length],
           ['Library scopes', Object.keys(preferences.views).length, Object.keys(preview.configuration.preferences.views).length],
           ['Equal-width scopes', Object.values(preferences.views).filter(view => view.board?.equalColumns).length,
             Object.values(preview.configuration.preferences.views).filter(view => view.board?.equalColumns).length],

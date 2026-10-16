@@ -1,7 +1,7 @@
 import { isPageKind, parseAdoContext, type AdoContext } from './context';
 
 export const INSPECT_MESSAGE = 'ado-customize/inspect' as const;
-export const INSPECT_PROTOCOL = 35;
+export const INSPECT_PROTOCOL = 36;
 
 const CARDS = '.wit-card, .boards-card, .taskboard-card';
 const GRIDS = '[role="grid"], [role="treegrid"], .bolt-table, .grid';
@@ -109,7 +109,7 @@ export function inspectPage(document: Document, address: string, scannedAt = Dat
   const emptyGrid = rows.length === 0 && [...document.querySelectorAll(GRIDS)].some(isRendered);
   let kind: InspectionKind;
   let candidates: { element: Element; id: string | null }[] = [];
-  if (context.pageKind === 'other' && forms.length === 0) {
+  if ((context.pageKind === 'other' || context.pageKind === 'pullrequest') && forms.length === 0) {
     kind = 'unsupported';
   } else if (cards.length && (context.pageKind === 'board' || context.pageKind === 'taskboard' || itemRows.length === 0)) {
     kind = 'cards';

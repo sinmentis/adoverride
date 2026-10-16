@@ -4,6 +4,7 @@ import { decodeCardLayout, decodeCardLayouts, decodeWorkspaceLayouts, isCardColu
   type CardColumn, type CardLayout, type CardLayouts } from './card-layout';
 import { decodeBoardProfile, defaultBoardProfile, isBoardCardField, isBoardPresentationFeature,
   type BoardCardField, type BoardPresentationFeature, type BoardProfile } from './board-profile';
+import { decodePrProfile, isPrFeature, kiwifruitPrProfile, type PrFeature, type PrProfile } from './pr';
 export { defaultBoardProfile, type BoardProfile } from './board-profile';
 
 export const DEFAULT_FEATURES = {
@@ -50,6 +51,7 @@ export interface Preferences {
   savedPresets: Preset[];
   views: Record<string, StoredView>;
   ticket: TicketProfile & { presetId: string; savedPresets: Preset[]; layoutLocked: boolean; undo: TicketUndo | null };
+  pr: PrProfile;
 }
 export const MAX_CONFIGURATION_BYTES = 2 * 1024 * 1024;
 export function portablePreferences(value: unknown): Preferences {
@@ -196,7 +198,8 @@ export function defaultView(): StoredView & { board: BoardProfile } {
 
 export function defaultPreferences(): Preferences {
   return { version: 11, revision: 0, enabled: true, theme: 'light', scope: 'all', savedPresets: [], views: { all: defaultView() },
-    ticket: { presetId: 'ticket:kiwifruit', ...decodeTicketProfile(KIWIFRUIT_TICKET_PROFILE), savedPresets: [], layoutLocked: false, undo: null } };
+    ticket: { presetId: 'ticket:kiwifruit', ...decodeTicketProfile(KIWIFRUIT_TICKET_PROFILE), savedPresets: [], layoutLocked: false, undo: null },
+    pr: kiwifruitPrProfile() };
 }
 export function effectiveBoardView(preferences: Preferences, context: AdoContext | null): StoredView & { board: BoardProfile } {
   for (const scope of ['board', 'project', 'organization', 'all'] as const) {
@@ -330,6 +333,8 @@ export function decodePreferences(value: unknown): Preferences {
     views,
     ticket: { presetId: retirePresets ? 'ticket:kiwifruit' : ticketPresetId, ...decodeTicketProfile(ticket, value.version),
       savedPresets: retirePresets ? [] : ticketPresets, layoutLocked, undo },
+    // Added within schema 11: documents without it get the kiwifruit pull request defaults.
+    pr: decodePrProfile(value.pr),
   };
 }
 
@@ -353,6 +358,8 @@ export type PreferenceAction =
   | { kind: 'restore-configuration'; backupId: string; expectedRevision: number }
   | { kind: 'reset-ticket-layout' }
   | { kind: 'reset-ticket' }
+  | { kind: 'pr-feature'; feature: PrFeature; enabled: boolean }
+  | { kind: 'reset-pr' }
   | { kind: 'reset-all' }
   | { kind: 'initialize' };
 
@@ -361,7 +368,8 @@ function validViewKey(key: unknown): key is string {
 }
 export function decodePreferenceAction(value: unknown): PreferenceAction {
   if (!isObject(value)) throw new Error('Invalid preferences action.');
-  if (value.kind === 'initialize' || value.kind === 'reset-all' || value.kind === 'reset-ticket' || value.kind === 'reset-ticket-layout') return { kind: value.kind };
+  if (value.kind === 'initialize' || value.kind === 'reset-all' || value.kind === 'reset-ticket' || value.kind === 'reset-ticket-layout' || value.kind === 'reset-pr') return { kind: value.kind };
+  if (value.kind === 'pr-feature' && isPrFeature(value.feature) && typeof value.enabled === 'boolean') return { kind: value.kind, feature: value.feature, enabled: value.enabled };
   if (value.kind === 'replace-configuration' || value.kind === 'restore-configuration') {
     if (typeof value.expectedRevision !== 'number' || !Number.isSafeInteger(value.expectedRevision) || value.expectedRevision < 0) throw new Error('Invalid configuration preview revision.');
     if (value.kind === 'replace-configuration') return { kind: value.kind, expectedRevision: value.expectedRevision, preferences: portablePreferences(value.preferences) };
@@ -441,6 +449,8 @@ export function applyPreferenceAction(current: Preferences, action: PreferenceAc
     return { ...current, theme: action.theme ?? current.theme, enabled: action.enabled ?? current.enabled, scope: action.scope ?? current.scope };
   }
   if (action.kind === 'ticket-layout-lock') return { ...current, ticket: { ...current.ticket, layoutLocked: action.locked } };
+  if (action.kind === 'pr-feature') return { ...current, pr: { ...current.pr, [action.feature]: action.enabled } };
+  if (action.kind === 'reset-pr') return { ...current, pr: kiwifruitPrProfile() };
   if (action.kind === 'ticket-view') return { ...current, ticket: { ...current.ticket, viewMode: action.viewMode } };
   if (action.kind === 'undo-ticket') {
     const undo = current.ticket.undo;
@@ -537,6 +547,7 @@ export function preferenceSaveMessage(action: PreferenceAction): string {
   if (action.kind === 'board-card-field') return 'Card fields saved';
   if (action.kind === 'board-autoload') return action.enabled ? 'Auto-loading enabled' : 'Auto-loading disabled';
   if (action.kind === 'board-columns') return action.equal ? 'Equal Board widths enabled' : 'Original Board widths restored';
+  if (action.kind === 'pr-feature' || action.kind === 'reset-pr') return 'Pull request settings saved';
   if (action.kind === 'replace-configuration') return 'Configuration imported';
   if (action.kind === 'restore-configuration') return 'Backup restored';
   if (action.kind === 'undo-ticket') return 'Change undone';

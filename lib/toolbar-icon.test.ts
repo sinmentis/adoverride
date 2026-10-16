@@ -37,6 +37,8 @@ describe('URL-based toolbar activity', () => {
     [address, true],
     ['https://dev.azure.com/example/Platform/_git/repo?workitem=101', true],
     ['https://dev.azure.com/example/Platform/_git/repo', false],
+    ['https://dev.azure.com/example/Platform/_git/repo/pullrequest/42', true],
+    ['https://dev.azure.com/example/Platform/_git/repo/pullrequest/42?_a=files', true],
     ['https://dev.azure.com/example/Platform/_dashboards', false],
     ['https://example.com/_boards/board', false],
     ['http://dev.azure.com/example/Platform/_boards/board', false],

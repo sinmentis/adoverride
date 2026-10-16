@@ -31,6 +31,15 @@ describe('ADO context', () => {
     }
   });
 
+  it('recognizes pull request pages on both hosts', () => {
+    expect(parseAdoContext('https://dev.azure.com/example/Platform/_git/service/pullrequest/42')?.pageKind).toBe('pullrequest');
+    expect(parseAdoContext('https://dev.azure.com/example/Platform/_git/service/pullrequest/42?_a=files&iteration=3')?.pageKind).toBe('pullrequest');
+    expect(parseAdoContext('https://example.visualstudio.com/DefaultCollection/Platform/_git/service/pullrequest/42')?.pageKind).toBe('pullrequest');
+    expect(parseAdoContext('https://dev.azure.com/example/Platform/_git/service/pullrequests')?.pageKind).toBe('other');
+    expect(parseAdoContext('https://dev.azure.com/example/Platform/_git/service/pullrequest/new')?.pageKind).toBe('other');
+    expect(scopeKey('board', parseAdoContext('https://dev.azure.com/example/Platform/_git/service/pullrequest/42'))).toBeNull();
+  });
+
   it('rejects unrelated hosts and unavailable scopes', () => {
     expect(parseAdoContext('https://dev.azure.com.attacker.example/example/Platform')).toBeNull();
     expect(parseAdoContext('http://dev.azure.com/example/Platform')).toBeNull();

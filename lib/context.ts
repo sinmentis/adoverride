@@ -1,9 +1,9 @@
 export type Scope = 'all' | 'organization' | 'project' | 'board';
-export type PageKind = 'board' | 'taskboard' | 'backlog' | 'query' | 'workitems' | 'other';
+export type PageKind = 'board' | 'taskboard' | 'backlog' | 'query' | 'workitems' | 'pullrequest' | 'other';
 
 export function isPageKind(value: unknown): value is PageKind {
   return value === 'board' || value === 'taskboard' || value === 'backlog' ||
-    value === 'query' || value === 'workitems' || value === 'other';
+    value === 'query' || value === 'workitems' || value === 'pullrequest' || value === 'other';
 }
 
 export interface AdoContext {
@@ -44,7 +44,8 @@ export function parseAdoContext(address: string): AdoContext | null {
   const pageKind: PageKind = hub === '_boards' ? 'board' :
     hub === '_backlogs' || (hub === '_sprints' && parts[hubIndex + 1] === 'backlog') ? 'backlog' :
     hub === '_sprints' ? 'taskboard' : hub === '_queries' ? 'query' :
-    hub === '_workitems' ? 'workitems' : 'other';
+    hub === '_workitems' ? 'workitems' :
+    hub === '_git' && parts[hubIndex + 2]?.toLowerCase() === 'pullrequest' && /^[1-9]\d*$/.test(parts[hubIndex + 3] ?? '') ? 'pullrequest' : 'other';
   return {
     host: url.hostname,
     organization,

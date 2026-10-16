@@ -2,8 +2,9 @@
 
 **Your Azure DevOps. Your way.**
 
-A Chrome extension that declutters Azure DevOps Boards and work items (tickets).
-Hide fields, rearrange cards, and widen your Kanban Board from one small popup.
+A Chrome extension that declutters Azure DevOps Boards, work items (tickets) and
+pull requests. Hide fields, rearrange cards, widen your Kanban Board and cut PR
+noise from one small popup.
 Your view changes. Your team's setup doesn't.
 
 ## Boards that use your screen
@@ -20,6 +21,13 @@ Equal-width columns, a compact header, fewer card fields, and automatic
 Hide optional fields, drag cards where you want them, and read in a wide
 Workspace with a Properties rail. Lock your layout or undo your last change.
 Works on User Stories, Bugs and any other work item type.
+
+## Pull requests that answer "can this merge?"
+
+Merge status moves to the top of the sidebar with passed checks folded away.
+Reviewers who haven't voted collapse into one line, and the activity feed opens
+on **Active comments** instead of every push. In **Files**, comment threads
+leave the file tree and the tree gets tighter indentation so long paths fit.
 
 ## One popup, two layers
 

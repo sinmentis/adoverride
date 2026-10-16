@@ -33,7 +33,7 @@ folder. Keep the existing release artifact unchanged.
 The manifest supplies this short description:
 
 ```text
-Declutter Azure DevOps Boards and work items: hide fields, rearrange cards, wider Kanban columns. Your Azure DevOps. Your way.
+Declutter Azure DevOps Boards, work items and pull requests: hide fields, rearrange cards, wider Kanban columns, cleaner PRs.
 ```
 
 Paste this detailed description:
@@ -41,7 +41,8 @@ Paste this detailed description:
 ```text
 Make Azure DevOps fit the way you work.
 
-ADOverride gives you a personal layout for Azure DevOps Boards and work items.
+ADOverride gives you a personal layout for Azure DevOps Boards, work items and
+pull requests.
 Hide clutter, rearrange cards, and give important content more room without
 changing your team's process or anyone else's view.
 
@@ -58,6 +59,12 @@ WORK ITEMS
   and a Properties rail.
 - Lock on-page layout controls or undo the last Ticket customization.
 
+PULL REQUESTS
+- Move merge status to the top of the sidebar and fold passed checks.
+- Fold optional reviewers who haven't voted into one line.
+- Open the activity feed on Active comments instead of every push.
+- Hide comment rows in the Files tree and tighten its indentation.
+
 YOUR SETTINGS
 - Start with the built-in kiwifruit preset or save your own.
 - Save Board settings per Board, project, organization, or across Azure DevOps.
@@ -73,8 +80,9 @@ using your existing session. It does not send your work item data to us or
 submit work item changes.
 
 GET STARTED
-Sign in to Azure DevOps, open a Kanban Board or work item, and open the extension.
-Use Library for Board settings and Ticket for work item settings.
+Sign in to Azure DevOps, open a Kanban Board, work item or pull request, and open
+the extension. Use Library for Board settings, Ticket for work item settings and
+PR for pull request settings.
 
 COMPATIBILITY
 Supports Azure DevOps Services on dev.azure.com and *.visualstudio.com.
@@ -91,9 +99,10 @@ Screenshots use fictional work items and replayed layouts.
 ### Single purpose
 
 ```text
-Let users personalize the local presentation of Azure DevOps Boards and work
-items by choosing visible content, card arrangements, and display density,
-without changing work item data or the team's process.
+Let users personalize the local presentation of Azure DevOps Boards, work
+items and pull requests by choosing visible content, card arrangements, and
+display density, without changing work item or pull request data or the team's
+process.
 ```
 
 ### Permission justifications

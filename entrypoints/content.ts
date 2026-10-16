@@ -11,6 +11,8 @@ import { LAYOUT_MESSAGE } from '@/lib/layout-diagnostics';
 import { createBoardController } from '@/lib/board-controller';
 import { BOARD_PORT } from '@/lib/board';
 import { captureBoardLayout } from '@/lib/board-layout-report';
+import { createPrController } from '@/lib/pr-controller';
+import { PR_PORT } from '@/lib/pr';
 
 export default defineContentScript({
   matches: ['https://dev.azure.com/*', 'https://*.visualstudio.com/*'],
@@ -24,12 +26,13 @@ export default defineContentScript({
       createDragUi: (commit, trace, reportError) => createTicketDragUi(context, commit, trace, reportError),
     });
     const board = createBoardController(document, () => location.href);
+    const pr = createPrController(document, () => location.href);
     let settingsRevision = -1;
     let settingsGeneration = 0;
     const applySettings = (value: Preferences) => {
       if (value.revision < settingsRevision) return;
       settingsRevision = value.revision;
-      controller.setPreferences(value); board.setPreferences(value);
+      controller.setPreferences(value); board.setPreferences(value); pr.setPreferences(value);
     };
     const loadSettings = () => {
       const generation = settingsGeneration;
@@ -39,7 +42,7 @@ export default defineContentScript({
         console.error('[ADOverride] Ticket settings unavailable.', reason);
         if (context.isValid && generation === settingsGeneration) {
           const message = reason instanceof Error ? reason.message : 'Settings unavailable.';
-          controller.failSettings(message); board.failSettings(message);
+          controller.failSettings(message); board.failSettings(message); pr.failSettings(message);
         }
       });
     };
@@ -54,13 +57,13 @@ export default defineContentScript({
       catch (reason) {
         console.error('[ADOverride] Invalid Ticket settings.', reason);
         const message = reason instanceof Error ? reason.message : 'Invalid settings.';
-        controller.failSettings(message); board.failSettings(message);
+        controller.failSettings(message); board.failSettings(message); pr.failSettings(message);
       }
     };
     browser.storage.onChanged.addListener(settingsListener);
     const connectListener: Parameters<typeof browser.runtime.onConnect.addListener>[0] = port => {
       if (port.sender?.id !== browser.runtime.id) return;
-      const reader = port.name === TICKET_PORT ? controller : port.name === BOARD_PORT ? board : null;
+      const reader = port.name === TICKET_PORT ? controller : port.name === BOARD_PORT ? board : port.name === PR_PORT ? pr : null;
       if (!reader) return;
       const unsubscribe = reader.subscribe(value => port.postMessage(value));
       port.onMessage.addListener((message: unknown) => {
@@ -71,12 +74,13 @@ export default defineContentScript({
       context.onInvalidated(() => { unsubscribe(); port.disconnect(); });
     };
     browser.runtime.onConnect.addListener(connectListener);
-    context.addEventListener(window, 'wxt:locationchange', () => { controller.refresh(); board.refresh(); });
+    context.addEventListener(window, 'wxt:locationchange', () => { controller.refresh(); board.refresh(); pr.refresh(); });
     context.onInvalidated(() => {
       browser.storage.onChanged.removeListener(settingsListener);
       browser.runtime.onConnect.removeListener(connectListener);
       controller.dispose();
       board.dispose();
+      pr.dispose();
     });
     const listener: Parameters<typeof browser.runtime.onMessage.addListener>[0] = (message: unknown, sender, sendResponse) => {
       if (sender.id !== browser.runtime.id) return;

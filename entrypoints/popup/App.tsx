@@ -20,9 +20,11 @@ import { SaveFeedback } from '@/lib/save-feedback';
 import { useInspector, type InspectorState } from '@/lib/use-inspector';
 import { useTicket } from '@/lib/use-ticket';
 import { useBoard } from '@/lib/use-board';
+import { usePr } from '@/lib/use-pr';
 import type { TicketArea } from '@/lib/ticket';
 import { LibraryPanel } from './LibraryPanel';
 import { TicketPanel } from './TicketPanel';
+import { PrPanel } from './PrPanel';
 import { LayoutDiagnosticsPanel } from './LayoutDiagnosticsPanel';
 import { ConfigurationPanel } from './ConfigurationPanel';
 import { Help } from './Help';
@@ -41,6 +43,7 @@ function inspectorLabel(state: InspectorState): { label: string; detail: string 
   if (state.status === 'unsupported') return { label: 'Open an ADO tab', detail: 'Supported sites: dev.azure.com and *.visualstudio.com.' };
   if (state.status === 'error') return { label: 'Inspection failed', detail: state.message };
   const result = state.inspection;
+  if (result.kind === 'unsupported' && result.context.pageKind === 'pullrequest') return { label: 'Pull request', detail: 'Pull request layout options are in the PR area.' };
   if (result.kind === 'unsupported') return { label: 'Not a work item view', detail: 'Open Boards, Backlogs, Sprints, query results, or Work items.' };
   if (result.kind === 'unrecognized') return { label: 'View not recognized', detail: 'No supported work item surface was found. Open inspection details to copy diagnostics.' };
   const tickets = result.unidentifiedItems === 0;
@@ -59,15 +62,19 @@ export default function App() {
   useEffect(() => {
     if (board.autoLoad.status === 'complete' && board.autoLoad.batches > 0) void refresh();
   }, [board.autoLoad.status, board.autoLoad.batches, board.autoLoad.itemsSeen, refresh]);
-  const [area, setArea] = useState<TicketArea>('library');
+  const { snapshot: pr, refresh: refreshPr } = usePr(preferences !== null);
+  const [area, setArea] = useState<TicketArea | 'pr'>('library');
+  const presetArea: TicketArea = area === 'ticket' ? 'ticket' : 'library';
   const lastTicket = useRef<string | null>(null);
+  const onPr = context?.pageKind === 'pullrequest';
   useEffect(() => {
     if (ticket.token !== lastTicket.current) {
       if (ticket.token) setArea('ticket');
-      else if (lastTicket.current) setArea('library');
+      else if (lastTicket.current) setArea(onPr ? 'pr' : 'library');
       lastTicket.current = ticket.token;
     }
-  }, [ticket.token]);
+  }, [ticket.token, onPr]);
+  useEffect(() => { if (onPr && !lastTicket.current) setArea('pr'); }, [onPr]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [name, setName] = useState('');
@@ -121,6 +128,7 @@ export default function App() {
       message: ticket.message?.replace(/\b(?:https?|file|chrome-extension):\/\/[^\s"'<>]+/gi, '[redacted URL]') ?? null,
     },
     board,
+    pr,
   }, null, 2);
 
   async function copyDiagnostics() {
@@ -135,7 +143,7 @@ export default function App() {
   }
 
   async function applyPreset(preset: Preset) {
-    const saved = await update({ kind: 'apply-preset', area, presetId: preset.id, viewKey: key ?? undefined });
+    const saved = await update({ kind: 'apply-preset', area: presetArea, presetId: preset.id, viewKey: key ?? undefined });
     if (saved) {
       setMenuOpen(false);
       setAnnouncement(`${preset.name} ${area === 'ticket' ? 'Ticket' : 'Library'} preferences saved.`);
@@ -165,7 +173,7 @@ export default function App() {
       return;
     }
     const id = savePresetId || `saved:${crypto.randomUUID()}`;
-    const saved = await update({ kind: 'save-preset', area, id, name: title, viewKey: key ?? undefined, replace: Boolean(savePresetId) });
+    const saved = await update({ kind: 'save-preset', area: presetArea, id, name: title, viewKey: key ?? undefined, replace: Boolean(savePresetId) });
     if (saved) {
       setSaveOpen(false);
       setAnnouncement(`Saved ${title}.`);
@@ -209,12 +217,23 @@ export default function App() {
 
             <div className="area-tabs">
               <SegmentedControl size="small" fullWidth aria-label="Extension area"
-                onChange={index => { setArea(index === 0 ? 'library' : 'ticket'); setSaveOpen(false); setDetailsOpen(false); setConfigurationOpen(false); }}>
+                onChange={index => { setArea(index === 0 ? 'library' : index === 1 ? 'ticket' : 'pr'); setSaveOpen(false); setDetailsOpen(false); setConfigurationOpen(false); }}>
                 <SegmentedControl.Button selected={area === 'library'}>Library</SegmentedControl.Button>
                 <SegmentedControl.Button selected={area === 'ticket'}>Ticket</SegmentedControl.Button>
+                <SegmentedControl.Button selected={area === 'pr'}>PR</SegmentedControl.Button>
               </SegmentedControl>
             </div>
-            <div className="controls single">
+            {area === 'pr' ? <div className="controls single">
+              <div className="control-field">
+                <div className="preset-actions">
+                  <Button size="small" leadingVisual={ProjectIcon} disabled={saving}
+                    onClick={() => void update({ kind: 'reset-pr' })}>Reset to kiwifruit</Button>
+                  <div className="ticket-history">
+                    <Help label="Pull request settings" text="One setting for every pull request. Only the page layout changes. Votes, comments and policies are never touched." />
+                  </div>
+                </div>
+              </div>
+            </div> : <div className="controls single">
               <div className="control-field">
                 <div className="preset-actions">
                   <ActionMenu open={menuOpen} onOpenChange={setMenuOpen}>
@@ -281,7 +300,7 @@ export default function App() {
                   </div>}
                 </div>
               </div>
-            </div>
+            </div>}
 
             <main className="popup-body">
               {error && saveState.status !== 'error' && <Flash variant="danger" className="notice">{error}</Flash>}
@@ -299,7 +318,7 @@ export default function App() {
                   <pre className="diagnostics" aria-label="Inspection diagnostics">{diagnostics}</pre>
                   <Text className="caption">No ticket content, IDs, or page URLs are included.</Text>
                 </section>
-              ) : !available ? (
+              ) : area === 'pr' ? <PrPanel preferences={preferences} snapshot={pr} saving={saving} update={update} /> : !available ? (
                 <Flash variant="warning">Open an ADO page for this scope, or select All ADO.</Flash>
               ) : saveOpen ? (
                 <form className="save-form" onSubmit={event => { event.preventDefault(); void savePreset(); }}>
@@ -347,7 +366,7 @@ export default function App() {
                   aria-pressed={detailsOpen} onClick={() => { setDetailsOpen(previous => !previous); setConfigurationOpen(false); }} />
                 <IconButton size="small" variant="invisible" icon={SyncIcon} aria-label="Refresh ticket count"
                   disabled={!preferences.enabled || inspector.status === 'loading'}
-                  onClick={() => { void refresh(); refreshTicket(); refreshBoard(); }} />
+                  onClick={() => { void refresh(); refreshTicket(); refreshBoard(); refreshPr(); }} />
               </div>
             </footer>
             <VisuallyHidden aria-live="polite">{announcement}</VisuallyHidden>

@@ -11,7 +11,7 @@ The repository is public. Store submissions remain a separate, manual approval.
 
 **Description**
 
-> Chrome extension to declutter Azure DevOps Boards and work items. Hide fields, rearrange cards, Ticket Workspace, equal-width Kanban columns, local presets.
+> Chrome extension to declutter Azure DevOps Boards, work items and pull requests. Hide fields, rearrange cards, Ticket Workspace, equal-width Kanban columns, cleaner PR pages, local presets.
 
 **Topics**
 
@@ -36,7 +36,7 @@ declarations, permission explanations, and reviewer instructions.
 
 **Short description**
 
-> Declutter Azure DevOps Boards and work items: hide fields, rearrange cards, wider Kanban columns. Your Azure DevOps. Your way.
+> Declutter Azure DevOps Boards, work items and pull requests: hide fields, rearrange cards, wider Kanban columns, cleaner PRs.
 
 **Overview**
 

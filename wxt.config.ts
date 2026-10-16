@@ -50,7 +50,7 @@ export default defineConfig({
   },
   manifest: {
     name: 'ADOverride - Azure DevOps Boards & Work Items',
-    description: 'Declutter Azure DevOps Boards and work items: hide fields, rearrange cards, wider Kanban columns. Your Azure DevOps. Your way.',
+    description: 'Declutter Azure DevOps Boards, work items and pull requests: hide fields, rearrange cards, wider Kanban columns, cleaner PRs.',
     permissions: ['storage', 'activeTab', 'scripting'],
     host_permissions: ['https://dev.azure.com/*', 'https://*.visualstudio.com/*'],
     action: { default_title: INACTIVE_TOOLBAR_TITLE, default_icon: toolbarIconPaths(false) },

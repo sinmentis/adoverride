@@ -1,6 +1,6 @@
 {
   "name": "adoverride",
-  "description": "ADOverride: a Chrome extension to declutter Azure DevOps Boards and work items. Your Azure DevOps. Your way.",
+  "description": "ADOverride: a Chrome extension to declutter Azure DevOps Boards, work items and pull requests. Your Azure DevOps. Your way.",
   "homepage": "https://github.com/sinmentis/adoverride#readme",
   "repository": {
     "type": "git",
@@ -10,7 +10,7 @@
     "url": "https://github.com/sinmentis/adoverride/issues"
   },
   "private": true,
-  "version": "0.11.10",
+  "version": "0.11.11",
   "license": "MIT",
   "type": "module",
   "keywords": [

@@ -2,8 +2,8 @@
 
 Effective date: October 16, 2026
 
-ADOverride customizes the appearance of Azure DevOps Boards and work items in
-your browser. It has no developer-operated backend, analytics, advertising, or
+ADOverride customizes the appearance of Azure DevOps Boards, work items, and
+pull requests in your browser. It has no developer-operated backend, analytics, advertising, or
 telemetry. The developers do not receive your Azure DevOps data through the
 extension.
 
@@ -16,8 +16,12 @@ extension.
 - **Website content:** the extension inspects the rendered page structure,
   card and field labels, visibility, and work item IDs needed to count loaded
   items. It changes presentation without copying ticket bodies, comments,
-  attachments, or editor drafts into its settings.
-- **Interactions and preferences:** visibility choices, card positions, view
+  attachments, or editor drafts into its settings. On pull request pages it
+  reads the rendered page structure (policy status icons, reviewer vote icons,
+  file-tree rows) to adjust the layout, and opens the native activity filter
+  once to select Active comments. It does not read or store pull request code,
+  descriptions, or comments, and never votes, completes, or resolves anything.
+- **Interactions and preferences:** pull request layout options, visibility choices, card positions, view
   mode, presets, scope, theme, layout lock, and the last undoable Ticket change
   are stored locally using Chrome's extension storage. Importing settings also
   keeps a local pre-import backup. Settings are not sent to Chrome Storage Sync.
