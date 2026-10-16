@@ -143,8 +143,8 @@ const DROPDOWN_SCRIPT = (initial: string) => `
   let callout = null;
   const close = () => { callout?.remove(); callout = null; button.setAttribute('aria-expanded', 'false'); };
   button.addEventListener('click', () => {
-    window.__fixtureFilterOpens = (window.__fixtureFilterOpens || 0) + 1;
     if (callout) return close();
+    window.__fixtureFilterOpens = (window.__fixtureFilterOpens || 0) + 1;
     callout = document.createElement('div');
     callout.className = 'flex-row flex-grow';
     callout.innerHTML = '<div class="bolt-callout absolute flex-row" style="left:40px;top:300px;width:260px"><div class="bolt-dropdown flex-column custom-scrollbar"><div class="bolt-dropdown-container no-outline"><div class="bolt-dropdown-list-box-container bolt-table-container flex-grow"><table role="listbox" aria-label="Dropdown Selection" class="bolt-list-box bolt-table bolt-list body-m relative scroll-hidden"><tbody>' +

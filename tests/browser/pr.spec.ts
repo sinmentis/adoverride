@@ -63,8 +63,9 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     await tagNatives(page);
     await expect(page.locator('[data-ado-pr]')).toHaveAttribute('data-ado-pr', /rail/);
     // The native filter is switched to Active comments once, without scrolling the page to the dropdown.
-    expect(await page.locator('.repos-activity-filter-dropdown > button').evaluate(node => node.getBoundingClientRect().top)).toBeGreaterThan(640);
     await expect(page.locator('.repos-activity-filter-dropdown > button')).toHaveText('Active comments (2)');
+    expect(await page.locator('.repos-activity-filter-dropdown > button').evaluate(node =>
+      node.getBoundingClientRect().top + document.querySelector('.repos-pr-details-page')!.scrollTop)).toBeGreaterThan(640);
     await expect(page.locator('tr[data-fixture-kind="push"]').first()).toBeHidden();
     await expect(page.locator('.bolt-callout')).toHaveCount(0);
     expect(await page.evaluate(() => (window as unknown as { __fixtureFilterOpens: number }).__fixtureFilterOpens)).toBe(1);
@@ -141,8 +142,8 @@ test('PR overview: a filter that is already not "Show everything" is kept, and d
   try {
     const page = await open(context, { overview: prOverviewHtml({ dark: true, filter: 'all_comments' }) });
     await expect(page.getByRole('button', { name: '2 passed', exact: true })).toBeVisible();
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __fixtureFilterOpens?: number }).__fixtureFilterOpens ?? 0)).toBe(1);
     await expect(page.locator('.bolt-callout')).toHaveCount(0);
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __fixtureFilterOpens?: number }).__fixtureFilterOpens ?? 0)).toBe(1);
     await expect(page.locator('.repos-activity-filter-dropdown > button')).toHaveText('All comments (3)');
     const colors = await page.getByRole('button', { name: '2 passed', exact: true }).evaluate(node => {
       const parse = (value: string) => (value.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);

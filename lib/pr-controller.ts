@@ -137,9 +137,12 @@ export function createPrController(document: Document, address: () => string) {
 
   async function applyFilter(key: string, dropdown: HTMLElement) {
     filterBusy = true;
+    const page = dropdown.closest('.repos-pr-details-page');
+    const scroll = page?.scrollTop ?? 0;
+    // Opening the menu and ADO's refocus can scroll the page; hold it still for the short operation.
+    const hold = () => { if (page && page.scrollTop !== scroll) page.scrollTop = scroll; };
+    page?.addEventListener('scroll', hold);
     try {
-      const page = dropdown.closest('.repos-pr-details-page');
-      const scroll = page?.scrollTop ?? 0;
       const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       const trigger = dropdown.querySelector<HTMLButtonElement>('button');
       if (!trigger) { filters.set(key, 'unavailable'); return; }
@@ -167,13 +170,14 @@ export function createPrController(document: Document, address: () => string) {
       }
       // ADO moves focus back to the trigger after its own async update; wait for that before restoring.
       await sleep(100);
-      if (page && page.scrollTop !== scroll) page.scrollTop = scroll;
+      hold();
       if (focused && focused !== trigger && focused !== document.body && focused.isConnected) focused.focus({ preventScroll: true });
       else if (document.activeElement === trigger) trigger.blur();
     } catch (reason) {
       console.error('[ADOverride] Could not select the native activity filter.', reason);
       filters.set(key, 'unavailable');
     } finally {
+      page?.removeEventListener('scroll', hold);
       filterBusy = false;
       schedule();
     }
