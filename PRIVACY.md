@@ -19,9 +19,12 @@ extension.
   attachments, or editor drafts into its settings. On pull request pages it
   reads the rendered page structure (policy status icons, reviewer vote icons,
   file-tree rows) to adjust the layout, and opens the native activity filter
-  once to select Active comments. It does not read or store pull request code,
-  descriptions, or comments, and never votes, completes, or resolves anything.
-- **Interactions and preferences:** pull request layout options, visibility choices, card positions, view
+  once to select Active comments. It reads comment author display names to
+  match your blocked list and to list authors in the popup. It does not read or
+  store pull request code, descriptions, or comments, and never votes,
+  completes, or resolves anything.
+- **Interactions and preferences:** pull request layout options, hidden pull
+  request tabs, blocked comment author names, visibility choices, card positions, view
   mode, presets, scope, theme, layout lock, and the last undoable Ticket change
   are stored locally using Chrome's extension storage. Importing settings also
   keeps a local pre-import backup. Settings are not sent to Chrome Storage Sync.
@@ -46,8 +49,8 @@ privacy policy and your organization's policies.
 
 Configuration export and diagnostic downloads happen only when you request
 them. They are generated locally, not uploaded automatically. Configuration
-files can include preset names, structural field keys, and saved scope
-identifiers. Layout diagnostics can include schema labels, CSS, and page
+files can include preset names, structural field keys, saved scope
+identifiers, and blocked author names. Layout diagnostics can include schema labels, CSS, and page
 structure. Review files before sharing them.
 
 If you choose to post a report on GitHub, that report is shared with GitHub and

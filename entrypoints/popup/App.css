@@ -46,3 +46,16 @@
 .popup .configuration-actions { display: flex; flex-wrap: wrap; gap: 6px; }
 .popup .configuration-summary { width: 100%; border-collapse: collapse; font-size: 11px; text-align: left; }
 .popup .configuration-summary th, .popup .configuration-summary td { padding: 4px 2px; border-bottom: 1px solid var(--borderColor-muted); }
+
+.popup .pr-list-label { display: flex; align-items: baseline; gap: 6px; min-width: 0; width: 0; flex: 1 1 0; }
+.popup .pr-list-label > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.popup .pr-list-label > .caption { flex-shrink: 0; }
+.pr-author-form {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0;
+}
+.pr-author-form > :first-child {
+  flex: 1;
+  min-width: 0;
+}

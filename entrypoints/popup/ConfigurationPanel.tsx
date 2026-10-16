@@ -7,6 +7,7 @@ import { CONFIGURATION_BACKUP_KEY, decodeConfigurationBackup, exportConfiguratio
 import { configurationBackup, extensionVersion } from '@/lib/extension';
 import { MAX_CONFIGURATION_BYTES, type PreferenceAction, type Preferences } from '@/lib/preferences';
 import { Help } from './Help';
+import { prFlagCount } from '@/lib/pr';
 
 interface Preview {
   configuration: Configuration;
@@ -114,7 +115,9 @@ export function ConfigurationPanel({ preferences, saving, update, onBack }: {
           ['Ticket view', preferences.ticket.viewMode, preview.configuration.preferences.ticket.viewMode],
           ['Ticket presets', preferences.ticket.savedPresets.length, preview.configuration.preferences.ticket.savedPresets.length],
           ['Library presets', preferences.savedPresets.length, preview.configuration.preferences.savedPresets.length],
-          ['PR options on', Object.values(preferences.pr).filter(Boolean).length, Object.values(preview.configuration.preferences.pr).filter(Boolean).length],
+          ['PR options on', prFlagCount(preferences.pr), prFlagCount(preview.configuration.preferences.pr)],
+          ['Hidden PR tabs', preferences.pr.hiddenTabs.length, preview.configuration.preferences.pr.hiddenTabs.length],
+          ['Blocked authors', preferences.pr.blockedAuthors.length, preview.configuration.preferences.pr.blockedAuthors.length],
           ['Library scopes', Object.keys(preferences.views).length, Object.keys(preview.configuration.preferences.views).length],
           ['Equal-width scopes', Object.values(preferences.views).filter(view => view.board?.equalColumns).length,
             Object.values(preview.configuration.preferences.views).filter(view => view.board?.equalColumns).length],

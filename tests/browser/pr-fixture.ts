@@ -28,13 +28,17 @@ table{border-collapse:collapse;width:100%;} td{padding:0;}
 .bolt-timeline-row>td{padding:8px 0;} .iteration-card{min-height:72px;} .repos-discussion-thread{min-height:120px;padding:12px;}
 .bolt-callout{z-index:10;background:#fff;box-shadow:0 6px 14px rgba(0,0,0,.2);} .ms-vss-web-vsts-theme-dark .bolt-callout{background:#252423;}
 .bolt-list-box-row{cursor:pointer;} .bolt-list-box-row>td{padding:6px 12px;}
-.repos-pr-description-card{min-height:560px;}
+.pr-header-reviewers .bolt-coin{display:inline-block;width:24px;height:24px;border-radius:50%;background:#8a8886;margin-left:4px;}
+.monaco-zone{border:1px solid #c8c6c4;margin:8px;}
 .repos-compare-toolbar{padding:16px 32px;height:70px;} .repos-changes-explorer-splitter{display:flex;height:calc(100vh - 210px);}
 .vss-Splitter--pane-fixed{width:295px;overflow:auto;} .bolt-tree-row td{white-space:nowrap;} .bolt-tree-expand-button{display:inline-block;width:24px;padding-left:6px;}
 .text-ellipsis{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;} .diff{height:240px;margin:8px;border:1px solid #c8c6c4;}
 `;
 
-function header() {
+const TABS: [string, string][] = [['overview', 'Overview'], ['files', 'Files'], ['updates', 'Updates'], ['commits', 'Commits'],
+  ['microsoft-wdg-es-stream-scm-owners-owners-tab', 'Owners'], ['ms-1es-Agency-sessions', 'Agency Sessions'],
+  ['XScenarios-PRInsights-Extension-PRInsights-Extension-Feature', 'Risk Assessment']];
+function header(selected = 'overview') {
   return `<div class="repos-pr-header margin-bottom-8 bolt-header flex-row flex-noshrink flex-start">
     <span role="heading" aria-level="1"><span class="screen-reader-only"></span></span>
     <div class="flex-column flex-grow">
@@ -46,19 +50,23 @@ function header() {
         <div class="repos-pr-header-complete-button bolt-split-button inline-flex-row"><button class="bolt-split-button-main bolt-button primary" data-mutating="complete">Set auto-complete</button></div>
       </div>
       <div class="flex-row">
-        <div class="pr-secondary-title-row secondary-text flex-row margin-left-8 rhythm-horizontal-4 flex-center">
+        <div class="pr-secondary-title-row secondary-text flex-row margin-left-8 rhythm-horizontal-4 flex-center" data-fixture="title-meta">
           <div class="pr-status-active bolt-pill flex-row flex-center">Active</div><span>Sample Author</span>
           <div class="pr-header-branches"><a class="bolt-link" href="#source">feature/sample</a> into <a class="bolt-link" href="#target">main</a></div>
+        </div>
+        <div class="flex-grow"></div>
+        <div class="pr-secondary-title-row secondary-text flex-row margin-left-8 rhythm-horizontal-8 flex-center" data-fixture="avatars">
+          <div class="pr-header-reviewers flex-self-start"><div class="flex-row flex-center rhythm-horizontal-8">
+            <div class="pr-reviewer relative"><div class="bolt-coin size24 cursor-pointer" role="button" aria-label="Sample Approver"></div></div>
+            <div class="pr-reviewer relative"><div class="bolt-coin size24 cursor-pointer" role="button" aria-label="Sample Reviewer A"></div></div>
+          </div></div>
         </div>
       </div>
     </div>
   </div>
   <div class="repos-pr-details-page-tabbar bolt-tabbar flex-row flex-center flex-noshrink sticky">
     <div class="bolt-tabbar-tabs flex-grow flex-wrap bolt-tabs flex-row tall" role="tablist">
-      <a class="bolt-tab selected" role="tab" id="__bolt-tab-overview" href="?">Overview</a>
-      <a class="bolt-tab" role="tab" id="__bolt-tab-files" href="?_a=files">Files</a>
-      <a class="bolt-tab" role="tab" id="__bolt-tab-updates" href="?_a=updates">Updates</a>
-      <a class="bolt-tab" role="tab" id="__bolt-tab-commits" href="?_a=commits">Commits</a>
+      ${TABS.map(([id, label]) => `<a class="bolt-tab${id === selected ? ' selected' : ''}" role="tab" id="__bolt-tab-${id}" aria-selected="${id === selected}" href="?_a=${id}">${label}</a>`).join('')}
     </div>
   </div>`;
 }
@@ -117,23 +125,41 @@ function rail() {
   </div>`;
 }
 
-const ROWS: { kind: 'push' | 'active' | 'resolved' }[] = [
-  { kind: 'push' }, { kind: 'active' }, { kind: 'push' }, { kind: 'resolved' }, { kind: 'active' }, { kind: 'push' }, { kind: 'push' },
+type RowKind = 'composer' | 'push' | 'active' | 'resolved' | 'system' | 'placeholder';
+const ROWS: { kind: RowKind; author?: string; iteration?: number }[] = [
+  { kind: 'composer' }, { kind: 'push', iteration: 12 }, { kind: 'active', author: 'Sample Reviewer' }, { kind: 'push', iteration: 11 },
+  { kind: 'resolved', author: 'Sample Author' }, { kind: 'active', author: 'Sample Bot' }, { kind: 'push', iteration: 10 }, { kind: 'system' },
+  { kind: 'push', iteration: 9 }, { kind: 'active', author: 'Sample Bot' }, { kind: 'push', iteration: 8 }, { kind: 'push', iteration: 7 },
+  { kind: 'placeholder' },
 ];
+export function commentThread(author: string, text: string, state: 'Resolve' | 'Reactivate' = 'Resolve') {
+  return `<div class="flex-grow repos-discussion-thread flex-column"><div class="repos-comment-viewer"><div class="repos-discussion-comment flex-column">
+    <div class="flex-row"><div><div class="bolt-coin repos-comment-header-persona size24" aria-label="${author}"></div></div>
+    <div class="repos-comment-editor-fit flex-column flex-grow"><div class="repos-discussion-comment-header flex-row"><div class="scroll-hidden flex-column">
+      <div class="font-weight-semibold padding-right-8 text-ellipsis">${author}</div></div></div>
+      <div class="markdown-content markdown-editor-preview">${text}</div></div></div></div></div>
+    <button class="bolt-button" data-mutating="resolve">${state}</button></div>`;
+}
+function feedRow({ kind, author, iteration }: (typeof ROWS)[number], index: number) {
+  const body = kind === 'composer' ? `<div class="repos-comment-card bolt-card"><div class="padding-vertical-8 padding-horizontal-20">Add a comment</div></div>` :
+    kind === 'push' ? `<div class="bolt-table-card bolt-card iteration-card"><a class="activity-feed-timeline-iteration" href="?_a=files&iteration=${iteration}">${iteration}</a> Sample Author pushed 1 commit</div>` :
+    kind === 'system' ? `<div class="flex-row flex-center"><span>Sample Reviewer joined as a reviewer</span></div>` :
+    kind === 'placeholder' ? `<div class="shimmer" style="height:40px"></div>` :
+    commentThread(author ?? 'Sample Reviewer', `A fictional review comment ${index}`, kind === 'active' ? 'Resolve' : 'Reactivate');
+  return `<tr class="bolt-timeline-row" data-fixture-kind="${kind}" data-fixture-row="${index}"><td>${body}</td></tr>`;
+}
 function activity() {
-  return `<table class="activity-feed-list"><tbody>${ROWS.map(({ kind }, index) => `<tr class="bolt-timeline-row" data-fixture-kind="${kind}"><td>${kind === 'push' ?
-    `<div class="bolt-table-card bolt-card iteration-card"><a class="activity-feed-timeline-iteration" href="?_a=files&iteration=${index}">${index}</a> Sample Author pushed 1 commit</div>` :
-    `<div class="repos-discussion-thread"><div class="repos-comment-viewer repos-discussion-comment">A fictional review comment ${index}</div>
-      <button class="bolt-button" data-mutating="resolve">${kind === 'active' ? 'Resolve' : 'Reactivate'}</button></div>`}</td></tr>`).join('')}</tbody></table>`;
+  return `<table class="activity-feed-list"><tbody>${ROWS.map(feedRow).join('')}</tbody></table>`;
 }
 
 const DROPDOWN_SCRIPT = (initial: string) => `
 (() => {
   const OPTIONS = [['everything', 'Show everything'], ['all_comments', 'All comments'], ['new', "What's new"], ['my_comments', 'My comments/replies'], ['active_comments', 'Active comments'], ['resolved_comments', 'Resolved comments']];
   const rows = () => [...document.querySelectorAll('tr.bolt-timeline-row')];
+  const comment = kind => kind === 'active' || kind === 'resolved';
   const match = (id, row) => { const kind = row.dataset.fixtureKind;
-    return id === 'everything' || id === 'all_comments' && kind !== 'push' || id === 'active_comments' && kind === 'active' || id === 'resolved_comments' && kind === 'resolved'; };
-  const count = id => id === 'new' ? 0 : id === 'my_comments' ? 1 : rows().filter(row => match(id, row)).length;
+    return kind === 'composer' || id === 'everything' || id === 'all_comments' && comment(kind) || id === 'active_comments' && kind === 'active' || id === 'resolved_comments' && kind === 'resolved'; };
+  const count = id => id === 'new' ? 0 : id === 'my_comments' ? 1 : rows().filter(row => row.dataset.fixtureKind !== 'composer' && row.dataset.fixtureKind !== 'placeholder' && match(id, row)).length;
   let selected = '${initial}';
   const button = document.querySelector('.repos-activity-filter-dropdown > button');
   const render = () => {
@@ -162,17 +188,28 @@ const DROPDOWN_SCRIPT = (initial: string) => `
   });
   render();
   for (const element of document.querySelectorAll('[data-mutating]')) element.addEventListener('click', () => { window.__fixtureMutations = (window.__fixtureMutations || 0) + 1; });
+  document.querySelector('[data-fixture-edit]')?.addEventListener('click', () => {
+    const preview = document.querySelector('.repos-pr-description .markdown-editor-preview');
+    if (!preview) return;
+    const editor = document.createElement('textarea');
+    editor.className = 'repos-description-editor'; editor.value = 'Editing'; editor.style.height = '120px';
+    preview.replaceWith(editor); editor.focus();
+  });
 })();`;
 
-export function prOverviewHtml({ dark = false, filter = 'everything', unknownStatus = false } = {}) {
+const PARAGRAPHS = Array.from({ length: 14 }, (_, index) => `<p>Fictional description paragraph ${index + 1} explains one more detail of the cache warmer.</p>`).join('');
+export function prOverviewHtml({ dark = false, filter = 'everything', unknownStatus = false, selected = 'overview' } = {}) {
   return `<!doctype html><html><head><title>Pull request 42: Add a fictional cache warmer</title><style>${BASE_CSS}</style></head>
   <body class="${dark ? 'ms-vss-web-vsts-theme-dark' : 'ms-vss-web-vsts-theme'}"><div class="app full-size region-page"><div class="flex-column full-size vertical-layout">
     <div class="repos-pr-details-page flex-grow custom-scrollbar v-scroll-auto flex-column">
-      ${header()}
+      ${header(selected)}
       <div class="page-content flex-column flex-noshrink flex-grow rhythm-vertical-16 page-content-top"><div class="flex-row">
         <div class="flex-column flex-grow rhythm-vertical-16 h-scroll-hidden shadow-padding">
           ${checksCard(unknownStatus)}
-          <div class="repos-pr-description-card bolt-card"><div class="padding-vertical-16 padding-horizontal-20"><h3>Description</h3><p>A fictional change description that explains the cache warmer.</p></div></div>
+          <div class="repos-pr-description-card bolt-card-with-header bolt-card flex-column"><div class="bolt-card-header bolt-header flex-row padding-horizontal-20"><h3 class="flex-grow">Description</h3>
+            <button class="bolt-button" data-fixture-edit aria-label="Edit description">Edit</button></div>
+            <div class="bolt-card-content flex-row flex-grow"><div class="repos-pr-description flex-column flex-grow padding-horizontal-20">
+              <div class="markdown-content markdown-editor-preview">${PARAGRAPHS}</div></div></div></div>
           <h2 class="screen-reader-only">Activity feed</h2>
           <div class="repos-activity-filter-dropdown"><button type="button" class="bolt-button bolt-expandable-button" aria-haspopup="listbox" aria-expanded="false"><span class="bolt-button-text"></span></button></div>
           ${activity()}
@@ -183,31 +220,33 @@ export function prOverviewHtml({ dark = false, filter = 'everything', unknownSta
   </div></div><script>${DROPDOWN_SCRIPT(filter)}</script></body></html>`;
 }
 
-const TREE: { level: number; name: string; comment?: boolean; folder?: boolean }[] = [
+const TREE: { level: number; name: string; comment?: boolean; folder?: boolean; author?: string }[] = [
   { level: 1, name: '/', folder: true }, { level: 2, name: 'service', folder: true }, { level: 3, name: 'cache', folder: true },
   { level: 4, name: 'internal', folder: true }, { level: 5, name: 'warmer_scheduler_configuration.go' },
-  { level: 6, name: 'A fictional inline review comment', comment: true }, { level: 5, name: 'warmer_scheduler_configuration_test.go' },
-  { level: 6, name: 'Another fictional review comment', comment: true }, { level: 3, name: 'README.md' },
+  { level: 6, name: 'A fictional inline review comment', comment: true, author: 'Sample Bot' }, { level: 5, name: 'warmer_scheduler_configuration_test.go' },
+  { level: 6, name: 'Another fictional review comment', comment: true, author: 'Sample Reviewer' }, { level: 3, name: 'README.md' },
 ];
 export function prFilesHtml({ dark = false } = {}) {
-  const rows = TREE.map(({ level, name, comment, folder }) => `<tr class="bolt-tree-row bolt-table-row bolt-list-row single-click-activation" role="row" aria-level="${level}"${folder ? ' aria-expanded="true"' : ''} data-fixture-tree="${comment ? 'comment' : 'file'}">
+  const rows = TREE.map(({ level, name, comment, folder, author }) => `<tr class="bolt-tree-row bolt-table-row bolt-list-row single-click-activation" role="row" aria-level="${level}"${folder ? ' aria-expanded="true"' : ''} data-fixture-tree="${comment ? 'comment' : 'file'}">
     <td class="bolt-table-cell-compact bolt-table-cell bolt-list-cell"></td>
     <td class="bolt-table-cell bolt-list-cell"><div class="bolt-table-cell-content flex-row flex-center"></div></td>
     <td class="bolt-tree-cell bolt-table-cell bolt-list-cell"><div class="${comment ? 'repos-file-explorer-tree-thread-item rhythm-horizontal-4 ' : 'scroll-hidden flex-grow padding-0 '}bolt-table-cell-content flex-row flex-center">
       <span class="fluent-icons-enabled"><span class="bolt-tree-expand-button font-size cursor-pointer flex-noshrink fabric-icon small" style="margin-left: ${(level - 1) * 16}px;">${folder ? '&#9662;' : ''}</span></span>
-      ${comment ? `<div class="flex-grow text-ellipsis">${name}</div>` : `<div class="padding-vertical-8 scroll-hidden flex-grow flex-row flex-center"><span class="text-ellipsis"><span>${name}</span></span></div>`}
+      ${comment ? `<div><div class="bolt-coin size16" aria-label="${author}"></div></div><div class="flex-grow text-ellipsis">${name}</div>` : `<div class="padding-vertical-8 scroll-hidden flex-grow flex-row flex-center"><span class="text-ellipsis"><span>${name}</span></span></div>`}
     </div></td><td class="bolt-table-cell-compact bolt-table-cell bolt-list-cell"></td></tr>`).join('');
   return `<!doctype html><html><head><title>Pull request 42: Files</title><style>${BASE_CSS}</style></head>
   <body class="${dark ? 'ms-vss-web-vsts-theme-dark' : 'ms-vss-web-vsts-theme'}"><div class="app full-size region-page">
     <div class="repos-pr-details-page flex-grow custom-scrollbar scroll-auto-hide bolt-page v-scroll-auto flex-column bolt-page-grey">
-      ${header()}
+      ${header('files')}
       <div class="page-content flex-column flex-noshrink flex-grow rhythm-vertical-16 padding-horizontal-0 padding-bottom-0"><div class="flex-column flex-grow">
         <div class="repos-compare-toolbar flex-row flex-center"><button class="bolt-button">All changes</button><span>6 changed files</span></div>
         <div class="scroll-hidden bolt-page-grey repos-changes-explorer-splitter vss-Splitter--container vss-Splitter--container-row">
           <div class="vss-Splitter--pane-fixed flex-column relative"><div class="absolute-fill flex-grow flex-column v-scroll-auto"><div class="bolt-table-container flex-grow">
             <table class="repos-changes-explorer-tree repos-file-explorer-tree body-xl bolt-table bolt-list body-m relative scroll-hidden" role="treegrid"><tbody>${rows}</tbody></table>
           </div></div></div>
-          <div class="flex-grow v-scroll-auto">${TREE.filter(row => !row.folder && !row.comment).map(row => `<div class="diff">${row.name}</div>`).join('')}</div>
+          <div class="flex-grow v-scroll-auto">${TREE.filter(row => !row.folder && !row.comment).map(row => `<div class="diff">${row.name}</div>`).join('')}
+            ${TREE.filter(row => row.comment).map(row => `<div class="monaco-zone" data-fixture-inline="${row.author}"><div class="repos-monaco-discussion-host repos-editor-discussion-host">
+              <div class="repos-editor-discussion margin-vertical-8">${commentThread(row.author ?? '', row.name)}</div></div></div>`).join('')}</div>
         </div>
       </div></div>
     </div>

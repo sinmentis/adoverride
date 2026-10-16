@@ -21,7 +21,8 @@ async function open(context: BrowserContext, html: { overview?: string; files?: 
   await context.route('https://dev.azure.com/**', route => {
     const url = new URL(route.request().url());
     expect(url.pathname).not.toContain('/_apis/');
-    const body = url.searchParams.get('_a') === 'files' ? html.files ?? prFilesHtml() : html.overview ?? prOverviewHtml();
+    const tab = url.searchParams.get('_a');
+    const body = tab === 'files' ? html.files ?? prFilesHtml() : tab && tab !== 'overview' ? prOverviewHtml({ selected: tab }) : html.overview ?? prOverviewHtml();
     return route.fulfill({ contentType: 'text/html', body });
   });
   const page = context.pages()[0] ?? await context.newPage();
@@ -42,12 +43,20 @@ async function stored(context: BrowserContext) {
   if (!worker) throw new Error('Missing extension worker.');
   return decodePreferences(await worker.evaluate(async key => (await chrome.storage.local.get(key))[key], KEY));
 }
+async function setPr(context: BrowserContext, patch: Record<string, unknown>) {
+  const worker = context.serviceWorkers()[0];
+  if (!worker) throw new Error('Missing extension worker.');
+  const current = await stored(context);
+  await worker.evaluate(({ key, value }) => chrome.storage.local.set({ [key]: value }), { key: KEY,
+    value: { ...current, revision: current.revision + 1, pr: { ...current.pr, ...patch } } });
+}
+const hidden = (page: Page, selector: string) => page.locator(selector).evaluate(node => getComputedStyle(node).display === 'none');
 function box(page: Page, selector: string) {
   return page.locator(selector).first().evaluate(node => node.getBoundingClientRect().toJSON() as DOMRect);
 }
 async function tagNatives(page: Page) {
   await page.evaluate(() => {
-    const nodes = [...document.querySelectorAll('[data-fixture],[data-fixture-reviewer],.repos-activity-filter-dropdown>button,tr.bolt-timeline-row')];
+    const nodes = [...document.querySelectorAll('[data-fixture],[data-fixture-reviewer],.repos-activity-filter-dropdown>button,tr.bolt-timeline-row,[role="tab"],.repos-pr-description')];
     (window as unknown as { __natives: [Element, Element | null][] }).__natives = nodes.map(node => [node, node.parentElement]);
   });
 }
@@ -59,18 +68,18 @@ function nativesIntact(page: Page) {
 test('PR overview: kiwifruit defaults fold noise, move merge status to the sidebar and keep native nodes', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
-    const page = await open(context, { overview: prOverviewHtml() }, '', 640);
+    const page = await open(context, { overview: prOverviewHtml() }, '', 360);
     await tagNatives(page);
     await expect(page.locator('[data-ado-pr]')).toHaveAttribute('data-ado-pr', /rail/);
     // The native filter is switched to Active comments once, without scrolling the page to the dropdown.
-    await expect(page.locator('.repos-activity-filter-dropdown > button')).toHaveText('Active comments (2)');
-    expect(await page.locator('.repos-activity-filter-dropdown > button').evaluate(node =>
-      node.getBoundingClientRect().top + document.querySelector('.repos-pr-details-page')!.scrollTop)).toBeGreaterThan(640);
+    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Active comments (3)');
+    expect(await page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])').evaluate(node =>
+      node.getBoundingClientRect().top + document.querySelector('.repos-pr-details-page')!.scrollTop)).toBeGreaterThan(360);
     await expect(page.locator('tr[data-fixture-kind="push"]').first()).toBeHidden();
     await expect(page.locator('.bolt-callout')).toHaveCount(0);
     expect(await page.evaluate(() => (window as unknown as { __fixtureFilterOpens: number }).__fixtureFilterOpens)).toBe(1);
     await expect(page.locator('.repos-pr-details-page')).toHaveJSProperty('scrollTop', 0);
-    await expect.poll(() => page.evaluate(() => document.activeElement === document.querySelector('.repos-activity-filter-dropdown > button'))).toBe(false);
+    await expect.poll(() => page.evaluate(() => document.activeElement === document.querySelector('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])'))).toBe(false);
     await page.setViewportSize({ width: 1440, height: 1000 });
     // Merge status sits at the top of the right sidebar, aligned with it.
     const status = await box(page, '[data-fixture="status"]');
@@ -114,7 +123,7 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     for (const name of ['Compact header', 'Merge status in sidebar', 'Collapse passed checks', 'Collapse silent reviewers', 'Start on active comments']) {
       await expect(popup.getByRole('button', { name, exact: true })).toHaveAttribute('aria-pressed', 'true');
     }
-    await expect(popup.getByRole('status')).toContainText('2 passed folded');
+    await expect(popup.locator('p[role="status"]')).toContainText('2 passed folded');
     await popup.locator('.popup').screenshot({ path: info.outputPath('pr-popup.png') });
 
     // Turning the sidebar option off puts the card back in place without touching the others.
@@ -133,7 +142,7 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     expect((await box(page, '.repos-pr-details-page-tabbar')).height).toBeGreaterThanOrEqual(47.5);
     expect(await nativesIntact(page)).toBe(true);
     // The filter is a one-time default; it is not reverted.
-    await expect(page.locator('.repos-activity-filter-dropdown > button')).toHaveText('Active comments (2)');
+    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Active comments (3)');
   } finally { await context.close(); }
 });
 
@@ -144,7 +153,7 @@ test('PR overview: a filter that is already not "Show everything" is kept, and d
     await expect(page.getByRole('button', { name: '2 passed', exact: true })).toBeVisible();
     await expect(page.locator('.bolt-callout')).toHaveCount(0);
     await expect.poll(() => page.evaluate(() => (window as unknown as { __fixtureFilterOpens?: number }).__fixtureFilterOpens ?? 0)).toBe(1);
-    await expect(page.locator('.repos-activity-filter-dropdown > button')).toHaveText('All comments (3)');
+    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('All comments (4)');
     const colors = await page.getByRole('button', { name: '2 passed', exact: true }).evaluate(node => {
       const parse = (value: string) => (value.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
       const luminance = ([r, g, b]: number[]) => [r, g, b].map(v => { const c = (v ?? 0) / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; })
@@ -155,7 +164,7 @@ test('PR overview: a filter that is already not "Show everything" is kept, and d
     });
     expect(colors).toBeGreaterThanOrEqual(4.5);
     const popup = await popupFor(context, page);
-    await expect(popup.getByRole('status')).toContainText('your filter kept');
+    await expect(popup.locator('p[role="status"]')).toContainText('your filter kept');
   } finally { await context.close(); }
 });
 
@@ -183,7 +192,7 @@ test('PR files: comment rows leave the tree, indentation halves, and both restor
     expect((await box(page, '.repos-compare-toolbar')).height).toBeLessThanOrEqual(70);
     const popup = await popupFor(context, page);
     await expect(popup.getByRole('tab', { name: /Files/ })).toHaveAttribute('aria-selected', 'true');
-    await expect(popup.getByRole('status')).toContainText('2 comment rows hidden');
+    await expect(popup.locator('p[role="status"]')).toContainText('2 comment rows hidden');
     await popup.getByRole('button', { name: 'Hide comments in file tree', exact: true }).click();
     await expect(page.locator('tr[data-fixture-tree="comment"]').first()).toBeVisible();
     await popup.getByRole('button', { name: 'Compact file tree', exact: true }).click();
@@ -191,5 +200,131 @@ test('PR files: comment rows leave the tree, indentation halves, and both restor
     await popup.getByRole('button', { name: 'Reset to kiwifruit', exact: true }).click();
     await expect(page.locator('tr[data-fixture-tree="comment"]').first()).toBeHidden();
     await expect.poll(() => deep.evaluate(node => getComputedStyle(node).marginLeft)).toBe('32px');
+  } finally { await context.close(); }
+});
+
+test('PR tabs and header: kiwifruit hides chosen tabs and avatars, the current tab always stays, and popup toggles work', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    const page = await open(context);
+    await tagNatives(page);
+    for (const id of ['updates', 'ms-1es-Agency-sessions', 'XScenarios-PRInsights-Extension-PRInsights-Extension-Feature']) {
+      await expect(page.locator(`#__bolt-tab-${id}`)).toBeHidden();
+    }
+    for (const id of ['overview', 'files', 'commits', 'microsoft-wdg-es-stream-scm-owners-owners-tab']) {
+      await expect(page.locator(`#__bolt-tab-${id}`)).toBeVisible();
+    }
+    await expect(page.locator('[data-fixture="avatars"]')).toBeHidden();
+    await expect(page.locator('[data-fixture="title-meta"]')).toBeVisible();
+    const popup = await popupFor(context, page);
+    await popup.getByRole('tab', { name: 'Tabs' }).click();
+    const list = popup.getByRole('region', { name: 'Visible pull request tabs' });
+    await expect(list.getByText('current', { exact: true })).toBeVisible();
+    await expect(list.getByRole('button', { name: 'Overview' })).toBeVisible();
+    await expect(list.getByRole('button', { name: 'Agency Sessions' })).toHaveAttribute('aria-pressed', 'false');
+    await list.getByRole('button', { name: 'Owners' }).click();
+    await expect.poll(async () => (await stored(context)).pr.hiddenTabs).toContain('microsoft-wdg-es-stream-scm-owners-owners-tab');
+    await expect(page.locator('#__bolt-tab-microsoft-wdg-es-stream-scm-owners-owners-tab')).toBeHidden();
+    await list.getByRole('button', { name: 'Agency Sessions' }).click();
+    await expect(page.locator('#__bolt-tab-ms-1es-Agency-sessions')).toBeVisible();
+    await popup.locator('.popup-body').evaluate(node => { node.scrollTop = 0; });
+    await popup.locator('.popup').screenshot({ path: info.outputPath('pr-popup-tabs.png') });
+    expect(await nativesIntact(page)).toBe(true);
+    // A hidden tab opened directly stays visible while it is current.
+    await page.goto(`${ADDRESS}?_a=updates`);
+    await expect(page.locator('#__bolt-tab-updates')).toBeVisible();
+    await expect(page.locator('#__bolt-tab-XScenarios-PRInsights-Extension-PRInsights-Extension-Feature')).toBeHidden();
+  } finally { await context.close(); }
+});
+
+test('PR description: long text folds behind Show more and opens fully while editing', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    const page = await open(context);
+    const body = '.repos-pr-description';
+    await expect(page.getByRole('button', { name: 'Show more', exact: true })).toBeVisible();
+    expect((await box(page, body)).height).toBeLessThanOrEqual(241);
+    await page.getByRole('button', { name: 'Show more', exact: true }).click();
+    await expect.poll(async () => (await box(page, body)).height).toBeGreaterThan(300);
+    await page.getByRole('button', { name: 'Show less', exact: true }).click();
+    await expect.poll(async () => (await box(page, body)).height).toBeLessThanOrEqual(241);
+    await page.getByRole('button', { name: 'Edit description' }).click();
+    await expect(page.locator('textarea.repos-description-editor')).toBeFocused();
+    await expect(page.locator('[data-ado-pr-fold]')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Show (more|less)/ })).toHaveCount(0);
+  } finally { await context.close(); }
+});
+
+test('PR feed: update runs fold, blocked authors fold behind one button, and runs join across hidden threads', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { activeComments: false });
+    const page = await open(context);
+    await tagNatives(page);
+    const row = (index: number) => `tr[data-fixture-row="${index}"]`;
+    // Runs: rows 6-8 (push, system, push) and 10-11 (push, push). The placeholder and composer never fold.
+    await expect(page.getByRole('button', { name: '+2 more updates', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: '+1 more updates', exact: true })).toBeVisible();
+    for (const index of [7, 8, 11]) expect(await hidden(page, row(index))).toBe(true);
+    for (const index of [0, 1, 2, 3, 6, 10, 12]) expect(await hidden(page, row(index))).toBe(false);
+    await page.getByRole('button', { name: '+2 more updates', exact: true }).click();
+    await expect.poll(() => hidden(page, row(8))).toBe(false);
+    await page.getByRole('button', { name: 'Hide 2 updates', exact: true }).click();
+    await expect.poll(() => hidden(page, row(8))).toBe(true);
+
+    const popup = await popupFor(context, page);
+    await popup.getByRole('tab', { name: 'Blocked' }).click();
+    const list = popup.getByRole('region', { name: 'Blocked comment authors' });
+    await expect(list.getByText('2 threads')).toBeVisible();
+    await list.getByRole('button', { name: 'Sample Bot', exact: true }).click();
+    await expect.poll(async () => (await stored(context)).pr.blockedAuthors).toEqual(['Sample Bot']);
+    for (const index of [5, 9]) await expect.poll(() => hidden(page, row(index))).toBe(true);
+    const summary = page.getByRole('button', { name: '2 from blocked authors', exact: true });
+    await expect(summary).toBeVisible();
+    // With both bot threads folded, rows 6-11 are one run behind the first push.
+    await expect(page.getByRole('button', { name: '+4 more updates', exact: true })).toBeVisible();
+    await summary.click();
+    await expect.poll(() => hidden(page, row(5))).toBe(false);
+    await expect(page.getByRole('button', { name: 'Hide 2 from blocked authors', exact: true })).toBeVisible();
+    // Our button inside the filter wrapper does not count as choosing a filter.
+    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Show everything (11)');
+    await popup.locator('.popup').screenshot({ path: info.outputPath('pr-popup-blocked.png') });
+    expect(await nativesIntact(page)).toBe(true);
+    expect(await page.evaluate(() => (window as unknown as { __fixtureMutations?: number }).__fixtureMutations ?? 0)).toBe(0);
+
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
+    await expect(page.locator('[data-ado-pr-hide],[data-ado-pr-fold],[data-ado-pr-ui]')).toHaveCount(0);
+    for (const index of [5, 7, 8, 9, 11]) await expect.poll(() => hidden(page, row(index))).toBe(false);
+    await expect(page.locator('#__bolt-tab-updates')).toBeVisible();
+    expect(await nativesIntact(page)).toBe(true);
+  } finally { await context.close(); }
+});
+
+test('PR files: blocked authors leave the tree and their inline threads fold', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { hideTreeComments: false });
+    const page = await open(context, {}, '?_a=files');
+    await expect(page.locator('tr[data-fixture-tree="comment"]').first()).toBeVisible();
+    const popup = await popupFor(context, page);
+    await popup.getByRole('tab', { name: 'Blocked' }).click();
+    await popup.getByRole('textbox', { name: 'Author display name' }).fill('  sample   bot ');
+    await popup.getByRole('button', { name: 'Block', exact: true }).click();
+    await expect.poll(async () => (await stored(context)).pr.blockedAuthors).toEqual(['sample bot']);
+    await expect(page.locator('tr[data-fixture-tree="comment"]').first()).toBeHidden();
+    await expect(page.locator('tr[data-fixture-tree="comment"]').nth(1)).toBeVisible();
+    const bot = page.locator('[data-fixture-inline="Sample Bot"]');
+    await expect(bot.locator('.repos-discussion-thread')).toBeHidden();
+    await expect(page.locator('[data-fixture-inline="Sample Reviewer"] .repos-discussion-thread')).toBeVisible();
+    await bot.getByRole('button', { name: 'Comment from a blocked author', exact: true }).click();
+    await expect(bot.locator('.repos-discussion-thread')).toBeVisible();
+    await expect(popup.locator('p[role="status"]')).toContainText('1 from blocked authors');
+    await popup.getByRole('textbox', { name: 'Author display name' }).fill('Sample Bot');
+    await popup.getByRole('button', { name: 'Block', exact: true }).click();
+    await expect(popup.getByText('Already blocked.')).toBeVisible();
+    // Reset keeps the block list.
+    await popup.getByRole('button', { name: 'Reset to kiwifruit', exact: true }).click();
+    await expect.poll(async () => (await stored(context)).pr.hideTreeComments).toBe(true);
+    expect((await stored(context)).pr.blockedAuthors).toEqual(['sample bot']);
   } finally { await context.close(); }
 });

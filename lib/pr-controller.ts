@@ -1,4 +1,5 @@
-import { emptyPrSnapshot, parsePullRequest, type PrFeature, type PrFilterState, type PrProfile, type PrSnapshot } from './pr';
+import { authorKey, emptyPrSnapshot, isPrTabId, normalizeAuthor, parsePullRequest, updateRuns,
+  type FeedRowKind, type PrAuthorState, type PrFeature, type PrFilterState, type PrProfile, type PrSnapshot, type PrTabState } from './pr';
 import type { Preferences } from './preferences';
 import { rendered } from './ticket';
 
@@ -10,9 +11,12 @@ const PASSED = 'data-ado-pr-passed';
 const SILENT = 'data-ado-pr-silent';
 const ORDER = 'data-ado-pr-order';
 const OPEN = 'data-ado-pr-open';
+const HIDE = 'data-ado-pr-hide';
+const FOLD = 'data-ado-pr-fold';
+export const DESCRIPTION_FOLD_HEIGHT = 240;
 const UI = 'data-ado-pr-ui';
 const STYLE = 'data-ado-pr-style';
-const OWNED = [ROOT, ROW, STATUS, PLACED, PASSED, SILENT, ORDER, OPEN];
+const OWNED = [ROOT, ROW, STATUS, PLACED, PASSED, SILENT, ORDER, OPEN, HIDE, FOLD];
 
 const levels = Array.from({ length: 16 }, (_, index) => index + 1);
 export const PR_CSS = `
@@ -37,8 +41,11 @@ export const PR_CSS = `
 [${ROOT}~="tree-comments"] .repos-changes-explorer-tree tr.bolt-tree-row:has(.repos-file-explorer-tree-thread-item){display:none!important;}
 [${ROOT}~="compact-tree"] .repos-changes-explorer-tree .bolt-tree-cell .padding-vertical-8{padding-top:4px!important;padding-bottom:4px!important;}
 ${levels.map(level => `[${ROOT}~="compact-tree"] .repos-changes-explorer-tree tr[aria-level="${level}"] .bolt-tree-expand-button{margin-left:${(level - 1) * 8}px!important;}`).join('\n')}
+[${HIDE}]{display:none!important;}
+[${FOLD}]{max-height:${DESCRIPTION_FOLD_HEIGHT}px!important;overflow:hidden!important;
+  -webkit-mask-image:linear-gradient(to bottom,#000 65%,transparent);mask-image:linear-gradient(to bottom,#000 65%,transparent);}
 [${UI}]{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;margin:6px 12px;padding:2px 8px;border:1px solid transparent;border-radius:4px;
-  background:transparent;color:var(--communication-foreground,#0078d4);font:inherit;font-size:13px;line-height:20px;cursor:pointer;}
+  background:transparent;color:var(--communication-foreground,#0078d4);font:inherit;font-size:13px;line-height:20px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
 [${UI}]:hover{border-color:currentColor;}
 [${UI}]:focus-visible{outline:2px solid var(--focus-border-color,#0078d4);outline-offset:1px;}
 `;
@@ -46,8 +53,10 @@ ${levels.map(level => `[${ROOT}~="compact-tree"] .repos-changes-explorer-tree tr
 const TOKENS: Record<PrFeature, string> = {
   compactHeader: 'compact-header', railStatus: 'rail', hidePassedChecks: 'passed', collapseReviewers: 'reviewers',
   activeComments: '', hideTreeComments: 'tree-comments', compactTree: 'compact-tree',
+  hideHeaderReviewers: '', foldDescription: '', foldUpdates: '',
 };
-const OVERVIEW: PrFeature[] = ['railStatus', 'hidePassedChecks', 'collapseReviewers', 'activeComments'];
+const EVERY_TAB: PrFeature[] = ['compactHeader', 'hideHeaderReviewers'];
+const OVERVIEW: PrFeature[] = ['railStatus', 'hidePassedChecks', 'collapseReviewers', 'foldDescription', 'activeComments', 'foldUpdates'];
 const FILES: PrFeature[] = ['hideTreeComments', 'compactTree'];
 
 function setAttribute(element: Element, name: string, value: string) {
@@ -68,6 +77,21 @@ export function statusSections(card: Element): { section: HTMLElement; state: st
     sections.push({ section, state });
   }
   return sections.length ? sections : null;
+}
+
+export function feedRowKind(row: Element): FeedRowKind {
+  if (row.querySelector('.repos-discussion-thread, .repos-discussion-comment')) return 'comment';
+  if (row.querySelector('.activity-feed-timeline-iteration')) return 'update';
+  if (row.querySelector('.repos-comment-card')) return 'composer';
+  if (row.querySelector('.shimmer, .bolt-spinner')) return 'placeholder';
+  // Card-less timeline rows are system events (reviewer added, policy changes, status updates).
+  if (!row.querySelector('.bolt-card') && (row.textContent ?? '').trim()) return 'update';
+  return 'unknown';
+}
+export function threadAuthor(element: Element): string | null {
+  const name = element.querySelector('.repos-discussion-comment-header .font-weight-semibold')?.textContent ??
+    element.querySelector('.repos-comment-header-persona')?.getAttribute('aria-label') ?? '';
+  return normalizeAuthor(name) || null;
 }
 
 export function createPrController(document: Document, address: () => string) {
@@ -207,6 +231,19 @@ export function createPrController(document: Document, address: () => string) {
       let passedChecks = 0;
       let silentReviewers = 0;
       let treeComments = 0;
+      let foldedUpdates = 0;
+      let blockedThreads = 0;
+      let descriptionFolded = false;
+      const tabs: PrTabState[] = [];
+      const authors = new Map<string, PrAuthorState>();
+      const blocked = new Set(profile.blockedAuthors.map(authorKey));
+      const seen = (name: string | null, count = 1) => {
+        if (!name || authors.size >= 200 && !authors.has(authorKey(name))) return;
+        const key = authorKey(name);
+        const item = authors.get(key) ?? { name, threads: 0, blocked: blocked.has(key) };
+        item.threads = Math.max(item.threads, 0) + count;
+        authors.set(key, item);
+      };
       const mark = (element: Element, name: string, value = '') => {
         const attributes = desired.get(element) ?? new Map<string, string>();
         attributes.set(name, value); desired.set(element, attributes);
@@ -215,6 +252,23 @@ export function createPrController(document: Document, address: () => string) {
       if (profile.compactHeader) {
         if (root.querySelector(':scope > .repos-pr-header')) { tokens.push(TOKENS.compactHeader); applied.push('compactHeader'); }
         else unsupported.push('compactHeader');
+      }
+      for (const tab of root.querySelectorAll<HTMLElement>(':scope > .repos-pr-details-page-tabbar [role="tab"]')) {
+        const id = tab.id.startsWith('__bolt-tab-') ? tab.id.slice('__bolt-tab-'.length) : '';
+        if (!isPrTabId(id) || tabs.length >= 60) continue;
+        const selected = tab.getAttribute('aria-selected') === 'true';
+        const hidden = !selected && profile.hiddenTabs.includes(id);
+        if (hidden) mark(tab, HIDE, 'tab');
+        tabs.push({ id, label: (tab.textContent ?? '').trim().slice(0, 200) || id, selected, hidden });
+      }
+      if (profile.hideHeaderReviewers) {
+        const header = root.querySelector(':scope > .repos-pr-header');
+        if (header) {
+          applied.push('hideHeaderReviewers');
+          const avatars = header.querySelector('.pr-header-reviewers');
+          const row = avatars?.closest('.pr-secondary-title-row');
+          if (avatars) mark(row && row.children.length === 1 ? row : avatars, HIDE, 'avatars');
+        } else unsupported.push('hideHeaderReviewers');
       }
       if (pr.view === 'overview') {
         const row = root.querySelector<HTMLElement>(':scope > .page-content > .flex-row');
@@ -275,6 +329,62 @@ export function createPrController(document: Document, address: () => string) {
             }
           } else unsupported.push('collapseReviewers');
         }
+        if (profile.foldDescription) {
+          const card = root.querySelector<HTMLElement>('.repos-pr-description-card');
+          const body = card?.querySelector<HTMLElement>('.repos-pr-description');
+          if (card && body) {
+            applied.push('foldDescription');
+            const active = document.activeElement;
+            const editing = !body.querySelector('.markdown-editor-preview') || Boolean(card.querySelector('textarea,[contenteditable="true"]')) ||
+              Boolean(active && active !== document.body && card.contains(active) && !active.hasAttribute(UI));
+            const id = `${pr.key}:description`;
+            const open = opened.has(id);
+            if (!editing && body.scrollHeight > DESCRIPTION_FOLD_HEIGHT + 60) {
+              if (!open) { mark(body, FOLD); descriptionFolded = true; }
+              keepButtons.add('description');
+              button('description', card, open ? 'Show less' : 'Show more', open, () => toggle(id));
+            }
+          } else unsupported.push('foldDescription');
+        }
+        const feed = root.querySelector('table.activity-feed-list');
+        const feedRows = feed ? [...feed.querySelectorAll<HTMLElement>(':scope > tbody > tr.bolt-timeline-row')]
+          .filter(row => !row.hidden && row.getAttribute('aria-hidden') !== 'true') : [];
+        const dropdownHost = root.querySelector<HTMLElement>('.repos-activity-filter-dropdown');
+        const blockedOpen = opened.has(`${pr.key}:blocked`);
+        const hiddenRows = new Set<HTMLElement>();
+        const blockedRows: HTMLElement[] = [];
+        for (const row of feedRows) {
+          if (feedRowKind(row) !== 'comment') continue;
+          const name = threadAuthor(row);
+          seen(name);
+          if (name && blocked.has(authorKey(name))) blockedRows.push(row);
+        }
+        if (blockedRows.length && dropdownHost) {
+          blockedThreads = blockedRows.length;
+          if (!blockedOpen) for (const row of blockedRows) { mark(row, HIDE, 'blocked'); hiddenRows.add(row); }
+          keepButtons.add('blocked');
+          button('blocked', dropdownHost, blockedOpen ? `Hide ${blockedRows.length} from blocked authors` : `${blockedRows.length} from blocked authors`,
+            blockedOpen, () => toggle(`${pr.key}:blocked`));
+        }
+        if (profile.foldUpdates) {
+          if (feed) {
+            applied.push('foldUpdates');
+            const visible = feedRows.filter(row => !hiddenRows.has(row));
+            for (const { start, end } of updateRuns(visible.map(feedRowKind))) {
+              const first = visible[start];
+              if (!first) continue;
+              const iteration = first.querySelector('.activity-feed-timeline-iteration')?.textContent?.trim();
+              const id = `${pr.key}:updates:${iteration || `row${feedRows.indexOf(first)}`}`;
+              const open = opened.has(id);
+              const count = end - start;
+              if (!open) { for (const row of visible.slice(start + 1, end + 1)) mark(row, HIDE, 'update'); foldedUpdates += count; }
+              const key = `updates:${id}`;
+              keepButtons.add(key);
+              const cards = first.querySelectorAll('.bolt-card');
+              button(key, cards[cards.length - 1] ?? first.querySelector(':scope > td') ?? first, open ? `Hide ${count} updates` : `+${count} more updates`, open, () => toggle(id));
+            }
+          } else unsupported.push('foldUpdates');
+        }
         if (profile.activeComments) {
           const dropdown = root.querySelector<HTMLElement>('.repos-activity-filter-dropdown');
           const ready = dropdown && rendered(dropdown) && root.querySelector('table.activity-feed-list');
@@ -288,19 +398,40 @@ export function createPrController(document: Document, address: () => string) {
         for (const feature of FILES) if (profile[feature]) {
           if (tree) { tokens.push(TOKENS[feature]); applied.push(feature); } else unsupported.push(feature);
         }
+        for (const item of tree?.querySelectorAll('tr.bolt-tree-row .repos-file-explorer-tree-thread-item') ?? []) {
+          const name = normalizeAuthor(item.querySelector('.bolt-coin')?.getAttribute('aria-label') ?? '') || null;
+          seen(name);
+          const row = item.closest('tr');
+          if (row && name && blocked.has(authorKey(name))) { mark(row, HIDE, 'blocked'); blockedThreads++; }
+        }
+        const inline = [...root.querySelectorAll<HTMLElement>('.repos-editor-discussion')];
+        inline.forEach((discussion, index) => {
+          const thread = discussion.querySelector<HTMLElement>(':scope > .repos-discussion-thread, .repos-discussion-thread');
+          const name = thread ? threadAuthor(thread) : null;
+          if (!tree) seen(name);
+          if (!thread || !name || !blocked.has(authorKey(name))) return;
+          const id = `${pr.key}:inline:${index}`;
+          const open = opened.has(id);
+          if (!tree) blockedThreads++;
+          if (!open) mark(thread, HIDE, 'blocked');
+          keepButtons.add(id);
+          button(id, discussion, open ? 'Hide comment from blocked author' : 'Comment from a blocked author', open, () => toggle(id));
+        });
       }
-      if (tokens.length) {
-        mark(root, ROOT, tokens.join(' '));
-        if (!style.isConnected) (document.head ?? document.documentElement).append(style);
-      } else style.remove();
+      if (tokens.length) mark(root, ROOT, tokens.join(' '));
+      if (desired.size || keepButtons.size) { if (!style.isConnected) (document.head ?? document.documentElement).append(style); }
+      else style.remove();
       sync(desired);
       removeButtons(keepButtons);
       if (resized && !desired.get(resized)?.has(PLACED)) { resize.unobserve(resized); resized = null; }
       const filter = profile.activeComments && pr.view === 'overview' ? filters.get(pr.key) ?? 'waiting' : 'off';
-      const relevant = pr.view === 'overview' ? ['compactHeader', ...OVERVIEW] : pr.view === 'files' ? ['compactHeader', ...FILES] : ['compactHeader'];
+      const relevant = [...EVERY_TAB, ...(pr.view === 'overview' ? OVERVIEW : pr.view === 'files' ? FILES : [])];
       const missing = unsupported.filter(feature => relevant.includes(feature));
-      publish({ version: 1, status: applied.length ? 'active' : 'original', view: pr.view, applied, unsupported: missing,
-        passedChecks, silentReviewers, treeComments, filter,
+      const blockedAll = [...authors.values()];
+      for (const name of profile.blockedAuthors) if (!authors.has(authorKey(name))) blockedAll.push({ name, threads: 0, blocked: true });
+      publish({ version: 2, status: applied.length || tabs.some(tab => tab.hidden) ? 'active' : 'original', view: pr.view, applied, unsupported: missing,
+        passedChecks, silentReviewers, treeComments, foldedUpdates, blockedThreads, descriptionFolded, filter, tabs,
+        authors: blockedAll.slice(0, 200),
         message: missing.length ? 'Some parts of this page were not recognized and keep the native layout.' : null });
     } catch (reason) {
       reset();
@@ -323,12 +454,18 @@ export function createPrController(document: Document, address: () => string) {
     attributeFilter: ['class', 'hidden', 'aria-hidden', 'aria-selected', 'aria-expanded'] });
   resize.observe(document.documentElement);
   const interaction = (event: Event) => {
-    if (!event.isTrusted || !(event.target instanceof Element) || !event.target.closest('.repos-activity-filter-dropdown')) return;
+    if (!event.isTrusted || !(event.target instanceof Element) || !event.target.closest('.repos-activity-filter-dropdown') ||
+      event.target.closest(`[${UI}]`)) return;
     const pr = parsePullRequest(address());
     if (pr) touched.add(pr.key);
   };
   document.addEventListener('pointerdown', interaction, true);
   document.addEventListener('keydown', interaction, true);
+  const focusChange = (event: Event) => {
+    if (event.target instanceof Element && event.target.closest('.repos-pr-description-card')) schedule();
+  };
+  document.addEventListener('focusin', focusChange);
+  document.addEventListener('focusout', focusChange);
 
   return {
     get snapshot() { return snapshot; },
@@ -344,6 +481,8 @@ export function createPrController(document: Document, address: () => string) {
       if (scheduled) window.cancelAnimationFrame(scheduled);
       document.removeEventListener('pointerdown', interaction, true);
       document.removeEventListener('keydown', interaction, true);
+      document.removeEventListener('focusin', focusChange);
+      document.removeEventListener('focusout', focusChange);
       reset(); listeners.clear();
     },
   };

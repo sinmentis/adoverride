@@ -129,18 +129,35 @@ profile; **Reset to kiwifruit** turns every option back on.
 | Overview option | What it does |
 | --- | --- |
 | Compact header | Tighter title, tab bar and Files toolbar on every PR tab |
+| Hide header avatars | Removes the reviewer avatar strip next to the title; the sidebar Reviewers list stays |
 | Merge status in sidebar | Moves the checks and policies card to the top of the right sidebar; work items are listed before tags |
 | Collapse passed checks | Folds passed policies into an **N passed** button; failing and pending ones stay |
 | Collapse silent reviewers | Folds optional reviewers without a vote into **+N with no vote**; required reviewers and anyone who voted stay |
+| Fold long description | Descriptions taller than about 12 lines show a preview with **Show more**; editing always shows the full text |
 | Start on active comments | Picks the native **Active comments** activity filter once when a PR opens |
+| Fold update runs | Two or more pushes or system events in a row fold behind the first one (**+N more updates**); comments stay in place |
 
 | Files option | What it does |
 | --- | --- |
 | Hide comments in file tree | Removes comment-thread rows from the changed-files tree; comments stay in the diff |
 | Compact file tree | Halves the indentation and tightens rows so long paths fit |
 
-kiwifruit turns all of them on, including for installs that existed before PR
-support. The activity filter is a one-time default: if you already picked
+**Tabs** lists the PR tabs on the page with a switch each, including extension
+tabs such as Agency Sessions or Risk Assessment. Hidden tabs are remembered by
+their stable id, so they stay hidden on every PR. The tab you are on always
+stays visible, so a direct link still works.
+
+**Blocked** lists the comment authors seen on this PR. Block one, or type a
+display name, and threads they started fold behind one **N from blocked
+authors** button next to the activity filter. In **Files** their rows leave the
+file tree and their inline threads fold to a one-line button. Matching uses the
+display name, case-insensitive. Agents that post under a person's account look
+like that person and can't be told apart.
+
+kiwifruit turns every option on and hides Updates, Test Results Hub, Agency
+Sessions, PR Standard Questionnaire and Risk Assessment, including for installs
+that existed before PR support. **Reset to kiwifruit** keeps your blocked
+list. The activity filter is a one-time default: if you already picked
 another filter, or change it later, ADOverride leaves it alone. ADOverride
 never votes, completes, resolves, or comments; it only changes the layout and
 opens the native filter menu once. Parts of the page it doesn't recognize keep
