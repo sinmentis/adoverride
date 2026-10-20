@@ -1,0 +1,56 @@
+Customize your Azure DevOps view without changing your team's setup.
+
+ADOverride is a Chrome extension for personal Azure DevOps Services layouts.
+Hide supported work item fields, move sections within work item forms, and give
+Kanban columns more room. Layout changes affect your browser, not your team's
+configuration or your teammates' views.
+
+USE YOUR WHOLE BOARD
+- Make Kanban columns use the available width.
+- Reduce header spacing and choose which fields appear on cards.
+- Load additional items through Azure DevOps' native controls under your
+  current filters. Native and server limits still apply.
+- Save Board settings for one board, a project, an organization, or all
+  supported Azure DevOps sites.
+
+FOCUS ON THE WORK ITEM
+- Show or hide supported form sections, pages, and fields.
+- Move form sections into your preferred arrangement.
+- Use Workspace for a wide reading area with properties alongside it.
+- Lock your layout or undo the last work item customization.
+- Save personal presets or transfer settings with JSON export/import.
+
+GET STARTED
+1. Install ADOverride, pin it to your toolbar, and open an Azure DevOps Kanban
+   board or work item.
+2. Click the extension icon. Library contains Board settings; Ticket contains
+   work item settings.
+3. Choose the fields and layout you want.
+
+The built-in kiwifruit preset applies automatically. It widens Board columns,
+enables native item loading, opens work items in Workspace, and hides some
+fields, including estimates, dates, and severity where matched.
+Use Ticket > Cards & fields > Show all to restore visibility. Turn ADOverride
+off with the switch at the top of the popup to see the original page layout.
+Your preferences are kept for when you turn it back on.
+
+LOCAL SETTINGS, NO DEVELOPER TRACKING
+ADOverride reads the Azure DevOps page address and layout to apply your settings.
+It stores your preferences locally and requests form-layout metadata from your
+own Azure DevOps organization using your existing sign-in.
+It does not send your work item data to the developer or submit work item
+changes. No analytics, advertising, or developer backend.
+
+The store's Web history, Website content, and User activity disclosures cover
+this local page access and preference handling. ADOverride does not keep a
+browsing-history log. See the linked privacy policy for details.
+
+COMPATIBILITY
+Supports Azure DevOps Services on dev.azure.com and *.visualstudio.com.
+Board layout support targets Kanban boards, not every Backlog, Query, sprint,
+or custom layout. Some features depend on English labels. Unsupported content
+may stay unchanged. Azure DevOps Server on other domains is not supported.
+Organization-managed browsers may require approval to install extensions.
+
+Free and open source under MIT. Not affiliated with or endorsed by Microsoft
+or GitHub. Screenshots use fictional work items and replayed layouts.

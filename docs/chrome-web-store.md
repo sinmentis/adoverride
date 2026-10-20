@@ -1,19 +1,28 @@
-# Chrome Web Store submission
+# Chrome Web Store listing and updates
 
-Submission kit for the published **0.11.10** Chrome package. No store submission
-is made by the scripts in this repository.
+The [live item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo)
+currently serves **0.11.10**. The copy in [store/LISTING.txt](store/LISTING.txt)
+and the published-version images describe Boards and work items only.
+Newer PR features on `main` are not in that package.
 
-## 1. Account and package
+No store submission is made by the scripts in this repository.
 
-In the [Developer Dashboard](https://chrome.google.com/webstore/devconsole),
-complete the publisher name, verify the contact email, and enable two-step
-verification on the publishing Google account. Complete any identity or trader
-status questions yourself based on your circumstances.
+## 1. Update the existing item
 
-Choose **Add new item** and upload `adoverride-0.11.10-chrome.zip` from the
-[release](https://github.com/sinmentis/adoverride/releases/tag/v0.11.10).
-Upload the extension ZIP, not the source-code archive or the entire materials
-folder. Keep the existing release artifact unchanged.
+Open the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
+using the publishing account and select ADOverride, item
+`ijeoidnjoamdkpfgbnhfajddhpakobjo`. **Do not add a new item.**
+
+For the current presentation-only update, replace the detailed description with
+`store/LISTING.txt` and the first screenshot with `store/01-board.jpg`. Keep the
+existing package and screenshots 2-5. Confirm the homepage, support, and privacy
+links below, save the draft, and follow the dashboard's review/publication steps.
+The listing bundle is not an extension ZIP and must not be uploaded as a package.
+
+For a later binary update, use the approved, verified Chrome ZIP from the
+matching [GitHub release](https://github.com/sinmentis/adoverride/releases).
+Keep existing release artifacts unchanged. A source-code ZIP or the entire
+listing-assets folder is not an installable extension package.
 
 ## 2. Store listing
 
@@ -21,7 +30,7 @@ folder. Keep the existing release artifact unchanged.
 | --- | --- |
 | Name (from manifest) | ADOverride - Azure DevOps Boards & Work Items |
 | Language | English |
-| Category | Productivity; choose Workflow & Planning if offered as a subcategory |
+| Category | Workflow & Planning (the current listing category) |
 | Homepage | https://github.com/sinmentis/adoverride |
 | Support | https://github.com/sinmentis/adoverride/issues |
 | Privacy policy | https://github.com/sinmentis/adoverride/blob/main/PRIVACY.md |
@@ -30,83 +39,35 @@ folder. Keep the existing release artifact unchanged.
 | Optional marquee | `marquee-1400x560.png` |
 | Screenshots, in order | `01-board.jpg` through `05-board-fields.jpg` |
 
-The manifest supplies this short description:
+The published 0.11.10 manifest supplies this short description:
 
 ```text
-Declutter Azure DevOps Boards, work items and pull requests: hide fields, rearrange cards, wider Kanban columns, cleaner PRs.
+Declutter Azure DevOps Boards and work items: hide fields, rearrange cards, wider Kanban columns. Your Azure DevOps. Your way.
 ```
 
-Paste this detailed description:
+The title and short description come from the uploaded manifest. They are not
+changed by pasting the detailed description. This presentation update keeps
+them unchanged. For a future approved package, a clearer proposed summary is
+(122 characters, within the 132-character limit):
 
 ```text
-Make Azure DevOps fit the way you work.
-
-ADOverride gives you a personal layout for Azure DevOps Boards, work items and
-pull requests.
-Hide clutter, rearrange cards, and give important content more room without
-changing your team's process or anyone else's view.
-
-BOARDS
-- Fill the available width with equal-width Kanban columns.
-- Reduce header spacing and optionally compact cards.
-- Choose whether cards show assignees, state, tags, story points, and link counts.
-- Automatically load additional native batches under your current filters.
-
-WORK ITEMS
-- Show or hide supported pages, cards, and fields.
-- Drag cards into your preferred arrangement.
-- Switch between the original view and Workspace, with a wide reading area
-  and a Properties rail.
-- Lock on-page layout controls or undo the last Ticket customization.
-
-PULL REQUESTS
-- Split Overview into Activity, Description and Checks tabs, with a failed
-  checks badge, so the activity feed gets the full width.
-- Fold passed checks and optional reviewers who haven't voted.
-- Open the activity feed on Active comments, fold runs of pushes, and show
-  each push as one "pushed N commits" line.
-- Block bot accounts so their resolved threads fold away.
-- Hide PR tabs you never use.
-- Hide comment rows in the Files tree and tighten its indentation.
-
-YOUR SETTINGS
-- Start with the built-in kiwifruit preset or save your own.
-- Save Board settings per Board, project, organization, or across Azure DevOps.
-- Use shared Ticket preferences across work item types, including User Stories
-  and Bugs.
-- Export or import your configuration as a local JSON file.
-
-PRIVACY
-Settings stay in local extension storage. No analytics, ads, or developer
-backend. ADOverride processes page structure and supported-page addresses
-locally and reads form-layout metadata from your own Azure DevOps organization
-using your existing session. It does not send your work item data to us or
-submit work item changes.
-
-GET STARTED
-Sign in to Azure DevOps, open a Kanban Board, work item or pull request, and open
-the extension. Use Library for Board settings, Ticket for work item settings and
-PR for pull request settings.
-
-COMPATIBILITY
-Supports Azure DevOps Services on dev.azure.com and *.visualstudio.com.
-Some matching depends on English labels. Custom process layouts and third-party
-controls may not be supported; unrecognized content stays unchanged.
-Azure DevOps Server on other domains is not supported.
-
-Open source under MIT. Not affiliated with or endorsed by Microsoft or GitHub.
-Screenshots use fictional work items and replayed layouts.
+Hide work item fields, rearrange form sections, and widen Azure DevOps boards. Customize your view, not your team's setup.
 ```
+
+### Detailed description
+
+Paste the complete contents of [store/LISTING.txt](store/LISTING.txt). That file
+is the source of truth for current-store copy; do not paste PR feature text from
+the main-branch guide into the current-version listing.
 
 ## 3. Privacy practices
 
 ### Single purpose
 
 ```text
-Let users personalize the local presentation of Azure DevOps Boards, work
-items and pull requests by choosing visible content, card arrangements, and
-display density, without changing work item or pull request data or the team's
-process.
+Let users personalize the local presentation of Azure DevOps Boards and work
+items by choosing visible content, form arrangements, and display density,
+without changing work item data or the team's process.
 ```
 
 ### Permission justifications
@@ -158,7 +119,8 @@ Do not equate "no server collection" with "no data handling." Google's
 [User Data FAQ](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq)
 requires disclosure even for local processing.
 
-Review and select the following categories for the current implementation:
+The current store lists these categories. Review them against the package
+being submitted; do not remove an accurate disclosure to simplify the listing:
 
 | Category | Why it applies |
 | --- | --- |
@@ -217,26 +179,52 @@ Do not assume anonymous access to a public GitHub repository enables ADO testing
 The repository's browser tests are supplemental evidence, not a replacement for
 reviewer access. They replay fictional Azure DevOps layouts without an ADO login.
 
-## 5. Distribution and submission
+## 5. Review and publication
 
-Choose free distribution and the regions where you intend to offer the
-extension. Select Public for the intended public listing, or Unlisted for a
-limited pilot. Complete account/legal declarations yourself.
+Keep the existing public, free listing and distribution settings unless an
+intentional change is approved. Complete any account/legal declarations
+yourself based on your circumstances.
 
 Save all sections, resolve dashboard errors, then choose **Submit for review**.
-For a controlled first launch, turn off automatic publication after approval;
-publish manually after approval. Submission and publication are separate from
+Use the dashboard's publication controls to decide when approved changes go
+live. Submission and publication are separate from
 GitHub releases and are not performed by this repository's tag workflow.
+
+### When a PR-capable package is approved for release
+
+Update the single-purpose text, data-use review, reviewer instructions, and
+screenshots to cover the new behavior. Explain that the PR defaults enable
+layout changes and hide some tabs, and that blocked authors' active and pending
+threads remain visible. Stored author display names must be considered in the
+dashboard's current data-use definitions.
+
+Only describe PR support as available through the store once the matching
+package is live. Then update the version notices in README, the guide, the
+privacy policy, and this checklist together.
 
 ## Regenerating images
 
+To regenerate the first screenshot and README hero from the existing
+same-content Board comparison, without replacing the remaining gallery:
+
+```sh
+node scripts/store-media.mjs
+```
+
+To recapture all page/popup images, use an extension build matching the version
+you plan to advertise, then:
+
 ```sh
 npm run build
+npm run screenshots
 npm run store:assets
 ```
 
-Outputs are in `docs/store/`. Screenshots are full-bleed 1280x800 JPEGs generated
-from the production extension and fictional fixtures. Popup views overlay an
+Do not replace current-store popup images with a newer build's PR controls.
+
+The first screenshot is a labeled 1280x800 before/after composition using the
+same fictional Board and viewport, with a PNG copy at `docs/images/board-hero.png`.
+The other four 1280x800 JPEGs show fictional fixtures; popup views overlay an
 actual popup capture on the corresponding fixture page. The 440x280 promotional
 tile and optional 1400x560 marquee are branded illustrations, not screenshots.
 The 128x128 listing icon uses the existing 96px icon with transparent padding.

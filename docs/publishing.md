@@ -3,15 +3,21 @@
 ## GitHub discoverability
 
 Repository: [sinmentis/adoverride](https://github.com/sinmentis/adoverride).
-The repository is public. Store submissions remain a separate, manual approval.
+The repository and [Chrome Web Store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo)
+are public. The current store and latest tagged release are **0.11.10**;
+`main` is newer. Store submissions remain a separate, manual approval.
 
 **Tagline**
 
-> Your Azure DevOps. Your way.
+> Customize your Azure DevOps view without changing your team's setup.
 
 **Description**
 
-> Chrome extension to declutter Azure DevOps Boards, work items and pull requests. Hide fields, rearrange cards, Ticket Workspace, equal-width Kanban columns, cleaner PR pages, local presets.
+> Chrome extension for personal Azure DevOps layouts: hide work item fields, rearrange form cards, and widen Kanban columns. No team-process changes.
+
+**Website**
+
+https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo
 
 **Topics**
 
@@ -19,45 +25,31 @@ The repository is public. Store submissions remain a separate, manual approval.
 `work-items`, `ui-customization`, `productivity`, `manifest-v3`, `wxt`, `react`,
 `typescript`
 
-The README title and introduction describe the implemented product in ordinary
-search terms. Keep feature claims specific. Do not advertise saved filter views,
+The README title and introduction describe the installable product in ordinary
+search terms. Label newer source-only features separately. Keep feature claims
+specific. Do not advertise saved filter views,
 personal highlight rules, server-wide changes, or other research-only ideas.
 
 Keep GitHub repository metadata and the social preview aligned with the listing.
 
 ## Chrome Web Store copy
 
-Use the [submission checklist](chrome-web-store.md) for upload assets, privacy
-declarations, permission explanations, and reviewer instructions.
+Use [store/LISTING.txt](store/LISTING.txt) for the current store's detailed
+description and the [update checklist](chrome-web-store.md) for assets, privacy
+declarations, permission explanations, and reviewer instructions. Edit the
+existing item, not a new listing.
 
 **Name**
 
 > ADOverride - Azure DevOps Boards & Work Items
 
-**Short description**
+**Short description (current published manifest)**
 
-> Declutter Azure DevOps Boards, work items and pull requests: hide fields, rearrange cards, wider Kanban columns, cleaner PRs.
+> Declutter Azure DevOps Boards and work items: hide fields, rearrange cards, wider Kanban columns. Your Azure DevOps. Your way.
 
-**Overview**
-
-ADOverride gives you a personal view of Azure DevOps without changing your
-team's process. Fill Kanban Boards with equal-width columns, reduce header
-spacing, choose visible card fields, and load native batches automatically.
-
-Everything sits in one small popup. On a work item, Cards & fields turns any
-page, card or field on or off, and Layout switches to Ticket Workspace for a
-reading lane and Properties rail. Drag native cards, lock your layout, and undo
-your last Ticket change. It works on User Stories, Bugs and other types. Save local presets or transfer settings with a previewed
-JSON import and a local backup.
-
-The kiwifruit preset starts with equal-width columns, a compact Board header,
-automatic item loading, and Ticket Workspace. Compact cards are optional.
-
-Native values, drafts, Save controls, filters, and drag handlers stay intact.
-Settings are local. There is no telemetry, personal access token, backend, or
-extension-owned work-item update. Read-only form-layout metadata uses the current
-ADO session. Supports dev.azure.com and legacy visualstudio.com organizations.
-Unknown native layouts remain unchanged with a notice.
+The title and summary are package-bound. Changing the detailed description or
+images does not change the installed package. Keep PR claims out of the live
+listing until a matching release is available there.
 
 ## Images
 
@@ -66,10 +58,14 @@ Unknown native layouts remain unchanged with a notice.
 - Generate the PNG with `npm run media`.
 - `docs/images/board-before-after.png` and `docs/images/ticket-before-after.png`
   compare native and customized layouts with the same fictional content.
+- `docs/images/board-hero.png` and `docs/store/01-board.jpg` use the same Board
+  comparison in a labeled, 1280 x 800 composition. Regenerate with
+  `node scripts/store-media.mjs`.
 - `docs/images/popup.png` shows the real popup: Ticket cards & fields, Ticket
   layout and Board layout.
 - Generate the comparisons and popup gallery with `npm run build` then
-  `npm run screenshots`.
+  `npm run screenshots`. Use a build matching the version being advertised;
+  recapturing with main can expose controls not yet in the store.
 - Use fictional fixture screenshots for a public listing. Never use private
   tickets, people, organization URLs, or an authenticated browser profile.
 
@@ -85,6 +81,10 @@ Unknown native layouts remain unchanged with a notice.
    credentials, dependencies, and build caches from source control.
 5. Push a version tag only when ready to release. Keep repository visibility
    unchanged; private releases require repository access.
+6. Submit the approved package as an update to the existing store item. Once
+   it is live, synchronize store copy, README/guide version notices, the privacy
+   policy's version scope, GitHub About, and the listing checklist. A GitHub
+   release alone does not update Chrome Web Store.
 
 ## CI and manual tag releases
 
@@ -106,13 +106,14 @@ browser-tested file afterward, then transferred to the release job without a
 rebuild. Validation has read-only repository permissions. Only the tag-triggered
 publication job can write releases.
 
-To release the current `0.11.1` version after CI is green:
+After explicit release approval and green CI, replace `X.Y.Z` below with the
+verified package version:
 
 ```sh
 git switch main
 git pull --rebase origin main
-git tag -a v0.11.1 -m "ADOverride v0.11.1"
-git push origin v0.11.1
+git tag -a vX.Y.Z -m "ADOverride vX.Y.Z"
+git push origin vX.Y.Z
 ```
 
 For a later release, update both manifests with
@@ -139,9 +140,8 @@ The release guards and their tests use Git, `zip`, and `unzip`. These are
 available on the Ubuntu CI runner. Review WXT's optional source ZIP separately;
 only the validated Chrome ZIP and checksum file are release assets.
 
-The store needs actual screenshots and its privacy declarations reviewed during
-submission. This document is listing copy, not a claim that the extension is
-already published or approved.
+The store needs screenshots and privacy declarations matching the submitted
+version. Store publication is separate from this repository's release workflow.
 
 Review `npm audit` before publishing source. The current candidate has upstream
 development-tool advisories in the WXT/Firefox runner dependency chain.

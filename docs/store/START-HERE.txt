@@ -1,23 +1,34 @@
-ADOverride - Chrome Web Store submission kit
+ADOverride - Chrome Web Store listing update
 
 1. Open https://chrome.google.com/webstore/devconsole
-2. Verify your publisher contact email and complete account requirements.
-3. Add a new item. Upload only adoverride-0.11.10-chrome.zip.
-4. Follow SUBMISSION.md for listing copy, images, permissions and privacy fields.
-5. Review the data-use certifications and arrange a safe ADO reviewer demo.
-6. Save the draft. Submit for review only when those items are complete.
+2. Select the EXISTING ADOverride item: ijeoidnjoamdkpfgbnhfajddhpakobjo.
+   Do not create a new item or upload this folder as an extension package.
+3. Replace the detailed description with the full contents of LISTING.txt.
+4. Replace the first screenshot with 01-board.jpg. Keep screenshots 2-5.
+5. Confirm the homepage, support, and privacy URLs below. Keep the current
+   package, title, short description, distribution, and truthful disclosures.
+6. Save the draft and follow the dashboard's review/publication steps.
+   Confirm the changes on the public listing after publication.
 
+Homepage:
+https://github.com/sinmentis/adoverride
+Support:
+https://github.com/sinmentis/adoverride/issues
 Privacy policy:
 https://github.com/sinmentis/adoverride/blob/main/PRIVACY.md
 
 Screenshots: 01-board.jpg through 05-board-fields.jpg, all 1280x800.
-Required graphic assets: icon-128.png and promo-440x280.png.
-Optional graphic asset: marquee-1400x560.png.
+The first image compares the same fictional Board before and after ADOverride.
+Existing icon/promo/marquee assets are included for reference, not a required
+change in this update.
 
-The ZIP and SHA256SUMS come from the published v0.11.10 GitHub release.
-The ZIP is unchanged. Screenshots use fictional ADO-style fixtures and real
-extension UI; popup views are composited onto the corresponding fixture.
-No Chrome Web Store item has been uploaded or submitted by this preparation.
+Current store version: 0.11.10, Boards and work items.
+The newer PR features on main are not included in the store build and are not
+advertised by this copy. This folder contains no extension package.
 
-Source checklist:
+The name and short description come from the uploaded manifest. A proposed
+short description for a future package is in the source checklist below.
+Do not upload an unreleased package just to change those fields.
+
+Source checklist and reviewer instructions:
 https://github.com/sinmentis/adoverride/blob/main/docs/chrome-web-store.md

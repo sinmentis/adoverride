@@ -1,11 +1,15 @@
 # ADOverride privacy policy
 
-Effective date: October 16, 2026
+Effective date: October 21, 2026
 
 ADOverride customizes the appearance of Azure DevOps Boards, work items, and
 pull requests in your browser. It has no developer-operated backend, analytics, advertising, or
 telemetry. The developers do not receive your Azure DevOps data through the
 extension.
+
+**Version scope:** the current Chrome Web Store version, 0.11.10, customizes
+Boards and work items. Pull request handling described below applies to newer
+source builds and is not included in that store version.
 
 ## Information handled in your browser
 
@@ -20,8 +24,10 @@ extension.
   reads the rendered page structure (policy status icons, reviewer vote icons,
   file-tree rows) to adjust the layout, and opens the native activity filter
   once to select Active comments. It reads comment author display names to
-  match your blocked list and to list authors in the popup. It does not read or
-  store pull request code, descriptions, or comments, and never votes,
+  match your blocked list and to list authors in the popup, and reads thread
+  status to keep active discussions visible. It does not copy pull request
+  code, descriptions, or comment text into settings or send them to the
+  developer, and never votes,
   completes, or resolves anything. The last Overview tab you used (Activity,
   Description or Checks) is kept in the Azure DevOps site's local storage.
 - **Interactions and preferences:** pull request layout options, hidden pull
@@ -75,6 +81,11 @@ removed. Disabling the extension pauses customization but does not delete its
 settings. Uninstalling it removes its extension storage; manually exported
 files remain wherever you saved them and must be deleted separately. Temporary
 page inspection and metadata caches are held in memory.
+
+In newer source builds, the last PR Overview tab is saved under
+`adoverride.pr.overviewTab` in the Azure DevOps site's local storage. Uninstalling
+the extension does not remove this site preference. It can be removed
+separately from that site's local storage.
 
 ## Contact and changes
 

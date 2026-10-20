@@ -1,12 +1,64 @@
 # ADOverride guide
 
-**Your Azure DevOps. Your way.**
+**Customize your Azure DevOps view without changing your team's setup.**
 
-**A Chrome extension for personal Azure DevOps Boards, work item and pull request layouts.**
+Hide work item fields, rearrange form sections, and make Kanban boards use more
+of your screen. Your layout changes do not change your teammates' views or your
+Azure DevOps process.
 
-Make Azure Boards use the screen space you have. Hide optional ticket fields,
-arrange native cards, and keep your own preferences without changing the team's
-process or saving work items. Built with WXT, React, TypeScript, and GitHub Primer.
+**Store version: v0.11.10.** Boards and work item features are available there.
+This guide also documents newer PR features on `main` (v0.11.17); those are not
+included in the store or latest tagged release yet.
+
+## Install in Chrome
+
+1. [Install ADOverride from Chrome Web Store](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo).
+2. Pin the extension and open an Azure DevOps Kanban board or work item.
+3. Click the extension icon. **Library** holds Board settings and **Ticket**
+   holds work item settings.
+
+The built-in preset applies automatically. It widens Board columns, enables
+native item loading, opens work items in Workspace, and hides some fields,
+including estimates, dates, and severity where matched. Use
+**Ticket > Cards & fields > Show all** to restore field and section visibility.
+The switch at the top of the popup turns off layout customization while keeping
+your preferences.
+
+Store installations receive updates through Chrome. Organization-managed
+browsers may require approval to install an extension or grant site access.
+
+## Manual install
+
+Use this route for development or a build not available in the store.
+It does not receive store updates.
+
+### From a release package
+
+1. Download the Chrome ZIP from [Releases](https://github.com/sinmentis/adoverride/releases)
+   and extract it into a permanent folder.
+2. Open `chrome://extensions` and turn on **Developer mode**.
+3. Choose **Load unpacked**, then select the extracted folder containing
+   `manifest.json`.
+4. Pin **ADOverride** and open an Azure DevOps Board or work item.
+
+Use the same folder for manual updates so Chrome retains the extension identity
+and settings. Save drafts, click **Reload** on the extension card, then refresh
+Azure DevOps. The popup header shows the installed version.
+
+The store and unpacked installs have separate settings. To switch between them,
+export your settings first, disable the old copy, then import into the new copy.
+Do not run both copies on the same pages.
+
+### From source
+
+Use Node.js 22.12 or newer.
+
+```sh
+npm ci
+npm run build
+```
+
+Load `.output/chrome-mv3` using the manual Chrome steps above.
 
 ## Features
 
@@ -18,9 +70,9 @@ process or saving work items. Built with WXT, React, TypeScript, and GitHub Prim
 | Automatic native **Show more items** loading | Layout lock and one-step Undo |
 | Per-board, project, organization, or global settings | Standalone tickets and tickets opened from a Board |
 
-Pull request pages get a cleaner Overview (Activity, Description and Checks
-tabs, passed checks and silent reviewers folded, Active comments first) and a
-tighter Files tree. See [Tidy a pull request](#tidy-a-pull-request).
+In the newer source build, pull request pages get a cleaner Overview (Activity,
+Description and Checks tabs, passed checks and silent reviewers folded, Active
+comments first) and a tighter Files tree. See [Tidy a pull request](#tidy-a-pull-request).
 
 Board and Ticket support local presets, light/dark popup themes, and configuration
 export/import with a preview and pre-import backup. Native values, drafts, Save
@@ -45,38 +97,6 @@ forms. Missing fields or groups are simply absent; unknown content stays native.
 Existing installs keep their current Ticket setup. Pick kiwifruit from the preset
 menu to switch to it. You can change every supported
 setting and save new personal presets.
-
-**Upgrading to 0.11.0:** old built-ins and previously saved templates are retired.
-Your active Board settings, Ticket layouts, visibility, lock, theme, and Undo
-content are retained. A retained setup that differs from kiwifruit shows
-**Custom**. Old configuration imports use the same cleanup. Newly saved presets
-in the current format survive restart and export/import.
-
-## Install in Chrome
-
-### From a release package
-
-1. Extract the Chrome extension ZIP into a permanent folder.
-2. Open `chrome://extensions` and turn on **Developer mode**.
-3. Choose **Load unpacked**, then select the extracted folder containing
-   `manifest.json`.
-4. Pin **ADOverride** and open an Azure DevOps Board or work item.
-
-Use the same folder for updates so Chrome retains the extension identity and
-settings. Save drafts, click **Reload** on the extension card, then refresh ADO.
-The popup header shows the installed version. Release packages are prepared
-with `npm run zip`; publication is a separate step.
-
-### From source
-
-Use Node.js 22.12 or newer.
-
-```sh
-npm ci
-npm run build
-```
-
-Load `.output/chrome-mv3` using the same Chrome steps above.
 
 ## Personalize your Board
 
@@ -108,7 +128,9 @@ the on-page hand and Hide controls while keeping saved presentation active.
 
 **Layout** picks the view, **Original** or **Workspace** (reading lane and
 Properties rail). Each view keeps its own card positions. **Reset positions**
-clears positions for the active view only.
+clears positions for the active view only. **Original** does not restore hidden
+fields or remove saved card positions. To restore Azure DevOps' card order,
+choose Original, then **Reset original positions**.
 
 **Cards & fields** lists pages, cards and fields with their switches. Search to
 filter, and use **Show all** to restore visibility. The number on the tab counts
@@ -122,6 +144,8 @@ preferences. Native navigation and validation can temporarily protect content
 that must remain reachable.
 
 ## Tidy a pull request
+
+**Newer source builds only; not in the store or latest release v0.11.10.**
 
 The popup selects **PR** on a pull request page. PR settings are one global
 profile; **Reset to kiwifruit** turns every option back on.
@@ -213,6 +237,8 @@ content-derived labels; regenerate and review them before sharing.
 
 ## Development and contributions
 
+Built with WXT, React, TypeScript, and GitHub Primer.
+
 ```sh
 npm run dev
 npm run compile
@@ -227,6 +253,14 @@ Browser tests load the production extension against fictional native-style
 fixtures. No ADO account is needed. Verify the exact behavior, preserve native
 editors and drafts, and keep unknown layouts safe. Do not add telemetry or
 automatic work-item writes.
+
+## Upgrade notes
+
+**Upgrading to 0.11.0:** old built-ins and previously saved templates are retired.
+Your active Board settings, Ticket layouts, visibility, lock, theme, and Undo
+content are retained. A retained setup that differs from kiwifruit shows
+**Custom**. Old configuration imports use the same cleanup. Newly saved presets
+in the current format survive restart and export/import.
 
 Release guard tests also use Git, `zip`, and `unzip`. See the
 [tag-release workflow](publishing.md#ci-and-manual-tag-releases) for the shared

@@ -9,6 +9,37 @@ const icon = (await readFile(new URL('../public/icon/96.png', import.meta.url)))
 const iconImage = (x, y, size) =>
   `<image x="${x}" y="${y}" width="${size}" height="${size}" href="data:image/png;base64,${icon}"/>`;
 
+async function boardHero() {
+  const comparison = await readFile(new URL('../docs/images/board-before-after.png', import.meta.url));
+  assert.deepEqual(
+    [comparison.readUInt32BE(16), comparison.readUInt32BE(20)], [3080, 688],
+    'Board comparison dimensions changed; review the hero crop before publishing.',
+  );
+  const image = comparison.toString('base64');
+  // Equal-sized crops align the columns while preserving content and horizontal scale.
+  const panel = (sourceX, sourceY, y) => `<svg x="48" y="${y}" width="1184" height="252" viewBox="${sourceX} ${sourceY} 1504 320">
+    <image width="3080" height="688" href="data:image/png;base64,${image}"/>
+  </svg><rect x="48" y="${y}" width="1184" height="252" rx="4" fill="none" stroke="#d0d7de"/>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800">
+    <rect width="1280" height="800" fill="#f6f8fa"/>
+    <g font-family="DejaVu Sans" fill="#1f2328">
+      ${iconImage(48, 20, 28)}
+      <text x="88" y="42" font-size="21" font-weight="700">ADOverride</text>
+      <text x="48" y="101" font-size="48" font-weight="700">Use your whole board</text>
+      <text x="48" y="139" font-size="24" fill="#57606a">Wider Azure DevOps columns. Changes only your view.</text>
+      <text x="48" y="179" font-size="22" font-weight="600">Before: unused space on the right</text>
+      ${panel(24, 324, 192)}
+      <text x="48" y="489" font-size="22" font-weight="600" fill="#0969da">After: columns use the available width</text>
+      ${panel(1552, 270, 502)}
+      <text x="48" y="783" font-size="15" fill="#57606a">Fictional demo with replayed layouts. Same work items and viewport in both views.</text>
+    </g>
+  </svg>`;
+  const png = new Resvg(svg, { font: { loadSystemFonts: true } }).render().asPng();
+  assert.equal(png.readUInt32BE(16), 1280);
+  assert.equal(png.readUInt32BE(20), 800);
+  return png;
+}
+
 function artwork(width, height) {
   const marquee = width > 440;
   const scale = marquee ? 1.65 : 1;
@@ -70,6 +101,19 @@ for (const [name, width, height, svg] of [
 const browser = await chromium.launch({ channel: 'chromium' });
 try {
   const page = await browser.newPage();
+  const hero = await boardHero();
+  const jpeg = await page.evaluate(async base64 => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    canvas.getContext('2d').drawImage(image, 0, 0);
+    return canvas.toDataURL('image/jpeg', 0.95).split(',')[1];
+  }, hero.toString('base64'));
+  await writeFile(new URL('../docs/images/board-hero.png', import.meta.url), hero);
+  await writeFile(new URL('01-board.jpg', directory), Buffer.from(jpeg, 'base64'));
   for (const name of ['01-board', '02-workspace', '03-ticket-fields', '04-ticket-layout', '05-board-fields']) {
     const data = await readFile(new URL(`${name}.jpg`, directory));
     assert.equal(data.readUInt16BE(0), 0xffd8, `${name} must be JPEG`);
@@ -84,4 +128,4 @@ try {
 } finally {
   await browser.close();
 }
-console.log('Verified five 1280x800 JPEGs, 128px icon, 440x280 tile and 1400x560 marquee.');
+console.log('Updated the Board hero; verified five 1280x800 JPEGs, 128px icon, 440x280 tile and 1400x560 marquee.');

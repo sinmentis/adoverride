@@ -1,55 +1,79 @@
 # ADOverride
 
-**Your Azure DevOps. Your way.**
+**Customize your Azure DevOps view without changing your team's setup.**
 
-A Chrome extension that declutters Azure DevOps Boards, work items (tickets) and
-pull requests. Hide fields, rearrange cards, widen your Kanban Board and cut PR
-noise from one small popup.
-Your view changes. Your team's setup doesn't.
+A Chrome extension to hide work item fields, rearrange form sections, and make
+Kanban boards use more of your screen. Layout changes affect your browser, not
+your teammates' views or your Azure DevOps process.
 
-## Boards that use your screen
+For Azure DevOps Services on `dev.azure.com` and `*.visualstudio.com`.
 
-![Azure DevOps Board before and after ADOverride](docs/images/board-before-after.png)
+**[Install from Chrome Web Store](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo)** |
+[Getting started](docs/guide.md#install-in-chrome) |
+[Manual install / build from source](docs/guide.md#manual-install)
 
-Equal-width columns, a compact header, fewer card fields, and automatic
-**Show more items** loading.
+**Available in the store: v0.11.10**, with Boards and work item customization.
+The newer pull request features on `main` (v0.11.17) are **not in the store
+version yet**.
 
-## Work items without the clutter
+[![Before and after: the same fictional Azure DevOps board uses the available width with ADOverride](docs/images/board-hero.png)](docs/images/board-hero.png)
 
-![Azure DevOps work item before and after ADOverride](docs/images/ticket-before-after.png)
+## Get started
 
-Hide optional fields, drag cards where you want them, and read in a wide
-Workspace with a Properties rail. Lock your layout or undo your last change.
-Works on User Stories, Bugs and any other work item type.
+1. Install from the store, pin **ADOverride**, and open an Azure DevOps Kanban
+   board or work item.
+2. Click the extension icon. **Library** contains Board settings; **Ticket**
+   contains work item settings.
+3. Choose the fields and layout you want. The built-in preset applies
+   automatically and hides some work item fields. Turn the switch at the top
+   of the popup off to see Azure DevOps' own layout; your preferences are kept.
 
-## Pull requests that answer "can this merge?"
+Chrome updates store installations automatically. Manual installation is for
+development or trying a build that has not reached the store.
 
-Overview splits into **Activity**, **Description** and **Checks** tabs, so the
-feed gets the full width and failing checks show as a badge on the tab. Passed
-checks fold away, reviewers who haven't voted collapse into one line, and the
-feed opens on **Active comments**. Runs of pushes fold into one
-line with each push reduced to "pushed N commits", and resolved threads from
-authors you block (bots, say) fold away. Hide the
-extension tabs you never open. In **Files**, comment threads leave the file
-tree and the tree gets tighter indentation so long paths fit.
+## Use the full width of your Kanban board
 
-## One popup, two layers
+Use equal-width columns, reduce header spacing, and choose which fields appear
+on cards. Load more items through Azure DevOps' native controls under your
+current filters. Save Board settings for one board, a project, an organization,
+or all supported sites.
 
-![ADOverride popup: Ticket cards and fields, Ticket layout, and Board layout](docs/images/popup.png)
+## Hide work item fields and give descriptions more room
 
-**Cards & fields** turns any page, card or field on or off. **Layout** switches
-between ADO's own arrangement and Workspace. **Board layout** holds the Kanban
-switches, saved per board, project, organization or all of ADO. Start from the
-built-in **kiwifruit** preset or save your own.
+Show or hide supported form sections and fields, move sections into your
+preferred arrangement, or use **Workspace** for a wider reading area with
+properties alongside it. Lock the layout or undo your last customization.
+Works with supported User Story, Bug, and other work item forms.
 
-*Demo screenshots use fictional work items and replayed native layouts.*
+[![The same fictional work item before and after the wider reading layout](docs/images/ticket-before-after.png)](docs/images/ticket-before-after.png)
 
-## Install
+Save personal presets or transfer settings with JSON export/import.
+See the [guide](docs/guide.md) for individual controls and how to restore hidden
+fields.
 
-1. Download and extract the Chrome ZIP from [Releases](https://github.com/sinmentis/adoverride/releases), or [build from source](docs/guide.md#from-source).
-2. Open `chrome://extensions`, enable **Developer mode**, and choose **Load unpacked**.
-3. Select the extracted folder and pin **ADOverride**.
+## Compatibility and privacy
 
-Settings stay local. No telemetry. No automatic work-item updates.
+Supports Azure DevOps Services on `dev.azure.com` and `*.visualstudio.com`.
+Some features depend on English labels. Board layout support targets Kanban
+boards, not every Backlog, Query, sprint, or custom layout. Unsupported parts
+may stay unchanged. Azure DevOps Server on other domains is not supported.
+
+Settings are stored locally. No analytics or developer backend.
+ADOverride reads the page address and layout to apply settings, and requests
+form-layout metadata from your own Azure DevOps organization using your existing
+sign-in. It does not send your work item data to the developer or submit work
+item changes. [Read the privacy policy](PRIVACY.md).
+
+*Screenshots use fictional work items and replayed layouts, not company data.*
+
+## Pull request improvements on main
+
+**Not included in the current store or latest tagged release, v0.11.10.**
+
+The newer source build splits Overview into **Activity**, **Description**, and
+**Checks**, gives discussions the full width, and folds passed checks and
+repeated updates. Resolved threads from selected authors can fold away; active
+and pending threads stay visible. [Explore the PR controls](docs/guide.md#tidy-a-pull-request)
+or [build from source](docs/guide.md#from-source).
 
 [Guide](docs/guide.md) | [Privacy](PRIVACY.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [MIT](LICENSE)
