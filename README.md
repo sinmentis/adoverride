@@ -1,79 +1,49 @@
 # ADOverride
 
-**Customize your Azure DevOps view without changing your team's setup.**
-
-A Chrome extension to hide work item fields, rearrange form sections, and make
-Kanban boards use more of your screen. Layout changes affect your browser, not
-your teammates' views or your Azure DevOps process.
+ADOverride changes the layout of Azure DevOps boards and work items in Chrome. You can hide fields, move sections in work items, and make board columns wider. It only changes your view, not work item data or what other people see.
 
 For Azure DevOps Services on `dev.azure.com` and `*.visualstudio.com`.
 
-**[Install from Chrome Web Store](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo)** |
-[Getting started](docs/guide.md#install-in-chrome) |
-[Manual install / build from source](docs/guide.md#manual-install)
+**[Install from Chrome Web Store](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo)** | [Getting started](docs/guide.md#install-in-chrome) | [Manual install / build from source](docs/guide.md#manual-install)
 
-**Available in the store: v0.11.10**, with Boards and work item customization.
-The newer pull request features on `main` (v0.11.17) are **not in the store
-version yet**.
+**The store version is v0.11.10.** It supports Boards and work items. Pull request support is on `main` (v0.11.17), but **is not in the store version yet**.
 
-[![Before and after: the same fictional Azure DevOps board uses the available width with ADOverride](docs/images/board-hero.png)](docs/images/board-hero.png)
+[![The same demo board with ADOverride off and on](docs/images/board-hero.png)](docs/images/board-hero.png)
 
 ## Get started
 
-1. Install from the store, pin **ADOverride**, and open an Azure DevOps Kanban
-   board or work item.
-2. Click the extension icon. **Library** contains Board settings; **Ticket**
-   contains work item settings.
-3. Choose the fields and layout you want. The built-in preset applies
-   automatically and hides some work item fields. Turn the switch at the top
-   of the popup off to see Azure DevOps' own layout; your preferences are kept.
+1. Install from the store, pin **ADOverride**, and open an Azure DevOps Kanban board or work item.
+2. Click the extension icon. **Library** has the Board settings. **Ticket** has the work item settings.
+3. Turn individual options on or off.
 
-Chrome updates store installations automatically. Manual installation is for
-development or trying a build that has not reached the store.
+The default preset applies automatically and hides some work item fields. Use **Ticket > Cards & fields > Show all** to show them again. The switch at the top of the popup turns off layout changes and keeps your saved settings.
 
-## Use the full width of your Kanban board
+Chrome updates store installations automatically. Use manual installation only for development or trying a build that is not in the store.
 
-Use equal-width columns, reduce header spacing, and choose which fields appear
-on cards. Load more items through Azure DevOps' native controls under your
-current filters. Save Board settings for one board, a project, an organization,
-or all supported sites.
+## Boards
 
-## Hide work item fields and give descriptions more room
+Make columns fill the available width, reduce header spacing, and choose which fields appear on cards. The extension can also load more items automatically under your current filters. Save settings for one board, a project, an organization, or all supported sites.
 
-Show or hide supported form sections and fields, move sections into your
-preferred arrangement, or use **Workspace** for a wider reading area with
-properties alongside it. Lock the layout or undo your last customization.
-Works with supported User Story, Bug, and other work item forms.
+## Work items
+
+Show or hide supported pages, sections, and fields. Move sections, or use **Workspace** to put the main text in a wide column and other fields in a sidebar. You can lock the layout or undo your last change. Supported forms include User Stories and Bugs.
 
 [![The same fictional work item before and after the wider reading layout](docs/images/ticket-before-after.png)](docs/images/ticket-before-after.png)
 
-Save personal presets or transfer settings with JSON export/import.
-See the [guide](docs/guide.md) for individual controls and how to restore hidden
-fields.
+You can save presets and export or import settings as JSON. The [guide](docs/guide.md) explains each control.
 
-## Compatibility and privacy
+## Compatibility
 
-Supports Azure DevOps Services on `dev.azure.com` and `*.visualstudio.com`.
-Some features depend on English labels. Board layout support targets Kanban
-boards, not every Backlog, Query, sprint, or custom layout. Unsupported parts
-may stay unchanged. Azure DevOps Server on other domains is not supported.
+Some features need English page labels. Board layout changes work on supported Kanban boards, not every Backlog, Query, sprint, or custom layout. Parts the extension does not recognize stay unchanged. Azure DevOps Server on other domains is not supported.
 
-Settings are stored locally. No analytics or developer backend.
-ADOverride reads the page address and layout to apply settings, and requests
-form-layout metadata from your own Azure DevOps organization using your existing
-sign-in. It does not send your work item data to the developer or submit work
-item changes. [Read the privacy policy](PRIVACY.md).
+## Privacy
 
-*Screenshots use fictional work items and replayed layouts, not company data.*
+Settings stay in your browser. The extension reads the current Azure DevOps page address and layout, and gets form-layout information from your organization using your existing sign-in. It does not send your work item data to the developer or save changes to your work items. There are no ads or analytics. [Privacy policy](PRIVACY.md).
 
-## Pull request improvements on main
+*Screenshots use fictional work items and replayed layouts.*
 
-**Not included in the current store or latest tagged release, v0.11.10.**
+## Pull requests (not yet in the store)
 
-The newer source build splits Overview into **Activity**, **Description**, and
-**Checks**, gives discussions the full width, and folds passed checks and
-repeated updates. Resolved threads from selected authors can fold away; active
-and pending threads stay visible. [Explore the PR controls](docs/guide.md#tidy-a-pull-request)
-or [build from source](docs/guide.md#from-source).
+The version on `main` splits Overview into **Activity**, **Description**, and **Checks** tabs. Each tab uses the full width. You can fold passed checks, repeated updates, and resolved threads from selected authors. Active and pending threads stay visible. [PR settings](docs/guide.md#tidy-a-pull-request) | [Build from source](docs/guide.md#from-source).
 
 [Guide](docs/guide.md) | [Privacy](PRIVACY.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [MIT](LICENSE)

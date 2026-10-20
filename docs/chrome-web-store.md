@@ -1,28 +1,18 @@
 # Chrome Web Store listing and updates
 
-The [live item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo)
-currently serves **0.11.10**. The copy in [store/LISTING.txt](store/LISTING.txt)
-and the published-version images describe Boards and work items only.
-Newer PR features on `main` are not in that package.
+The [store version](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) is **0.11.10**. The text in [store/LISTING.txt](store/LISTING.txt) and the images describe Boards and work items. PR features on `main` are not in that package.
 
 No store submission is made by the scripts in this repository.
 
 ## 1. Update the existing item
 
-Open the [Developer Dashboard](https://chrome.google.com/webstore/devconsole)
-using the publishing account and select ADOverride, item
-`ijeoidnjoamdkpfgbnhfajddhpakobjo`. **Do not add a new item.**
+Open the [Developer Dashboard](https://chrome.google.com/webstore/devconsole) with the publishing account and select ADOverride, item `ijeoidnjoamdkpfgbnhfajddhpakobjo`. **Do not add a new item.**
 
-For the current presentation-only update, replace the detailed description with
-`store/LISTING.txt` and the first screenshot with `store/01-board.jpg`. Keep the
-existing package and screenshots 2-5. Confirm the homepage, support, and privacy
-links below, save the draft, and follow the dashboard's review/publication steps.
-The listing bundle is not an extension ZIP and must not be uploaded as a package.
+Replace the detailed description with `store/LISTING.txt` and the first screenshot with `store/01-board.jpg`. Keep the current package and screenshots 2-5. Check the links below, save, and submit the changes.
 
-For a later binary update, use the approved, verified Chrome ZIP from the
-matching [GitHub release](https://github.com/sinmentis/adoverride/releases).
-Keep existing release artifacts unchanged. A source-code ZIP or the entire
-listing-assets folder is not an installable extension package.
+The listing ZIP contains text and images, not an extension package. Do not upload it in the dashboard's package section.
+
+For a later extension update, use the approved Chrome ZIP from the matching [GitHub release](https://github.com/sinmentis/adoverride/releases). Do not change an already published release file.
 
 ## 2. Store listing
 
@@ -45,29 +35,22 @@ The published 0.11.10 manifest supplies this short description:
 Declutter Azure DevOps Boards and work items: hide fields, rearrange cards, wider Kanban columns. Your Azure DevOps. Your way.
 ```
 
-The title and short description come from the uploaded manifest. They are not
-changed by pasting the detailed description. This presentation update keeps
-them unchanged. For a future approved package, a clearer proposed summary is
-(122 characters, within the 132-character limit):
+The title and short description come from the uploaded extension package. This text-and-images update leaves them unchanged. A suggested short description for a later package is:
 
 ```text
-Hide work item fields, rearrange form sections, and widen Azure DevOps boards. Customize your view, not your team's setup.
+Hide fields, move work item sections, and make Azure DevOps board columns wider. Changes only affect your browser.
 ```
 
 ### Detailed description
 
-Paste the complete contents of [store/LISTING.txt](store/LISTING.txt). That file
-is the source of truth for current-store copy; do not paste PR feature text from
-the main-branch guide into the current-version listing.
+Paste all of [store/LISTING.txt](store/LISTING.txt). Do not add PR features to this version's description.
 
 ## 3. Privacy practices
 
 ### Single purpose
 
 ```text
-Let users personalize the local presentation of Azure DevOps Boards and work
-items by choosing visible content, form arrangements, and display density,
-without changing work item data or the team's process.
+Change how Azure DevOps Boards and work items look in the user's browser. Users can hide fields, move form sections, and change spacing without changing work item data or the team's process.
 ```
 
 ### Permission justifications
@@ -75,36 +58,25 @@ without changing work item data or the team's process.
 **storage**
 
 ```text
-Store local presentation settings, scope-specific Board profiles, Ticket
-visibility and arrangements, named presets, the last undoable change, and a
-pre-import configuration backup. No Chrome Storage Sync is used.
+Save settings in the browser: Board profiles, hidden work item fields, section positions, presets, the last undoable change, and a backup before importing settings. Chrome Storage Sync is not used.
 ```
 
 **activeTab**
 
 ```text
-Identify the tab the user is customizing when they open the popup, determine
-whether it is a supported Azure DevOps view, and connect the popup's settings
-and inspection controls to that tab. Unrelated pages are not customized.
+Check whether the current tab is a supported Azure DevOps page and connect the popup to that page. The extension does not change other websites.
 ```
 
 **scripting**
 
 ```text
-Inject the bundled content controller into an already-open Azure DevOps tab
-when the controller is missing or outdated after an extension install or
-update. Injection is guarded by a supported Azure DevOps URL check and uses
-only packaged code.
+Connect the extension to an Azure DevOps tab that was already open when the extension was installed or updated. This uses only code included in the package and only runs on supported Azure DevOps URLs.
 ```
 
 **Host permissions: `https://dev.azure.com/*`, `https://*.visualstudio.com/*`**
 
 ```text
-Apply saved presentation settings to Azure DevOps pages as they load and read
-project/process/type/form-layout metadata from the user's own organization
-over HTTPS with their existing session. The legacy visualstudio.com pattern
-supports organization-specific Azure DevOps hostnames. Access is not requested
-for arbitrary websites. There is no developer backend or work item write API.
+Apply saved settings to Azure DevOps pages and read project, process, work item type, and form-layout information from the user's own organization over HTTPS. Requests use the user's existing sign-in. The visualstudio.com permission supports older Azure DevOps addresses. The extension does not request access to other websites, send data to a developer server, or write to work items.
 ```
 
 ### Remote code
@@ -144,29 +116,18 @@ must match the linked privacy policy.
 Paste these instructions into **Test instructions**:
 
 ```text
-ADOverride has no separate account or paid features. It requires access to an
-Azure DevOps Services organization/project with Azure Boards enabled.
+ADOverride has no separate account or paid features. You need an Azure DevOps Services organization and project with Azure Boards enabled.
 
-1. Sign in at https://dev.azure.com using a test organization/project. Use an
-   English UI and a standard Agile or Scrum process. Create a few fictional
-   work items if the Board is empty.
+1. Sign in at https://dev.azure.com using a test organization and project. Use English and a standard Agile or Scrum process. Create a few fictional work items if the Board is empty.
 2. Open Boards > Boards, pin ADOverride, and open its popup.
-3. In Library > Board layout, toggle Equal-width columns and Compact header.
-   The Board should change without modifying work items.
-4. In Library > Card fields, toggle Assignee or Tags. Card metadata visibility
-   should change without changing the stored values.
-5. Open a User Story or Bug. The popup selects Ticket. Expand Details under
-   Cards & fields and toggle a supported optional card such as Description.
-6. Open Layout and switch between Original and Workspace. Where the native
-   layout is supported, Workspace has a reading area and Properties rail.
-7. Leave layout controls unlocked to drag a card by its extension handle.
-   Undo restores the last Ticket customization. Lock removes on-page controls.
-8. Turn off ADOverride using the popup's master switch. Native presentation
-   returns; saved preferences remain for the next time it is enabled.
+3. In Library > Board layout, toggle Equal-width columns and Compact header. The Board should change without modifying work items.
+4. In Library > Card fields, toggle Assignee or Tags. Fields should appear or disappear without changing the saved values.
+5. Open a User Story or Bug. The popup selects Ticket. Expand Details under Cards & fields and toggle a supported section such as Description.
+6. Open Layout and switch between Original and Workspace. On supported forms, Workspace shows the main text in a wide column and other fields in a sidebar.
+7. Leave layout controls unlocked and drag a section by its extension handle. Undo restores the last work item customization. Lock removes the on-page controls.
+8. Turn off ADOverride using the switch at the top of the popup. The original page layout returns. Saved settings are kept.
 
-No personal access token is required. The extension is limited to
-dev.azure.com and HTTPS *.visualstudio.com sites. Unknown layouts may remain
-unchanged. On other websites the popup explains that an ADO page is required.
+No personal access token is required. The extension only works on dev.azure.com and HTTPS *.visualstudio.com sites. Parts it does not recognize stay unchanged. On other websites the popup asks you to open an Azure DevOps page.
 ```
 
 **Access to arrange before submission:** these instructions do not provide a

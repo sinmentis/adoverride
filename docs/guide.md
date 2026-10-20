@@ -1,53 +1,35 @@
 # ADOverride guide
 
-**Customize your Azure DevOps view without changing your team's setup.**
+ADOverride changes the layout of Azure DevOps boards and work items in Chrome. You can hide fields, move sections in work items, and make board columns wider. It only changes your view, not work item data or what other people see.
 
-Hide work item fields, rearrange form sections, and make Kanban boards use more
-of your screen. Your layout changes do not change your teammates' views or your
-Azure DevOps process.
-
-**Store version: v0.11.10.** Boards and work item features are available there.
-This guide also documents newer PR features on `main` (v0.11.17); those are not
-included in the store or latest tagged release yet.
+**The store version is v0.11.10.** It supports Boards and work items. This guide also covers PR features on `main` (v0.11.17), which are not in the store or latest tagged release yet.
 
 ## Install in Chrome
 
 1. [Install ADOverride from Chrome Web Store](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo).
 2. Pin the extension and open an Azure DevOps Kanban board or work item.
-3. Click the extension icon. **Library** holds Board settings and **Ticket**
-   holds work item settings.
+3. Click the extension icon. **Library** has the Board settings. **Ticket** has the work item settings.
 
-The built-in preset applies automatically. It widens Board columns, enables
-native item loading, opens work items in Workspace, and hides some fields,
-including estimates, dates, and severity where matched. Use
-**Ticket > Cards & fields > Show all** to restore field and section visibility.
-The switch at the top of the popup turns off layout customization while keeping
-your preferences.
+The default preset applies automatically. It widens Board columns, turns on automatic item loading, and switches work items to Workspace. It also hides some fields, including estimates, dates, and severity where matched.
 
-Store installations receive updates through Chrome. Organization-managed
-browsers may require approval to install an extension or grant site access.
+To show hidden fields, use **Ticket > Cards & fields > Show all**. The switch at the top of the popup turns off layout changes and keeps your saved settings.
+
+Chrome updates store installations automatically. Your organization may require approval to install extensions or let them access Azure DevOps.
 
 ## Manual install
 
-Use this route for development or a build not available in the store.
-It does not receive store updates.
+Use this route for development or a build that is not in the store. You will need to update it manually.
 
 ### From a release package
 
-1. Download the Chrome ZIP from [Releases](https://github.com/sinmentis/adoverride/releases)
-   and extract it into a permanent folder.
+1. Download the Chrome ZIP from [Releases](https://github.com/sinmentis/adoverride/releases) and extract it into a permanent folder.
 2. Open `chrome://extensions` and turn on **Developer mode**.
-3. Choose **Load unpacked**, then select the extracted folder containing
-   `manifest.json`.
+3. Choose **Load unpacked**, then select the extracted folder containing `manifest.json`.
 4. Pin **ADOverride** and open an Azure DevOps Board or work item.
 
-Use the same folder for manual updates so Chrome retains the extension identity
-and settings. Save drafts, click **Reload** on the extension card, then refresh
-Azure DevOps. The popup header shows the installed version.
+Use the same folder for updates so Chrome keeps the extension's settings. Save any drafts, click **Reload** on the extension card, then refresh Azure DevOps. The popup header shows the installed version.
 
-The store and unpacked installs have separate settings. To switch between them,
-export your settings first, disable the old copy, then import into the new copy.
-Do not run both copies on the same pages.
+The store and unpacked installs have separate settings. To switch between them, export your settings first, disable the old copy, then import into the new copy. Do not run both copies on the same pages.
 
 ### From source
 

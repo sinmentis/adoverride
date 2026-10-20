@@ -7,13 +7,13 @@ The repository and [Chrome Web Store item](https://chromewebstore.google.com/det
 are public. The current store and latest tagged release are **0.11.10**;
 `main` is newer. Store submissions remain a separate, manual approval.
 
-**Tagline**
+**Short explanation**
 
-> Customize your Azure DevOps view without changing your team's setup.
+> Hide fields, move sections in work items, and make Azure DevOps board columns wider.
 
 **Description**
 
-> Chrome extension for personal Azure DevOps layouts: hide work item fields, rearrange form cards, and widen Kanban columns. No team-process changes.
+> Chrome extension for Azure DevOps. Hide fields, move sections in work items, and make board columns wider. Only affects your browser.
 
 **Website**
 

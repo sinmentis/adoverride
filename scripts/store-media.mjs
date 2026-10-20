@@ -25,13 +25,13 @@ async function boardHero() {
     <g font-family="DejaVu Sans" fill="#1f2328">
       ${iconImage(48, 20, 28)}
       <text x="88" y="42" font-size="21" font-weight="700">ADOverride</text>
-      <text x="48" y="101" font-size="48" font-weight="700">Use your whole board</text>
-      <text x="48" y="139" font-size="24" fill="#57606a">Wider Azure DevOps columns. Changes only your view.</text>
-      <text x="48" y="179" font-size="22" font-weight="600">Before: unused space on the right</text>
+      <text x="48" y="101" font-size="48" font-weight="700">Wider board columns</text>
+      <text x="48" y="139" font-size="24" fill="#57606a">The same Azure DevOps board with ADOverride off and on.</text>
+      <text x="48" y="179" font-size="22" font-weight="600">ADOverride off</text>
       ${panel(24, 324, 192)}
-      <text x="48" y="489" font-size="22" font-weight="600" fill="#0969da">After: columns use the available width</text>
+      <text x="48" y="489" font-size="22" font-weight="600" fill="#0969da">ADOverride on</text>
       ${panel(1552, 270, 502)}
-      <text x="48" y="783" font-size="15" fill="#57606a">Fictional demo with replayed layouts. Same work items and viewport in both views.</text>
+      <text x="48" y="783" font-size="15" fill="#57606a">Demo data in a replayed layout. Both views use the same window size.</text>
     </g>
   </svg>`;
   const png = new Resvg(svg, { font: { loadSystemFonts: true } }).render().asPng();

@@ -1,14 +1,11 @@
 ADOverride - Chrome Web Store listing update
 
 1. Open https://chrome.google.com/webstore/devconsole
-2. Select the EXISTING ADOverride item: ijeoidnjoamdkpfgbnhfajddhpakobjo.
-   Do not create a new item or upload this folder as an extension package.
+2. Select the existing ADOverride item: ijeoidnjoamdkpfgbnhfajddhpakobjo. Do not create a new item.
 3. Replace the detailed description with the full contents of LISTING.txt.
 4. Replace the first screenshot with 01-board.jpg. Keep screenshots 2-5.
-5. Confirm the homepage, support, and privacy URLs below. Keep the current
-   package, title, short description, distribution, and truthful disclosures.
-6. Save the draft and follow the dashboard's review/publication steps.
-   Confirm the changes on the public listing after publication.
+5. Check the homepage, support, and privacy URLs below. Leave the package, title, short description, distribution, and privacy declarations unchanged.
+6. Save and submit the changes. Check the public listing once they are published.
 
 Homepage:
 https://github.com/sinmentis/adoverride
@@ -19,16 +16,14 @@ https://github.com/sinmentis/adoverride/blob/main/PRIVACY.md
 
 Screenshots: 01-board.jpg through 05-board-fields.jpg, all 1280x800.
 The first image compares the same fictional Board before and after ADOverride.
-Existing icon/promo/marquee assets are included for reference, not a required
-change in this update.
+The icon and promotional images are included for reference. You do not need to replace them.
 
 Current store version: 0.11.10, Boards and work items.
-The newer PR features on main are not included in the store build and are not
-advertised by this copy. This folder contains no extension package.
+PR features are on main but are not in the store build. This copy does not advertise them.
 
-The name and short description come from the uploaded manifest. A proposed
-short description for a future package is in the source checklist below.
-Do not upload an unreleased package just to change those fields.
+This ZIP contains text and images, not an extension package. Do not upload it in the dashboard's package section.
+
+The name and short description come from the extension package. A suggested short description for a later release is in the checklist below.
 
 Source checklist and reviewer instructions:
 https://github.com/sinmentis/adoverride/blob/main/docs/chrome-web-store.md
