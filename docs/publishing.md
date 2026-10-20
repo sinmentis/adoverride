@@ -3,17 +3,15 @@
 ## GitHub discoverability
 
 Repository: [sinmentis/adoverride](https://github.com/sinmentis/adoverride).
-The repository and [Chrome Web Store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo)
-are public. The current store and latest tagged release are **0.11.10**;
-`main` is newer. Store submissions remain a separate, manual approval.
+The repository and [Chrome Web Store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) are public. This release is **0.11.18**. Store submissions need separate approval, so check the live listing before saying an update is available there.
 
 **Short explanation**
 
-> Hide fields, move sections in work items, and make Azure DevOps board columns wider.
+> Change layouts on Azure DevOps boards, work items, and pull requests.
 
 **Description**
 
-> Chrome extension for Azure DevOps. Hide fields, move sections in work items, and make board columns wider. Only affects your browser.
+> Chrome extension for Azure DevOps boards, work items, and pull requests. Hide fields, move sections, and fold PR activity. Only affects your browser.
 
 **Website**
 
@@ -34,18 +32,15 @@ Keep GitHub repository metadata and the social preview aligned with the listing.
 
 ## Chrome Web Store copy
 
-Use [store/LISTING.txt](store/LISTING.txt) for the current store's detailed
-description and the [update checklist](chrome-web-store.md) for assets, privacy
-declarations, permission explanations, and reviewer instructions. Edit the
-existing item, not a new listing.
+Use [store/LISTING.txt](store/LISTING.txt) for the 0.11.18 description and the [update checklist](chrome-web-store.md) for the package, images, privacy declarations, and reviewer instructions. Update the existing item, not a new listing.
 
 **Name**
 
-> ADOverride - Azure DevOps Boards & Work Items
+> ADOverride - Customize Azure DevOps
 
-**Short description (current published manifest)**
+**Short description (0.11.18 manifest)**
 
-> Declutter Azure DevOps Boards and work items: hide fields, rearrange cards, wider Kanban columns. Your Azure DevOps. Your way.
+> Hide work item fields, widen boards, and organize pull request pages in Azure DevOps. Changes only affect your browser.
 
 The title and summary are package-bound. Changing the detailed description or
 images does not change the installed package. Keep PR claims out of the live
@@ -63,6 +58,7 @@ listing until a matching release is available there.
   `node scripts/store-media.mjs`.
 - `docs/images/popup.png` shows the real popup: Ticket cards & fields, Ticket
   layout and Board layout.
+- `docs/store/05-pull-request.jpg` shows the full-width Checks tab from the current extension with fictional PR data.
 - Generate the comparisons and popup gallery with `npm run build` then
   `npm run screenshots`. Use a build matching the version being advertised;
   recapturing with main can expose controls not yet in the store.

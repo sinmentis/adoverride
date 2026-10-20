@@ -4,9 +4,18 @@ import { fileURLToPath } from 'node:url';
 import { checkArtifact, checkLiveTag, checkTag, command } from './release-check.mjs';
 
 export function releaseNotes(repository, commit) {
-  return `Extract the Chrome ZIP and use **Load unpacked** in \`chrome://extensions\` with Developer mode enabled.
+  return `[Install from Chrome Web Store](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo). Store approval is separate, so the store may still have an older version.
 
-[Installation guide](https://github.com/${repository}/blob/${commit}/README.md#install)
+This package includes:
+- Board and work item layout settings.
+- Activity, Description, and Checks tabs on pull requests, with full-width sections.
+- Controls to fold passed checks, repeated updates, and resolved threads from selected authors. Active and pending threads stay visible.
+
+When updating from 0.11.10, PR settings turn on by default. They hide Updates and some extension tabs and select Active comments once. Change these in the popup's PR section, or use the master switch to turn off layout changes. Existing Board and work item settings are kept.
+
+To install this exact build manually, extract the Chrome ZIP and use **Load unpacked** in \`chrome://extensions\` with Developer mode enabled. Manual installs do not receive store updates.
+
+[Installation guide](https://github.com/${repository}/blob/${commit}/docs/guide.md#manual-install) | [PR settings](https://github.com/${repository}/blob/${commit}/docs/guide.md#tidy-a-pull-request)
 
 Built from commit \`${commit}\`.`;
 }

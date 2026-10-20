@@ -58,6 +58,7 @@ try {
   if (store) await mkdir('docs/store', { recursive: true });
   const { presentationBoardHtml } = await loader.ssrLoadModule('/tests/browser/board-presentation-fixture.ts');
   const { workspaceTicketHtml } = await loader.ssrLoadModule('/tests/browser/workspace-fixture.ts');
+  const { prOverviewHtml } = await loader.ssrLoadModule('/tests/browser/pr-fixture.ts');
   const { TICKET_LAYOUT } = await loader.ssrLoadModule('/tests/browser/ticket-fixtures.ts');
   const { defaultPreferences } = await loader.ssrLoadModule('/lib/preferences.ts');
   const preferences = defaultPreferences();
@@ -162,11 +163,6 @@ try {
   });
   if (store) {
     await storeShot('01-board', libraryPopup);
-    const fieldsPopup = await popupShot(async popup => {
-      await popup.getByRole('tab', { name: /^Card fields/ }).click();
-      await expect(popup.getByRole('button', { name: 'Assignee', exact: true })).toBeVisible();
-    });
-    await storeShot('05-board-fields', fieldsPopup);
   }
 
   await enabled(false);
@@ -199,6 +195,19 @@ try {
   if (store) {
     await storeShot('03-ticket-fields', cardsPopup);
     await storeShot('04-ticket-layout', layoutPopup);
+    html = prOverviewHtml();
+    await page.goto(`${origin}/example/Platform/_git/service/pullrequest/42`);
+    await expect(page.locator('[data-ado-pr-tab]')).toHaveCount(2);
+    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Active comments (2)');
+    await page.locator('[data-ado-pr-tab="checks"]').click();
+    await expect(page.locator('[data-ado-pr-view]')).toHaveAttribute('data-ado-pr-view', 'checks');
+    await expect(page.locator('[data-fixture="status"]')).toBeVisible();
+    await expect(page.locator('[data-fixture="reviewers"]')).toBeVisible();
+    await expect(page.locator('.activity-feed-list')).toBeHidden();
+    await expect.poll(() => page.locator('[data-fixture="status"]').evaluate(element => element.getBoundingClientRect().width))
+      .toBeGreaterThan(1200);
+    expect(await page.evaluate(() => window.__fixtureMutations ?? 0)).toBe(0);
+    await storeShot('05-pull-request');
   } else {
     await writeFile('docs/images/popup.png', gallery([
       { title: 'Ticket: cards &amp; fields', image: cardsPopup },

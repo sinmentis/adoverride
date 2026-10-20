@@ -1,4 +1,4 @@
-ADOverride changes the layout of Azure DevOps boards and work items in Chrome. You can hide fields, move sections in work items, and make board columns wider. It only changes your view, not work item data or what other people see.
+ADOverride changes the layout of Azure DevOps boards, work items, and pull requests in Chrome. You can hide fields, move sections in work items, make board columns wider, and put PR activity, descriptions, and checks in separate tabs. It only changes your view, not work item data or what other people see.
 
 Boards
 - Make columns fill the available width.
@@ -12,19 +12,29 @@ Work items
 - Lock the layout, undo the last change, and save presets.
 - Export or import your settings as a JSON file.
 
+Pull requests
+- Split Overview into Activity, Description, and Checks tabs. Each tab uses the full width.
+- Fold passed checks, reviewers who have not voted, and repeated updates.
+- Show pushes as "pushed N commits", with a button to open the commit list.
+- Choose which PR tabs to show and hide the reviewer avatars near the title.
+- Fold resolved or closed threads from authors you choose. Active and pending threads stay visible, even for blocked authors.
+- Hide comment rows in the Files tree and reduce its indentation.
+
 Getting started
-1. Install ADOverride, pin it to the toolbar, and open an Azure DevOps Kanban board or work item.
-2. Click the extension icon. Library has the Board settings. Ticket has the work item settings.
+1. Install ADOverride, pin it to the toolbar, and open an Azure DevOps Kanban board, work item, or pull request.
+2. Click the extension icon. Library has the Board settings, Ticket has the work item settings, and PR has the pull request settings.
 3. Turn individual options on or off.
 
 The default preset applies as soon as you install the extension. It widens Board columns, turns on automatic item loading, and switches work items to Workspace. It also hides some fields, including estimates, dates, and severity where matched.
 
+PR settings also turn on by default when updating from 0.11.10. They hide Updates and some extension tabs and select Active comments once. You can change these options in the PR section. Existing Board and work item settings are kept.
+
 To show hidden work item fields, use Ticket > Cards & fields > Show all. To return to the original page layout, turn off the switch at the top of the popup. Your saved settings are kept.
 
 Privacy
-Settings stay in your browser. The extension reads the current Azure DevOps page address and layout, and gets form-layout information from your organization using your existing sign-in. It does not send your work item data to the developer or save changes to your work items. There are no ads or analytics.
+Settings stay in your browser. The extension reads the current Azure DevOps page address and layout, and gets form-layout information from your organization using your existing sign-in. On PR pages it reads comment author names and thread status for filtering. Blocked author names are saved in your settings. The last Activity, Description, or Checks tab is saved in the Azure DevOps site's local storage.
 
-The store's Web history, Website content, and User activity labels cover this page access and your saved settings. The extension does not keep a browsing-history log. The linked privacy policy explains the details.
+It does not send your work item or PR data to the developer, save changes to your work items, post comments, or change review votes. There are no ads or analytics, and it does not keep a browsing-history log. The linked privacy policy explains the data handling in more detail.
 
 Compatibility
 Works with Azure DevOps Services on dev.azure.com and *.visualstudio.com. Some features need English page labels. Board layout changes work on supported Kanban boards, not every Backlog, Query, sprint, or custom layout. Parts the extension does not recognize stay unchanged. Azure DevOps Server on other domains is not supported.

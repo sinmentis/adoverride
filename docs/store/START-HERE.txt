@@ -1,11 +1,13 @@
-ADOverride - Chrome Web Store listing update
+ADOverride 0.11.18 - Chrome Web Store update
 
 1. Open https://chrome.google.com/webstore/devconsole
 2. Select the existing ADOverride item: ijeoidnjoamdkpfgbnhfajddhpakobjo. Do not create a new item.
-3. Replace the detailed description with the full contents of LISTING.txt.
-4. Replace the first screenshot with 01-board.jpg. Keep screenshots 2-5.
-5. Check the homepage, support, and privacy URLs below. Leave the package, title, short description, distribution, and privacy declarations unchanged.
-6. Save and submit the changes. Check the public listing once they are published.
+3. Upload adoverride-0.11.18-chrome.zip as the new extension package. It comes from the v0.11.18 GitHub release; SHA256SUMS contains its checksum.
+4. Check the package title: ADOverride - Customize Azure DevOps. The new short description also comes from this package.
+5. Replace the detailed description with all of LISTING.txt. Replace the five screenshots with the files listed below, in order.
+6. Review Privacy practices for the new PR features. The extension reads comment author display names and saves blocked author names. Check the current data-use definitions, including Personally identifiable information, before confirming the declarations.
+7. Check the homepage, support, and privacy URLs below. Use the reviewer instructions in the linked checklist, including its PR steps.
+8. Save and submit the update. After approval, publish it and check that the public listing shows 0.11.18 and the new title.
 
 Homepage:
 https://github.com/sinmentis/adoverride
@@ -14,16 +16,19 @@ https://github.com/sinmentis/adoverride/issues
 Privacy policy:
 https://github.com/sinmentis/adoverride/blob/main/PRIVACY.md
 
-Screenshots: 01-board.jpg through 05-board-fields.jpg, all 1280x800.
-The first image compares the same fictional Board before and after ADOverride.
+Screenshots, in order (all 1280x800):
+01-board.jpg
+02-workspace.jpg
+03-ticket-fields.jpg
+04-ticket-layout.jpg
+05-pull-request.jpg
+
+The images use fictional data and the 0.11.18 extension.
 The icon and promotional images are included for reference. You do not need to replace them.
 
-Current store version: 0.11.10, Boards and work items.
-PR features are on main but are not in the store build. This copy does not advertise them.
+Upload only adoverride-0.11.18-chrome.zip in the package section. Do not upload a source archive or a ZIP containing the whole store-materials folder.
 
-This ZIP contains text and images, not an extension package. Do not upload it in the dashboard's package section.
-
-The name and short description come from the extension package. A suggested short description for a later release is in the checklist below.
+Keep the existing store item so users receive the update and keep their settings. Publishing the GitHub release does not update Chrome Web Store.
 
 Source checklist and reviewer instructions:
 https://github.com/sinmentis/adoverride/blob/main/docs/chrome-web-store.md

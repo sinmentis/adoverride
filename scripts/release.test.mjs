@@ -27,7 +27,7 @@ function fixture() {
   const pkg = { name: 'adoverride', version: VERSION };
   const lock = { ...pkg, packages: { '': pkg } };
   const manifest = {
-    manifest_version: 3, version: VERSION, name: 'ADOverride - Azure DevOps Boards & Work Items',
+    manifest_version: 3, version: VERSION, name: 'ADOverride - Customize Azure DevOps',
     permissions: ['storage', 'activeTab', 'scripting'],
     host_permissions: ['https://dev.azure.com/*', 'https://*.visualstudio.com/*'],
   };
@@ -151,6 +151,11 @@ describe('manual release gates', () => {
     expect(() => checkPackage(f.cwd)).toThrow();
     expect(() => validateManifest({ ...f.manifest, version: '0.11.0' }, VERSION)).toThrow('Manifest and package version');
   });
+  it('rejects a package with the previous store title', () => {
+    const f = fixture();
+    expect(() => validateManifest({ ...f.manifest, name: 'ADOverride - Azure DevOps Boards & Work Items' }, VERSION))
+      .toThrow('Unexpected extension name');
+  });
   it.each([
     { permissions: ['storage', 'activeTab', 'scripting', 'cookies'] },
     { host_permissions: ['<all_urls>'] },
@@ -173,6 +178,14 @@ describe('manual release gates', () => {
 });
 
 describe('release publication and reruns', () => {
+  it('links the store and manual guide and explains PR defaults', () => {
+    const notes = releaseNotes(REPOSITORY, 'a'.repeat(40));
+    expect(notes).toContain('chromewebstore.google.com/detail/');
+    expect(notes).toContain(`/blob/${'a'.repeat(40)}/docs/guide.md#manual-install`);
+    expect(notes).toContain('PR settings turn on by default');
+    expect(notes).toContain('Active and pending threads stay visible');
+    expect(notes).not.toContain('README.md#install');
+  });
   it('creates a draft, uploads the verified assets, then publishes and verifies it', () => {
     const f = fixture();
     f.artifact();

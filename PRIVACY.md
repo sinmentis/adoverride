@@ -7,9 +7,7 @@ pull requests in your browser. It has no developer-operated backend, analytics, 
 telemetry. The developers do not receive your Azure DevOps data through the
 extension.
 
-**Version scope:** the current Chrome Web Store version, 0.11.10, customizes
-Boards and work items. Pull request handling described below applies to newer
-source builds and is not included in that store version.
+**Version scope:** this policy covers v0.11.18, including pull request features. The older 0.11.10 store package only customizes Boards and work items and does not perform the PR handling described below.
 
 ## Information handled in your browser
 
@@ -82,7 +80,7 @@ settings. Uninstalling it removes its extension storage; manually exported
 files remain wherever you saved them and must be deleted separately. Temporary
 page inspection and metadata caches are held in memory.
 
-In newer source builds, the last PR Overview tab is saved under
+The last PR Overview tab is saved under
 `adoverride.pr.overviewTab` in the Azure DevOps site's local storage. Uninstalling
 the extension does not remove this site preference. It can be removed
 separately from that site's local storage.

@@ -24,7 +24,8 @@ export default defineConfig({
   hooks: {
     'build:done': async wxt => {
       for (const file of ['LICENSE', 'README.md', 'PRIVACY.md', 'docs/guide.md', 'docs/publishing.md', 'docs/chrome-web-store.md',
-        'docs/images/board-before-after.png', 'docs/images/ticket-before-after.png', 'docs/images/popup.png',
+        'docs/images/board-before-after.png', 'docs/images/board-hero.png', 'docs/images/ticket-before-after.png', 'docs/images/popup.png',
+        'docs/store/LISTING.txt', 'docs/store/START-HERE.txt',
         'docs/images/social-preview.svg', 'docs/images/social-preview.png']) {
         const target = path.join(wxt.config.outDir, file);
         await mkdir(path.dirname(target), { recursive: true });
@@ -49,8 +50,8 @@ export default defineConfig({
     },
   },
   manifest: {
-    name: 'ADOverride - Azure DevOps Boards & Work Items',
-    description: 'Declutter Azure DevOps Boards, work items and pull requests: hide fields, rearrange cards, wider Kanban columns, cleaner PRs.',
+    name: 'ADOverride - Customize Azure DevOps',
+    description: 'Hide work item fields, widen boards, and organize pull request pages in Azure DevOps. Changes only affect your browser.',
     permissions: ['storage', 'activeTab', 'scripting'],
     host_permissions: ['https://dev.azure.com/*', 'https://*.visualstudio.com/*'],
     action: { default_title: INACTIVE_TOOLBAR_TITLE, default_icon: toolbarIconPaths(false) },

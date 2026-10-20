@@ -12,7 +12,8 @@ export const REQUIRED_FILES = [
   'manifest.json', 'popup.html', 'background.js', 'content-scripts/content.js',
   'LICENSE', 'README.md', 'PRIVACY.md', 'THIRD-PARTY-NOTICES.txt', 'THIRD-PARTY-NOTICES-CONTENT.txt',
   'docs/guide.md', 'docs/publishing.md', 'docs/chrome-web-store.md',
-  'docs/images/board-before-after.png', 'docs/images/ticket-before-after.png', 'docs/images/popup.png',
+  'docs/images/board-before-after.png', 'docs/images/board-hero.png', 'docs/images/ticket-before-after.png', 'docs/images/popup.png',
+  'docs/store/LISTING.txt', 'docs/store/START-HERE.txt',
 ];
 const DOCUMENTATION = new Set([
   ...REQUIRED_FILES.filter(file => file.startsWith('docs/')),
@@ -65,7 +66,7 @@ export function checkLiveTag({ cwd = process.cwd(), tag, commit }, run = command
 export function validateManifest(manifest, version) {
   assert.equal(manifest.manifest_version, 3, 'Only the Chrome Manifest V3 package can be released.');
   assert.equal(manifest.version, version, 'Manifest and package version do not match.');
-  assert.equal(manifest.name, 'ADOverride - Azure DevOps Boards & Work Items', 'Unexpected extension name.');
+  assert.equal(manifest.name, 'ADOverride - Customize Azure DevOps', 'Unexpected extension name.');
   assert.deepEqual(manifest.permissions?.toSorted(), ['activeTab', 'scripting', 'storage'], 'Unexpected extension permissions.');
   assert.deepEqual(manifest.host_permissions?.toSorted(), ['https://*.visualstudio.com/*', 'https://dev.azure.com/*'], 'Unexpected host permissions.');
   assert.ok(!manifest.optional_permissions?.length && !manifest.optional_host_permissions?.length, 'Unexpected optional permissions.');
@@ -73,7 +74,7 @@ export function validateManifest(manifest, version) {
 
 export function validateMembers(entries) {
   const files = entries.filter(entry => !entry.endsWith('/'));
-  const directories = new Set(['assets/', 'chunks/', 'content-scripts/', 'icon/', 'icon-gray/', 'docs/', 'docs/images/']);
+  const directories = new Set(['assets/', 'chunks/', 'content-scripts/', 'icon/', 'icon-gray/', 'docs/', 'docs/images/', 'docs/store/']);
   assert.equal(new Set(entries).size, entries.length, 'Duplicate archive members.');
   for (const entry of entries) {
     assert.ok(entry && !entry.startsWith('/') && !entry.includes('\\') &&

@@ -114,7 +114,7 @@ try {
   }, hero.toString('base64'));
   await writeFile(new URL('../docs/images/board-hero.png', import.meta.url), hero);
   await writeFile(new URL('01-board.jpg', directory), Buffer.from(jpeg, 'base64'));
-  for (const name of ['01-board', '02-workspace', '03-ticket-fields', '04-ticket-layout', '05-board-fields']) {
+  for (const name of ['01-board', '02-workspace', '03-ticket-fields', '04-ticket-layout', '05-pull-request']) {
     const data = await readFile(new URL(`${name}.jpg`, directory));
     assert.equal(data.readUInt16BE(0), 0xffd8, `${name} must be JPEG`);
     const size = await page.evaluate(async base64 => {

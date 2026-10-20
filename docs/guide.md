@@ -1,14 +1,14 @@
 # ADOverride guide
 
-ADOverride changes the layout of Azure DevOps boards and work items in Chrome. You can hide fields, move sections in work items, and make board columns wider. It only changes your view, not work item data or what other people see.
+ADOverride changes the layout of Azure DevOps boards, work items, and pull requests in Chrome. You can hide fields, move sections in work items, make board columns wider, and put PR activity, descriptions, and checks in separate tabs. It only changes your view, not work item data or what other people see.
 
-**The store version is v0.11.10.** It supports Boards and work items. This guide also covers PR features on `main` (v0.11.17), which are not in the store or latest tagged release yet.
+**This guide covers v0.11.18**, including PR support. Chrome Web Store approval is separate from the GitHub release. Check the version on the listing; the older 0.11.10 store package only supports Boards and work items.
 
 ## Install in Chrome
 
 1. [Install ADOverride from Chrome Web Store](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo).
-2. Pin the extension and open an Azure DevOps Kanban board or work item.
-3. Click the extension icon. **Library** has the Board settings. **Ticket** has the work item settings.
+2. Pin the extension and open an Azure DevOps Kanban board, work item, or pull request.
+3. Click the extension icon. **Library** has the Board settings, **Ticket** has the work item settings, and **PR** has the pull request settings.
 
 The default preset applies automatically. It widens Board columns, turns on automatic item loading, and switches work items to Workspace. It also hides some fields, including estimates, dates, and severity where matched.
 
@@ -52,9 +52,7 @@ Load `.output/chrome-mv3` using the manual Chrome steps above.
 | Automatic native **Show more items** loading | Layout lock and one-step Undo |
 | Per-board, project, organization, or global settings | Standalone tickets and tickets opened from a Board |
 
-In the newer source build, pull request pages get a cleaner Overview (Activity,
-Description and Checks tabs, passed checks and silent reviewers folded, Active
-comments first) and a tighter Files tree. See [Tidy a pull request](#tidy-a-pull-request).
+Pull request settings split Overview into Activity, Description, and Checks tabs. You can fold passed checks and reviewers who have not voted, start with Active comments, and reduce spacing in the Files tree. See [Tidy a pull request](#tidy-a-pull-request).
 
 Board and Ticket support local presets, light/dark popup themes, and configuration
 export/import with a preview and pre-import backup. Native values, drafts, Save
@@ -127,7 +125,7 @@ that must remain reachable.
 
 ## Tidy a pull request
 
-**Newer source builds only; not in the store or latest release v0.11.10.**
+**Included in v0.11.18.** When upgrading from 0.11.10, PR settings turn on by default. Existing Board and work item settings are kept.
 
 The popup selects **PR** on a pull request page. PR settings are one global
 profile; **Reset to kiwifruit** turns every option back on.

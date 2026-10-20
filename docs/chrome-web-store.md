@@ -1,6 +1,6 @@
 # Chrome Web Store listing and updates
 
-The [store version](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) is **0.11.10**. The text in [store/LISTING.txt](store/LISTING.txt) and the images describe Boards and work items. PR features on `main` are not in that package.
+This kit is for **0.11.18**, including PR features and the new package title. Update the [existing store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) with the package, text, and screenshots together. Store approval is separate from the GitHub release.
 
 No store submission is made by the scripts in this repository.
 
@@ -8,17 +8,15 @@ No store submission is made by the scripts in this repository.
 
 Open the [Developer Dashboard](https://chrome.google.com/webstore/devconsole) with the publishing account and select ADOverride, item `ijeoidnjoamdkpfgbnhfajddhpakobjo`. **Do not add a new item.**
 
-Replace the detailed description with `store/LISTING.txt` and the first screenshot with `store/01-board.jpg`. Keep the current package and screenshots 2-5. Check the links below, save, and submit the changes.
+Upload `adoverride-0.11.18-chrome.zip` from the [v0.11.18 release](https://github.com/sinmentis/adoverride/releases/tag/v0.11.18). Verify it against the release's `SHA256SUMS`. Do not upload a source archive or the outer store-materials ZIP as the extension package.
 
-The listing ZIP contains text and images, not an extension package. Do not upload it in the dashboard's package section.
-
-For a later extension update, use the approved Chrome ZIP from the matching [GitHub release](https://github.com/sinmentis/adoverride/releases). Do not change an already published release file.
+Replace the detailed description with `store/LISTING.txt` and replace all five screenshots with the files below. Review the new PR data handling, check the links, save, and submit the update. Do not change an already published GitHub release file.
 
 ## 2. Store listing
 
 | Field | Value |
 | --- | --- |
-| Name (from manifest) | ADOverride - Azure DevOps Boards & Work Items |
+| Name (from manifest) | ADOverride - Customize Azure DevOps |
 | Language | English |
 | Category | Workflow & Planning (the current listing category) |
 | Homepage | https://github.com/sinmentis/adoverride |
@@ -27,30 +25,26 @@ For a later extension update, use the approved Chrome ZIP from the matching [Git
 | Store icon | `icon-128.png` |
 | Small promotional tile | `promo-440x280.png` |
 | Optional marquee | `marquee-1400x560.png` |
-| Screenshots, in order | `01-board.jpg` through `05-board-fields.jpg` |
+| Screenshots, in order | `01-board.jpg`, `02-workspace.jpg`, `03-ticket-fields.jpg`, `04-ticket-layout.jpg`, `05-pull-request.jpg` |
 
-The published 0.11.10 manifest supplies this short description:
-
-```text
-Declutter Azure DevOps Boards and work items: hide fields, rearrange cards, wider Kanban columns. Your Azure DevOps. Your way.
-```
-
-The title and short description come from the uploaded extension package. This text-and-images update leaves them unchanged. A suggested short description for a later package is:
+The 0.11.18 package supplies this short description (119 characters):
 
 ```text
-Hide fields, move work item sections, and make Azure DevOps board columns wider. Changes only affect your browser.
+Hide work item fields, widen boards, and organize pull request pages in Azure DevOps. Changes only affect your browser.
 ```
+
+Check that both the new title and this summary appear after uploading the package.
 
 ### Detailed description
 
-Paste all of [store/LISTING.txt](store/LISTING.txt). Do not add PR features to this version's description.
+Paste all of [store/LISTING.txt](store/LISTING.txt). It describes this package, including PR settings and their defaults.
 
 ## 3. Privacy practices
 
 ### Single purpose
 
 ```text
-Change how Azure DevOps Boards and work items look in the user's browser. Users can hide fields, move form sections, and change spacing without changing work item data or the team's process.
+Change how Azure DevOps Boards, work items, and pull requests look in the user's browser. Users can hide fields, move form sections, choose visible PR tabs, and fold activity without changing work item or PR data.
 ```
 
 ### Permission justifications
@@ -58,7 +52,7 @@ Change how Azure DevOps Boards and work items look in the user's browser. Users 
 **storage**
 
 ```text
-Save settings in the browser: Board profiles, hidden work item fields, section positions, presets, the last undoable change, and a backup before importing settings. Chrome Storage Sync is not used.
+Save settings in the browser: Board profiles, hidden work item fields, section positions, PR layout options, hidden PR tabs, blocked author display names, presets, the last undoable change, and a backup before importing settings. Chrome Storage Sync is not used.
 ```
 
 **activeTab**
@@ -91,14 +85,15 @@ Do not equate "no server collection" with "no data handling." Google's
 [User Data FAQ](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq)
 requires disclosure even for local processing.
 
-The current store lists these categories. Review them against the package
-being submitted; do not remove an accurate disclosure to simplify the listing:
+Keep accurate disclosures from the earlier version and review them against 0.11.18:
 
 | Category | Why it applies |
 | --- | --- |
-| Website content | Local processing of rendered ADO structure, schema labels, and work item IDs for presentation and counts |
+| Website content | Rendered ADO structure, schema labels, work item IDs, PR status icons, author display names, and thread status |
 | Web history | Current supported-page URLs and derived organization/project/Board scope keys; no browsing-history log |
-| User activity | User-triggered visibility, layout, and preference changes handled and saved locally; no analytics or general click/keystroke log |
+| User activity | User-chosen layouts, hidden tabs, blocked author names, and other settings saved locally; no analytics or general click/keystroke log |
+
+**Review Personally identifiable information:** PR author display names are read from rendered comments, and names added to the blocked list are saved and included in settings exports. Check the dashboard's current category definitions before certifying this release; do not simply reuse the 0.11.10 answers.
 
 The extension does not extract passwords, cookie values, payment information,
 health data, precise location, or private communications for storage or
@@ -116,7 +111,7 @@ must match the linked privacy policy.
 Paste these instructions into **Test instructions**:
 
 ```text
-ADOverride has no separate account or paid features. You need an Azure DevOps Services organization and project with Azure Boards enabled.
+ADOverride has no separate account or paid features. You need an Azure DevOps Services organization and project with Azure Boards and an Azure Repos pull request containing fictional review activity.
 
 1. Sign in at https://dev.azure.com using a test organization and project. Use English and a standard Agile or Scrum process. Create a few fictional work items if the Board is empty.
 2. Open Boards > Boards, pin ADOverride, and open its popup.
@@ -125,9 +120,12 @@ ADOverride has no separate account or paid features. You need an Azure DevOps Se
 5. Open a User Story or Bug. The popup selects Ticket. Expand Details under Cards & fields and toggle a supported section such as Description.
 6. Open Layout and switch between Original and Workspace. On supported forms, Workspace shows the main text in a wide column and other fields in a sidebar.
 7. Leave layout controls unlocked and drag a section by its extension handle. Undo restores the last work item customization. Lock removes the on-page controls.
-8. Turn off ADOverride using the switch at the top of the popup. The original page layout returns. Saved settings are kept.
+8. Open the demo pull request. The popup selects PR. Overview becomes Activity, with Description and Checks beside it. Switch between them and confirm each section uses the full width.
+9. In PR > Tabs, toggle a tab such as Updates. The current tab stays visible. In PR > Blocked, add the display name of an author with both active and resolved demo threads. Resolved threads fold; active threads stay visible.
+10. Switch the native activity filter to Show everything to see update folding. Open a folded push's commit list, then switch to Files to check the compact file tree.
+11. Turn off ADOverride using the switch at the top of the popup. Its layout changes are removed and saved settings are kept. A native activity filter already selected by the extension is not automatically reset.
 
-No personal access token is required. The extension only works on dev.azure.com and HTTPS *.visualstudio.com sites. Parts it does not recognize stay unchanged. On other websites the popup asks you to open an Azure DevOps page.
+Do not approve, complete, resolve, or post on a real PR during these checks. No personal access token is required. The extension only works on dev.azure.com and HTTPS *.visualstudio.com sites. Parts it does not recognize stay unchanged. On other websites the popup asks you to open an Azure DevOps page.
 ```
 
 **Access to arrange before submission:** these instructions do not provide a
@@ -151,17 +149,7 @@ Use the dashboard's publication controls to decide when approved changes go
 live. Submission and publication are separate from
 GitHub releases and are not performed by this repository's tag workflow.
 
-### When a PR-capable package is approved for release
-
-Update the single-purpose text, data-use review, reviewer instructions, and
-screenshots to cover the new behavior. Explain that the PR defaults enable
-layout changes and hide some tabs, and that blocked authors' active and pending
-threads remain visible. Stored author display names must be considered in the
-dashboard's current data-use definitions.
-
-Only describe PR support as available through the store once the matching
-package is live. Then update the version notices in README, the guide, the
-privacy policy, and this checklist together.
+After publication, confirm the public listing shows version 0.11.18, the new title, and the PR screenshot. Upload to the existing item so current users receive the update with their settings intact.
 
 ## Regenerating images
 
@@ -181,7 +169,7 @@ npm run screenshots
 npm run store:assets
 ```
 
-Do not replace current-store popup images with a newer build's PR controls.
+Publish these images alongside the matching package, not on the older 0.11.10 listing by itself.
 
 The first screenshot is a labeled 1280x800 before/after composition using the
 same fictional Board and viewport, with a PNG copy at `docs/images/board-hero.png`.
