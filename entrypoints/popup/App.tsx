@@ -5,6 +5,7 @@ import {
   ToggleSwitch, VisuallyHidden,
 } from '@primer/react';
 import { ThemeProvider } from '@primer/react/next';
+import brandIcon from '@/assets/brand.svg';
 import {
   ArrowLeftIcon, GearIcon, InfoIcon, LockIcon,
   MoonIcon, PlusIcon, ProjectIcon, SlidersIcon,
@@ -196,7 +197,7 @@ export default function App() {
         ) : (
           <>
             <header className="popup-header">
-              <span className="brand"><SlidersIcon size={18} /></span>
+              <img className="brand" src={brandIcon} alt="" width={26} height={26} />
               <div className="brand-copy">
                 <Heading as="h1" style={{ fontSize: 14 }}>ADOverride</Heading>
                 <Text className="caption" data-extension-version={version}>v{version}</Text>

@@ -7,6 +7,7 @@ export function releaseNotes(repository, commit) {
   return `[Install from Chrome Web Store](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo). Store approval is separate, so the store may still have an older version.
 
 This package includes:
+- The Offset icon, a blue O with a separate orange corner.
 - Board and work item layout settings.
 - Activity, Description, and Checks tabs on pull requests, with full-width sections.
 - Controls to fold passed checks, repeated updates, and resolved threads from selected authors. Active and pending threads stay visible.

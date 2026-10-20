@@ -1,13 +1,13 @@
-ADOverride 0.11.18 - Chrome Web Store update
+ADOverride 0.11.19 - Chrome Web Store update
 
 1. Open https://chrome.google.com/webstore/devconsole
 2. Select the existing ADOverride item: ijeoidnjoamdkpfgbnhfajddhpakobjo. Do not create a new item.
-3. Upload adoverride-0.11.18-chrome.zip as the new extension package. It comes from the v0.11.18 GitHub release; SHA256SUMS contains its checksum.
+3. Upload adoverride-0.11.19-chrome.zip as the new extension package. It comes from the v0.11.19 GitHub release; SHA256SUMS contains its checksum.
 4. Check the package title: ADOverride - Customize Azure DevOps. The new short description also comes from this package.
-5. Replace the detailed description with all of LISTING.txt. Replace the five screenshots with the files listed below, in order.
-6. Review Privacy practices for the new PR features. The extension reads comment author display names and saves blocked author names. Check the current data-use definitions, including Personally identifiable information, before confirming the declarations.
+5. Replace the detailed description with all of LISTING.txt and the five screenshots in the order below. Replace the store icon with icon-128.png and the promotional tile with promo-440x280.png. If you use a marquee, replace it with marquee-1400x560.png.
+6. Data handling is unchanged from 0.11.18. If updating from 0.11.10, review Privacy practices for the PR features: the extension reads comment author display names and saves blocked author names. Check the current data-use definitions, including Personally identifiable information, before confirming the declarations.
 7. Check the homepage, support, and privacy URLs below. Use the reviewer instructions in the linked checklist, including its PR steps.
-8. Save and submit the update. After approval, publish it and check that the public listing shows 0.11.18 and the new title.
+8. Save and submit the update. After approval, publish it and check that the public listing shows 0.11.19 and the new Offset icon.
 
 Homepage:
 https://github.com/sinmentis/adoverride
@@ -23,10 +23,11 @@ Screenshots, in order (all 1280x800):
 04-ticket-layout.jpg
 05-pull-request.jpg
 
-The images use fictional data and the 0.11.18 extension.
-The icon and promotional images are included for reference. You do not need to replace them.
+The images use fictional data and the 0.11.19 extension. Replace the old sliders icon wherever it appears in the listing.
 
-Upload only adoverride-0.11.18-chrome.zip in the package section. Do not upload a source archive or a ZIP containing the whole store-materials folder.
+Upload only adoverride-0.11.19-chrome.zip in the package section. Do not upload a source archive or a ZIP containing the whole store-materials folder.
+
+For the GitHub repository's uploaded social preview, use social-preview.png under Settings > Social preview. This is separate from the store update.
 
 Keep the existing store item so users receive the update and keep their settings. Publishing the GitHub release does not update Chrome Web Store.
 

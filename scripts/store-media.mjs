@@ -47,7 +47,7 @@ function artwork(width, height) {
   const y = marquee ? 96 : 28;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
     <defs><linearGradient id="background" x2="1" y2="1">
-      <stop stop-color="#052b63"/><stop offset="1" stop-color="#0969da"/>
+      <stop stop-color="#101a2f"/><stop offset="1" stop-color="#263855"/>
     </linearGradient></defs>
     <rect width="100%" height="100%" fill="url(#background)"/>
     <g transform="translate(${x} ${y}) scale(${scale})">

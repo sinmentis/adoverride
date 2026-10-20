@@ -23,7 +23,7 @@ export default defineConfig({
   },
   hooks: {
     'build:done': async wxt => {
-      for (const file of ['LICENSE', 'README.md', 'PRIVACY.md', 'docs/guide.md', 'docs/publishing.md', 'docs/chrome-web-store.md',
+      for (const file of ['LICENSE', 'README.md', 'PRIVACY.md', 'assets/brand.svg', 'docs/guide.md', 'docs/publishing.md', 'docs/chrome-web-store.md',
         'docs/images/board-before-after.png', 'docs/images/board-hero.png', 'docs/images/ticket-before-after.png', 'docs/images/popup.png',
         'docs/store/LISTING.txt', 'docs/store/START-HERE.txt',
         'docs/images/social-preview.svg', 'docs/images/social-preview.png']) {

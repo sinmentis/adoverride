@@ -2,7 +2,7 @@
 
 ADOverride changes the layout of Azure DevOps boards, work items, and pull requests in Chrome. You can hide fields, move sections in work items, make board columns wider, and put PR activity, descriptions, and checks in separate tabs. It only changes your view, not work item data or what other people see.
 
-**This guide covers v0.11.18**, including PR support. Chrome Web Store approval is separate from the GitHub release. Check the version on the listing; the older 0.11.10 store package only supports Boards and work items.
+**This guide covers v0.11.19**, with the new Offset icon and the PR settings from 0.11.18. Chrome Web Store approval is separate from the GitHub release. Check the version on the listing; the older 0.11.10 store package only supports Boards and work items.
 
 ## Install in Chrome
 

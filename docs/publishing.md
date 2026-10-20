@@ -3,7 +3,7 @@
 ## GitHub discoverability
 
 Repository: [sinmentis/adoverride](https://github.com/sinmentis/adoverride).
-The repository and [Chrome Web Store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) are public. This release is **0.11.18**. Store submissions need separate approval, so check the live listing before saying an update is available there.
+The repository and [Chrome Web Store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) are public. This release is **0.11.19**. Store submissions need separate approval, so check the live listing before saying an update is available there.
 
 **Short explanation**
 
@@ -32,13 +32,13 @@ Keep GitHub repository metadata and the social preview aligned with the listing.
 
 ## Chrome Web Store copy
 
-Use [store/LISTING.txt](store/LISTING.txt) for the 0.11.18 description and the [update checklist](chrome-web-store.md) for the package, images, privacy declarations, and reviewer instructions. Update the existing item, not a new listing.
+Use [store/LISTING.txt](store/LISTING.txt) for the 0.11.19 description and the [update checklist](chrome-web-store.md) for the package, images, privacy declarations, and reviewer instructions. Update the existing item, not a new listing.
 
 **Name**
 
 > ADOverride - Customize Azure DevOps
 
-**Short description (0.11.18 manifest)**
+**Short description (0.11.19 manifest)**
 
 > Hide work item fields, widen boards, and organize pull request pages in Azure DevOps. Changes only affect your browser.
 
@@ -48,9 +48,11 @@ listing until a matching release is available there.
 
 ## Images
 
+- `assets/brand.svg` is the source for the Offset mark. Run `npm run icons` to regenerate the active and inactive toolbar PNGs. The popup uses the same SVG.
 - `docs/images/social-preview.png`: 1280 x 640 GitHub social preview.
 - `docs/images/social-preview.svg`: reproducible source artwork.
 - Generate the PNG with `npm run media`.
+- The GitHub social preview is a separate repository setting. Upload the regenerated PNG under **Settings > Social preview**; committing the image does not replace an uploaded preview.
 - `docs/images/board-before-after.png` and `docs/images/ticket-before-after.png`
   compare native and customized layouts with the same fictional content.
 - `docs/images/board-hero.png` and `docs/store/01-board.jpg` use the same Board

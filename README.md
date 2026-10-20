@@ -6,7 +6,7 @@ For Azure DevOps Services on `dev.azure.com` and `*.visualstudio.com`.
 
 **[Install from Chrome Web Store](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo)** | [Getting started](docs/guide.md#install-in-chrome) | [Manual install / build from source](docs/guide.md#manual-install)
 
-**[Version 0.11.18](https://github.com/sinmentis/adoverride/releases/tag/v0.11.18)** includes PR support and changes the package title to **ADOverride - Customize Azure DevOps**. Chrome Web Store updates need separate approval. If the store still shows 0.11.10, that version only supports Boards and work items.
+**[Version 0.11.19](https://github.com/sinmentis/adoverride/releases/tag/v0.11.19)** replaces the sliders icon with a blue O and an orange corner. It includes the PR settings from 0.11.18. Chrome Web Store updates need separate approval. If the store still shows 0.11.10, that version only supports Boards and work items.
 
 [![The same demo board with ADOverride off and on](docs/images/board-hero.png)](docs/images/board-hero.png)
 

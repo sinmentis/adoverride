@@ -7,7 +7,7 @@ pull requests in your browser. It has no developer-operated backend, analytics, 
 telemetry. The developers do not receive your Azure DevOps data through the
 extension.
 
-**Version scope:** this policy covers v0.11.18, including pull request features. The older 0.11.10 store package only customizes Boards and work items and does not perform the PR handling described below.
+**Version scope:** this policy covers v0.11.18 and v0.11.19, including pull request features. The icon update in 0.11.19 does not change data handling. The older 0.11.10 store package only customizes Boards and work items and does not perform the PR handling described below.
 
 ## Information handled in your browser
 

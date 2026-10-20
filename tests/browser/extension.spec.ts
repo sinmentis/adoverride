@@ -142,6 +142,14 @@ test('installed extension counts tickets without altering the page and persists 
     await board.bringToFront();
     await popup.goto(`chrome-extension://${extensionId}/popup.html`);
     await expect(popup.getByRole('heading', { name: 'ADOverride', exact: true })).toBeVisible();
+    const brand = popup.locator('img.brand');
+    await expect(brand).toHaveJSProperty('complete', true);
+    await expect(brand).toHaveJSProperty('naturalWidth', 128);
+    await expect(brand).toHaveAttribute('alt', '');
+    expect(await brand.evaluate(image => {
+      const { width, height } = image.getBoundingClientRect();
+      return { width, height };
+    })).toEqual({ width: 26, height: 26 });
     await expect(popup.locator('[data-inspector-state]')).toHaveText('Tickets loaded: 2');
     await expect(board.locator('body')).toHaveJSProperty('innerHTML', original);
 

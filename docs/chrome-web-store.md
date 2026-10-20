@@ -1,6 +1,6 @@
 # Chrome Web Store listing and updates
 
-This kit is for **0.11.18**, including PR features and the new package title. Update the [existing store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) with the package, text, and screenshots together. Store approval is separate from the GitHub release.
+This kit is for **0.11.19**, with the Offset icon and the PR settings from 0.11.18. Update the [existing store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) with the package, icon, promotional images, and screenshots together. Store approval is separate from the GitHub release.
 
 No store submission is made by the scripts in this repository.
 
@@ -8,9 +8,9 @@ No store submission is made by the scripts in this repository.
 
 Open the [Developer Dashboard](https://chrome.google.com/webstore/devconsole) with the publishing account and select ADOverride, item `ijeoidnjoamdkpfgbnhfajddhpakobjo`. **Do not add a new item.**
 
-Upload `adoverride-0.11.18-chrome.zip` from the [v0.11.18 release](https://github.com/sinmentis/adoverride/releases/tag/v0.11.18). Verify it against the release's `SHA256SUMS`. Do not upload a source archive or the outer store-materials ZIP as the extension package.
+Upload `adoverride-0.11.19-chrome.zip` from the [v0.11.19 release](https://github.com/sinmentis/adoverride/releases/tag/v0.11.19). Verify it against the release's `SHA256SUMS`. Do not upload a source archive or the outer store-materials ZIP as the extension package.
 
-Replace the detailed description with `store/LISTING.txt` and replace all five screenshots with the files below. Review the new PR data handling, check the links, save, and submit the update. Do not change an already published GitHub release file.
+Replace the detailed description with `store/LISTING.txt`, all five screenshots, the listing icon, and the small promotional tile. If the listing uses a marquee, replace that too. Data handling is unchanged from 0.11.18; when upgrading from 0.11.10, review the PR data handling below. Save and submit the update.
 
 ## 2. Store listing
 
@@ -27,7 +27,7 @@ Replace the detailed description with `store/LISTING.txt` and replace all five s
 | Optional marquee | `marquee-1400x560.png` |
 | Screenshots, in order | `01-board.jpg`, `02-workspace.jpg`, `03-ticket-fields.jpg`, `04-ticket-layout.jpg`, `05-pull-request.jpg` |
 
-The 0.11.18 package supplies this short description (119 characters):
+The 0.11.19 package supplies this short description (119 characters):
 
 ```text
 Hide work item fields, widen boards, and organize pull request pages in Azure DevOps. Changes only affect your browser.
@@ -85,7 +85,7 @@ Do not equate "no server collection" with "no data handling." Google's
 [User Data FAQ](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq)
 requires disclosure even for local processing.
 
-Keep accurate disclosures from the earlier version and review them against 0.11.18:
+Keep accurate disclosures from the earlier version and review them against 0.11.19:
 
 | Category | Why it applies |
 | --- | --- |
@@ -149,7 +149,7 @@ Use the dashboard's publication controls to decide when approved changes go
 live. Submission and publication are separate from
 GitHub releases and are not performed by this repository's tag workflow.
 
-After publication, confirm the public listing shows version 0.11.18, the new title, and the PR screenshot. Upload to the existing item so current users receive the update with their settings intact.
+After publication, confirm the public listing shows version 0.11.19, the Offset icon, and the PR screenshot. Upload to the existing item so current users receive the update with their settings intact.
 
 ## Regenerating images
 

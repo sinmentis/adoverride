@@ -1,6 +1,6 @@
 .popup { display: flex; flex-direction: column; width: 340px; height: 480px; overflow: hidden; background: var(--bgColor-default); color: var(--fgColor-default); }
 .popup .popup-header { display: flex; align-items: center; gap: 6px; padding: 6px 11px; }
-.popup .brand { display: grid; place-items: center; flex: 0 0 26px; height: 26px; border-radius: var(--borderRadius-medium); background: var(--bgColor-accent-muted); color: var(--fgColor-accent); }
+.popup .brand { display: block; flex: 0 0 26px; width: 26px; height: 26px; }
 .popup .brand-copy { flex: 1; min-width: 0; }
 .popup .caption { display: block; color: var(--fgColor-muted); font-size: 11px; line-height: 1.5; }
 .popup .brand-copy .caption { margin-top: 1px; font-size: 10px; }
