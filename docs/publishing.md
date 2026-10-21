@@ -53,7 +53,8 @@ listing until a matching release is available there.
 - `docs/images/social-preview.svg`: reproducible source artwork.
 - Generate the PNG with `npm run media`.
 - The GitHub social preview is a separate repository setting. Upload the regenerated PNG under **Settings > Social preview**; committing the image does not replace an uploaded preview.
-- The README uses `docs/images/pr-before.png`, `pr-after.png`, `work-item-before.png`, and `work-item-after.png`. Each pair comes from the same captured Azure DevOps page, with sample names, text, code, and avatars. Preserve the real page structure, styles, and fonts.
+- The README uses `docs/images/pr-commits.png`, `pr-reading-space.png`, and `work-item-layout.png`. Each 1280 x 800 poster shows side-by-side crops of the same captured Azure DevOps page, with sample names, text, code, and avatars. Keep content, font size, window size, and image scale consistent within each comparison.
+- Annotations must match the captured geometry. Any measurements or percentages describe only the example shown, not a guaranteed improvement on every page.
 - Keep source captures, extracted styles, fonts, and replay files local. Review every visible value and image before committing only the final PNGs.
 - `docs/images/board-before-after.png` and `docs/images/ticket-before-after.png`
   compare native and customized layouts with the same fictional content.
