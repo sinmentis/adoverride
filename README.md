@@ -10,7 +10,13 @@ ADOverride is a Chrome extension for changing how Azure DevOps pages look. It on
 - Hide unused PR tabs and duplicate reviewer avatars. Fold passed checks, reviewers who have not voted, and repeated push updates.
 - Fold resolved threads from bots or other authors you choose. Active and pending threads stay visible.
 
-[![PR Checks tab with full-width checks and reviewers, alongside Activity and Description tabs](docs/store/05-pull-request.jpg)](docs/store/05-pull-request.jpg)
+**Before**
+
+[![Azure DevOps PR Overview with checks, description, and reviewers sharing the page](docs/images/pr-before.png)](docs/images/pr-before.png)
+
+**After**
+
+[![ADOverride gives discussion the full width and puts Description and Checks in separate tabs](docs/images/pr-after.png)](docs/images/pr-after.png)
 
 ## Work items
 
@@ -18,7 +24,13 @@ ADOverride is a Chrome extension for changing how Azure DevOps pages look. It on
 - Drag sections to rearrange the page, or use **Workspace** for a wide reading area and a properties sidebar.
 - Lock your layout, undo your last change, and save or share presets.
 
-[![Work item Workspace with a wide description, properties sidebar, and controls for showing or hiding sections and fields](docs/store/03-ticket-fields.jpg)](docs/store/03-ticket-fields.jpg)
+**Before**
+
+[![Azure DevOps work item with fields and sections spread across three columns](docs/images/work-item-before.png)](docs/images/work-item-before.png)
+
+**After**
+
+[![ADOverride Workspace with a wide description and one Properties column](docs/images/work-item-after.png)](docs/images/work-item-after.png)
 
 **Boards:** widen columns, hide card fields, reduce spacing, and load more items automatically.
 
@@ -26,6 +38,6 @@ Works on `dev.azure.com` and `*.visualstudio.com`. Some features need English la
 
 Settings stay local. No ads or analytics. Turn the extension off to restore the page layout without losing your settings.
 
-*Screenshots use fictional work items and replayed layouts. Click an image to see it full size.*
+*Each pair uses the same captured Azure DevOps page with sample data. Click an image to see it full size.*
 
 [Privacy](PRIVACY.md) | [Contributing](CONTRIBUTING.md) | [Security](SECURITY.md) | [MIT](LICENSE)

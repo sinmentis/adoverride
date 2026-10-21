@@ -53,6 +53,8 @@ listing until a matching release is available there.
 - `docs/images/social-preview.svg`: reproducible source artwork.
 - Generate the PNG with `npm run media`.
 - The GitHub social preview is a separate repository setting. Upload the regenerated PNG under **Settings > Social preview**; committing the image does not replace an uploaded preview.
+- The README uses `docs/images/pr-before.png`, `pr-after.png`, `work-item-before.png`, and `work-item-after.png`. Each pair comes from the same captured Azure DevOps page, with sample names, text, code, and avatars. Preserve the real page structure, styles, and fonts.
+- Keep source captures, extracted styles, fonts, and replay files local. Review every visible value and image before committing only the final PNGs.
 - `docs/images/board-before-after.png` and `docs/images/ticket-before-after.png`
   compare native and customized layouts with the same fictional content.
 - `docs/images/board-hero.png` and `docs/store/01-board.jpg` use the same Board
@@ -61,11 +63,8 @@ listing until a matching release is available there.
 - `docs/images/popup.png` shows the real popup: Ticket cards & fields, Ticket
   layout and Board layout.
 - `docs/store/05-pull-request.jpg` shows the full-width Checks tab from the current extension with fictional PR data.
-- Generate the comparisons and popup gallery with `npm run build` then
-  `npm run screenshots`. Use a build matching the version being advertised;
-  recapturing with main can expose controls not yet in the store.
-- Use fictional fixture screenshots for a public listing. Never use private
-  tickets, people, organization URLs, or an authenticated browser profile.
+- Generate the fixture comparisons and popup gallery with `npm run build` then `npm run screenshots`. This does not regenerate the README screenshots; do not replace those with fixture renders. Use a build matching the version being advertised; recapturing with main can expose controls not yet in the store.
+- Use made-up content in public screenshots. Never publish real work item content, people, organization URLs, source captures, or browser profiles.
 
 ## Release checklist
 

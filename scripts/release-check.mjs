@@ -13,7 +13,8 @@ export const REQUIRED_FILES = [
   'LICENSE', 'README.md', 'PRIVACY.md', 'assets/brand.svg', 'THIRD-PARTY-NOTICES.txt', 'THIRD-PARTY-NOTICES-CONTENT.txt',
   'docs/guide.md', 'docs/publishing.md', 'docs/chrome-web-store.md',
   'docs/images/board-before-after.png', 'docs/images/board-hero.png', 'docs/images/ticket-before-after.png', 'docs/images/popup.png',
-  'docs/store/LISTING.txt', 'docs/store/START-HERE.txt', 'docs/store/03-ticket-fields.jpg', 'docs/store/05-pull-request.jpg',
+  'docs/images/pr-before.png', 'docs/images/pr-after.png', 'docs/images/work-item-before.png', 'docs/images/work-item-after.png',
+  'docs/store/LISTING.txt', 'docs/store/START-HERE.txt',
 ];
 const DOCUMENTATION = new Set([
   ...REQUIRED_FILES.filter(file => file.startsWith('docs/')),
