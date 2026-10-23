@@ -1,16 +1,36 @@
 # Chrome Web Store listing and updates
 
-This kit is for **0.11.19**, with the Offset icon and the PR settings from 0.11.18. Update the [existing store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) with the package, icon, promotional images, and screenshots together. Store approval is separate from the GitHub release.
+This kit is for **0.11.23**, including permanent wide PR Files layouts. Update the [existing store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) with the package, description, and screenshots together. Store approval is separate from the GitHub release.
 
 No store submission is made by the scripts in this repository.
+
+## Before uploading: check the public developer address
+
+Developer contact information belongs to the publisher account, not the extension manifest. Changing the package or its privacy policy cannot hide that information.
+
+Open the [Developer Dashboard](https://chrome.google.com/webstore/devconsole), select the correct publisher, and open **Account**. Check both the ordinary **Physical address** field and the **Trader / Non-trader** declaration.
+
+| Situation | Action |
+| --- | --- |
+| Non-trader with an optional Physical address | Google's account guide requires this field for items offering purchases, additional paid features, or subscriptions. If none apply and the dashboard allows it, clear the optional address and save |
+| Incorrect trader declaration | Correct it only if Non-trader truthfully describes the publisher's circumstances. Free or open-source software does not by itself determine legal status |
+| Trader | Google publicly displays verified trader contact details. There is no supported hide-address toggle. Use a correct, verifiable contact address; do not enter a fake address |
+| Updating a trader address in the same country | Google's FAQ directs publishers to the verification information in Google Payments settings. Other identity changes can require verification again |
+| Address still visible or the setting is unavailable | Recheck the correct publisher account, then contact [Chrome Web Store support](https://support.google.com/chrome_webstore/contact/one_stop_support) |
+
+After saving, inspect the public listing while signed out or in an incognito window. Do not assume an immediate update or change legal declarations just to remove an address. Do not put identity documents or personal addresses in GitHub issues, release files, or screenshots.
+
+Official sources: [account fields](https://developer.chrome.com/docs/webstore/set-up-account), [trader disclosure](https://developer.chrome.com/docs/webstore/program-policies/trader-disclosure), and [trader verification FAQ](https://developer.chrome.com/docs/webstore/program-policies/trader-verification-faq).
 
 ## 1. Update the existing item
 
 Open the [Developer Dashboard](https://chrome.google.com/webstore/devconsole) with the publishing account and select ADOverride, item `ijeoidnjoamdkpfgbnhfajddhpakobjo`. **Do not add a new item.**
 
-Upload `adoverride-0.11.19-chrome.zip` from the [v0.11.19 release](https://github.com/sinmentis/adoverride/releases/tag/v0.11.19). Verify it against the release's `SHA256SUMS`. Do not upload a source archive or the outer store-materials ZIP as the extension package.
+The prepared kit contains the locally validated candidate `adoverride-0.11.23-chrome.zip` and `SHA256SUMS`. It does not mean that v0.11.23 has been published on GitHub. Before store submission, commit and push the reviewed source, images, and updated privacy policy; wait for CI; then follow the approved tag-release procedure in [Publishing](publishing.md). Download the resulting Chrome ZIP and its checksum from GitHub Releases for the store submission. If its bytes differ from the local candidate, use the published artifact and its own checksum together, not a mixture.
 
-Replace the detailed description with `store/LISTING.txt`, all five screenshots, the listing icon, and the small promotional tile. If the listing uses a marquee, replace that too. Data handling is unchanged from 0.11.18; when upgrading from 0.11.10, review the PR data handling below. Save and submit the update.
+Do not upload a source archive or the outer release-kit ZIP as the extension package. Check the manifest version is 0.11.23.
+
+Replace the detailed description with `store/LISTING.txt` and the five screenshots below. Keep the Offset icon; the kit includes its listing icon and promotional tiles for consistency. Review the new Files data handling and confirm the linked privacy policy is updated before submitting.
 
 ## 2. Store listing
 
@@ -22,12 +42,12 @@ Replace the detailed description with `store/LISTING.txt`, all five screenshots,
 | Homepage | https://github.com/sinmentis/adoverride |
 | Support | https://github.com/sinmentis/adoverride/issues |
 | Privacy policy | https://github.com/sinmentis/adoverride/blob/main/PRIVACY.md |
-| Store icon | `icon-128.png` |
-| Small promotional tile | `promo-440x280.png` |
-| Optional marquee | `marquee-1400x560.png` |
-| Screenshots, in order | `01-board.jpg`, `02-workspace.jpg`, `03-ticket-fields.jpg`, `04-ticket-layout.jpg`, `05-pull-request.jpg` |
+| Store icon | `store/icon-128.png` |
+| Small promotional tile | `store/promo-440x280.png` |
+| Optional marquee | `store/marquee-1400x560.png` |
+| Screenshots, in order | `01-pr-files-wide.jpg`, `02-pr-files-bottom.jpg`, `03-pr-commits.jpg`, `04-pr-reading-space.jpg`, `05-work-item-layout.jpg`, all in `store/` |
 
-The 0.11.19 package supplies this short description (119 characters):
+The 0.11.23 package supplies this short description (119 characters):
 
 ```text
 Hide work item fields, widen boards, and organize pull request pages in Azure DevOps. Changes only affect your browser.
@@ -37,14 +57,14 @@ Check that both the new title and this summary appear after uploading the packag
 
 ### Detailed description
 
-Paste all of [store/LISTING.txt](store/LISTING.txt). It describes this package, including PR settings and their defaults.
+Paste all of [store/LISTING.txt](store/LISTING.txt). Keep the description to a short feature summary; setup instructions and data-handling details belong in the guide and privacy policy.
 
 ## 3. Privacy practices
 
 ### Single purpose
 
 ```text
-Change how Azure DevOps Boards, work items, and pull requests look in the user's browser. Users can hide fields, move form sections, choose visible PR tabs, and fold activity without changing work item or PR data.
+Change how Azure DevOps Boards, work items, and pull requests look in the user's browser. Users can hide fields, move form sections, choose visible PR tabs, fold activity, and navigate changed files in a drawer or bottom panel. Native editing and review controls remain owned by Azure DevOps.
 ```
 
 ### Permission justifications
@@ -52,7 +72,7 @@ Change how Azure DevOps Boards, work items, and pull requests look in the user's
 **storage**
 
 ```text
-Save settings in the browser: Board profiles, hidden work item fields, section positions, PR layout options, hidden PR tabs, blocked author display names, presets, the last undoable change, and a backup before importing settings. Chrome Storage Sync is not used.
+Save settings in the browser: Board profiles, hidden work item fields, section positions, PR layout options, Files navigation position, hidden PR tabs, blocked author display names, presets, the last undoable change, and a backup before importing settings. File inventory and search text are not saved. Chrome Storage Sync is not used.
 ```
 
 **activeTab**
@@ -85,15 +105,17 @@ Do not equate "no server collection" with "no data handling." Google's
 [User Data FAQ](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq)
 requires disclosure even for local processing.
 
-Keep accurate disclosures from the earlier version and review them against 0.11.19:
+Keep accurate disclosures from the earlier version and review them against 0.11.23:
 
 | Category | Why it applies |
 | --- | --- |
-| Website content | Rendered ADO structure, schema labels, work item IDs, PR status icons, author display names, and thread status |
+| Website content | Rendered ADO structure, schema labels, work item IDs, PR status icons, author display names, thread status, file names/paths, selection, and reviewed state |
 | Web history | Current supported-page URLs and derived organization/project/Board scope keys; no browsing-history log |
 | User activity | User-chosen layouts, hidden tabs, blocked author names, and other settings saved locally; no analytics or general click/keystroke log |
 
 **Review Personally identifiable information:** PR author display names are read from rendered comments, and names added to the blocked list are saved and included in settings exports. Check the dashboard's current category definitions before certifying this release; do not simply reuse the 0.11.10 answers.
+
+Files navigation uses only the currently rendered native tree. It does not fetch another inventory or persist file paths, reviewed states, or search text. Selecting a file never marks it reviewed automatically. An explicit review-checkbox click invokes Azure DevOps' native control and can update that user's reviewed state through Azure DevOps.
 
 The extension does not extract passwords, cookie values, payment information,
 health data, precise location, or private communications for storage or
@@ -122,8 +144,13 @@ ADOverride has no separate account or paid features. You need an Azure DevOps Se
 7. Leave layout controls unlocked and drag a section by its extension handle. Undo restores the last work item customization. Lock removes the on-page controls.
 8. Open the demo pull request. The popup selects PR. Overview becomes Activity, with Description and Checks beside it. Switch between them and confirm each section uses the full width.
 9. In PR > Tabs, toggle a tab such as Updates. The current tab stays visible. In PR > Blocked, add the display name of an author with both active and resolved demo threads. Resolved threads fold; active threads stay visible.
-10. Switch the native activity filter to Show everything to see update folding. Open a folded push's commit list, then switch to Files to check the compact file tree.
-11. Turn off ADOverride using the switch at the top of the popup. Its layout changes are removed and saved settings are kept. A native activity filter already selected by the extension is not automatically reset.
+10. Switch the native activity filter to Show everything to see update folding. Open a folded push's commit list.
+11. Open Files on a small demo PR with a fully loaded, expanded file tree. In PR > Files, enable Wide Files layout. File navigation is its indented subsetting; choose Drawer.
+12. The PR header, tabs, and actions remain visible while the code uses the available width. Click Files to open the drawer. Search by file name, select a file, and confirm selection does not mark it reviewed. Pin keeps the drawer beside the code; Unpin releases that width.
+13. Choose Bottom panel in the popup. The searchable file list moves below the code. Minimize and Expand change its height, and the code editor resizes with it. The layout choice survives reload. There is no Enter/Exit focus mode.
+14. On the fictional demo PR only, click a file's review checkbox and confirm it uses the native reviewed state. Unreviewed filters the current file inventory. No review action happens without a checkbox click.
+15. Turn Wide Files layout off to restore the native sidebar. If the native tree is collapsed or incomplete, the extension keeps it and shows a notice instead of an incomplete replacement.
+16. Turn off ADOverride using the switch at the top of the popup. Its layout changes are removed and saved settings are kept. A native activity filter already selected by the extension is not automatically reset.
 
 Do not approve, complete, resolve, or post on a real PR during these checks. No personal access token is required. The extension only works on dev.azure.com and HTTPS *.visualstudio.com sites. Parts it does not recognize stay unchanged. On other websites the popup asks you to open an Azure DevOps page.
 ```
@@ -149,34 +176,21 @@ Use the dashboard's publication controls to decide when approved changes go
 live. Submission and publication are separate from
 GitHub releases and are not performed by this repository's tag workflow.
 
-After publication, confirm the public listing shows version 0.11.19, the Offset icon, and the PR screenshot. Upload to the existing item so current users receive the update with their settings intact.
+After publication, confirm the public listing shows version 0.11.23, the Offset icon, the two Files comparisons, and the intended public developer details. Upload to the existing item so current users receive the update with their settings intact.
 
 ## Regenerating images
 
-To regenerate the first screenshot and README hero from the existing
-same-content Board comparison, without replacing the remaining gallery:
+To rebuild the five store screenshots from the approved real-layout README posters, regenerate the listing icon, and validate the two curated promotional tiles without replacing them:
 
 ```sh
-node scripts/store-media.mjs
-```
-
-To recapture all page/popup images, use an extension build matching the version
-you plan to advertise, then:
-
-```sh
-npm run build
-npm run screenshots
 npm run store:assets
 ```
 
-Publish these images alongside the matching package, not on the older 0.11.10 listing by itself.
+All five screenshots are 1280x800 JPEGs made from the approved PNG posters, not replacement fixture renders. The two Files posters replay captured native DOM/CSS with the actual 0.11.23 Files implementation and sample values. Matching regions retain the live capture's geometry within one CSS pixel. Each pair uses the same content, font size, viewport, and image scale. The measured 32% diff-width increase applies only to the displayed example.
 
-The first screenshot is a labeled 1280x800 before/after composition using the
-same fictional Board and viewport, with a PNG copy at `docs/images/board-hero.png`.
-The other four 1280x800 JPEGs show fictional fixtures; popup views overlay an
-actual popup capture on the corresponding fixture page. The 440x280 promotional
-tile and optional 1400x560 marquee are branded illustrations, not screenshots.
-The 128x128 listing icon uses the existing 96px icon with transparent padding.
+Keep raw captures, extracted styles/fonts, intermediate HTML, and private browser artifacts outside the repository and release kit. `npm run screenshots` remains a fixture/popup tool; it does not recreate the real-layout posters. Publish the artwork alongside the matching package, not as a claim about the older store build.
+
+The 440x280 promotional tile uses a branded Before/After PR Files comparison. The optional 1400x560 marquee compares both PR Files and Ticket Workspace. Both use the approved "More code. Less clutter." direction and real-layout captures with sample data. These PNGs are curated inputs; `npm run store:assets` validates their dimensions without overwriting them. The 128x128 listing icon uses the existing 96px Offset icon with transparent padding.
 
 Official references:
 [account](https://developer.chrome.com/docs/webstore/set-up-account),

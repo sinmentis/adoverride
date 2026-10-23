@@ -1,7 +1,8 @@
-import { authorKey, emptyPrSnapshot, isPrTabId, normalizeAuthor, parsePullRequest, updateRuns,
-  type FeedRowKind, type PrAuthorState, type PrFeature, type PrFilterState, type PrProfile, type PrSnapshot, type PrTabState } from './pr';
+import { authorKey, emptyPrSnapshot, isPrTabId, normalizeAuthor, parsePullRequest,
+  type FeedRowKind, type PrAuthorState, type PrFeature, type PrProfile, type PrSnapshot, type PrTabState } from './pr';
 import type { Preferences } from './preferences';
 import { rendered } from './ticket';
+import { createPrFiles } from './pr-files';
 
 const ROOT = 'data-ado-pr';
 const ROW = 'data-ado-pr-row';
@@ -17,6 +18,8 @@ const WIDE = 'data-ado-pr-wide';
 const VIEW = 'data-ado-pr-view';
 const PART = 'data-ado-pr-part';
 const TAB_UI = 'data-ado-pr-tab';
+const UPDATE = 'data-ado-pr-update';
+const COMMIT_PREVIEW = 'data-ado-pr-commit-preview';
 const VIEW_KEY = 'adoverride.pr.overviewTab';
 export type OverviewTab = 'activity' | 'description' | 'checks';
 const OVERVIEW_TABS: { id: Exclude<OverviewTab, 'activity'>; label: string }[] = [
@@ -24,7 +27,7 @@ const OVERVIEW_TABS: { id: Exclude<OverviewTab, 'activity'>; label: string }[] =
 export const DESCRIPTION_FOLD_HEIGHT = 240;
 const UI = 'data-ado-pr-ui';
 const STYLE = 'data-ado-pr-style';
-const OWNED = [ROOT, ROW, STATUS, PLACED, PASSED, SILENT, ORDER, OPEN, HIDE, FOLD, WIDE, VIEW, PART];
+const OWNED = [ROOT, ROW, STATUS, PLACED, PASSED, SILENT, ORDER, OPEN, HIDE, FOLD, WIDE, VIEW, PART, UPDATE, COMMIT_PREVIEW];
 
 const levels = Array.from({ length: 16 }, (_, index) => index + 1);
 export const PR_CSS = `
@@ -53,6 +56,15 @@ export const PR_CSS = `
 [${ROOT}~="compact-tree"] .repos-changes-explorer-tree .bolt-tree-cell .padding-vertical-8{padding-top:4px!important;padding-bottom:4px!important;}
 ${levels.map(level => `[${ROOT}~="compact-tree"] .repos-changes-explorer-tree tr[aria-level="${level}"] .bolt-tree-expand-button{margin-left:${(level - 1) * 8}px!important;}`).join('\n')}
 [${HIDE}]{display:none!important;}
+[${UPDATE}]>td{padding-top:0!important;padding-bottom:0!important;}
+[${UPDATE}]>.bolt-timeline-cell>.bolt-timeline-cell-content>.flex-grow>.padding-bottom-16{padding-bottom:4px!important;}
+[${UPDATE}] .bolt-table-card{min-height:0!important;box-shadow:none!important;}
+[${UPDATE}] .iteration-card-header{padding:0!important;margin:0!important;}
+[${UPDATE}] .iteration-card-header>.iteration-header{padding:8px 12px!important;min-height:0!important;}
+[${UPDATE}] .bolt-table-container+a.bolt-link{margin:6px 12px!important;}
+[${COMMIT_PREVIEW}] .bolt-table-two-line-cell{padding-top:4px!important;padding-bottom:4px!important;height:auto!important;}
+[${COMMIT_PREVIEW}] .repos-commits-table-content{padding-top:2px!important;padding-bottom:2px!important;min-height:0!important;}
+[${COMMIT_PREVIEW}] .commit-title{white-space:normal!important;overflow-wrap:anywhere;overflow:visible!important;text-overflow:clip!important;}
 [${ROOT}~="split"] #__bolt-tab-overview .bolt-tab-text{font-size:0!important;}
 [${ROOT}~="split"] #__bolt-tab-overview .bolt-tab-text::before,[${ROOT}~="split"] #__bolt-tab-overview .bolt-tab-text::after{content:"Activity"!important;font-size:var(--ado-pr-tab-font,14px);}
 [${ROOT}~="split"] #__bolt-tab-overview .bolt-tab-text::before{visibility:visible!important;height:auto!important;}
@@ -81,18 +93,17 @@ ${levels.map(level => `[${ROOT}~="compact-tree"] .repos-changes-explorer-tree tr
 
 const TOKENS: Record<PrFeature, string> = {
   compactHeader: 'compact-header', railStatus: 'rail', hidePassedChecks: 'passed', collapseReviewers: 'reviewers',
-  activeComments: '', hideTreeComments: 'tree-comments', compactTree: 'compact-tree',
+  hideTreeComments: 'tree-comments', compactTree: 'compact-tree',
   hideHeaderReviewers: '', foldDescription: '', foldUpdates: '', compactPushes: '', splitOverview: '',
+  focusFiles: '',
 };
 const EVERY_TAB: PrFeature[] = ['splitOverview', 'compactHeader', 'hideHeaderReviewers'];
-const OVERVIEW: PrFeature[] = ['railStatus', 'hidePassedChecks', 'collapseReviewers', 'foldDescription', 'activeComments', 'foldUpdates', 'compactPushes'];
-const FILES: PrFeature[] = ['hideTreeComments', 'compactTree'];
+const OVERVIEW: PrFeature[] = ['railStatus', 'hidePassedChecks', 'collapseReviewers', 'foldDescription', 'foldUpdates', 'compactPushes'];
+const FILES: PrFeature[] = ['hideTreeComments', 'compactTree', 'focusFiles'];
 
 function setAttribute(element: Element, name: string, value: string) {
   if (element.getAttribute(name) !== value) element.setAttribute(name, value);
 }
-function sleep(ms: number) { return new Promise(resolve => window.setTimeout(resolve, ms)); }
-function labelText(element: Element | null | undefined) { return element?.textContent?.replace(/\(\d+\)/g, '').trim().toLowerCase() ?? ''; }
 
 export function statusSections(card: Element): { section: HTMLElement; state: string }[] | null {
   const column = card.querySelector(':scope > .bolt-card-content > .flex-column');
@@ -117,6 +128,13 @@ export function feedRowKind(row: Element): FeedRowKind {
   if (!row.querySelector('.bolt-card') && (row.textContent ?? '').trim()) return 'update';
   return 'unknown';
 }
+export function commitRows(table: Element): HTMLElement[] | null {
+  const rows = [...table.querySelectorAll<HTMLElement>(':scope > tbody > tr[role="row"]')];
+  const total = Number(table.getAttribute('aria-rowcount'));
+  if (!Number.isSafeInteger(total) || total < 1 || rows.length !== total ||
+    rows.some(row => !row.querySelector('.commit-title')?.textContent?.trim() || row.hidden || row.getAttribute('aria-hidden') === 'true')) return null;
+  return rows;
+}
 // Active and Pending threads are open. Unknown states count as open so nothing unresolved is hidden.
 export function threadOpen(thread: Element): boolean {
   const label = thread.querySelector('[aria-label^="State button "]')?.getAttribute('aria-label') ?? '';
@@ -138,6 +156,7 @@ export function createPrController(document: Document, address: () => string) {
   let disposed = false;
   let scheduled = 0;
   const listeners = new Set<(value: PrSnapshot) => void>();
+  const files = createPrFiles(document, schedule);
   const tabElements = new Map<string, HTMLElement>();
   let overviewTab: OverviewTab = 'activity';
   try {
@@ -181,9 +200,6 @@ export function createPrController(document: Document, address: () => string) {
   const marked = new Set<Element>();
   const buttons = new Map<string, HTMLButtonElement>();
   const opened = new Set<string>();
-  const filters = new Map<string, PrFilterState>();
-  const touched = new Set<string>();
-  let filterBusy = false;
   // Thread authors seen during this page session, so filters and lazy loading don't shrink the list.
   let knownKey = '';
   const known = new Map<string, { name: string; threads: number }>();
@@ -220,6 +236,7 @@ export function createPrController(document: Document, address: () => string) {
   }
   function reset() {
     sync(); removeButtons(); removeTabs(); style.remove();
+    files.clear();
     if (resized) { resize.unobserve(resized); resized = null; }
   }
   function button(id: string, parent: Element, text: string, expanded: boolean, toggle: () => void, label?: string) {
@@ -242,54 +259,6 @@ export function createPrController(document: Document, address: () => string) {
     schedule();
   }
 
-  async function applyFilter(key: string, dropdown: HTMLElement) {
-    filterBusy = true;
-    const page = dropdown.closest('.repos-pr-details-page');
-    const scroll = page?.scrollTop ?? 0;
-    // Opening the menu and ADO's refocus can scroll the page; hold it still for the short operation.
-    const hold = () => { if (page && page.scrollTop !== scroll) page.scrollTop = scroll; };
-    page?.addEventListener('scroll', hold);
-    try {
-      const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-      const trigger = dropdown.querySelector<HTMLButtonElement>('button');
-      if (!trigger) { filters.set(key, 'unavailable'); return; }
-      const options = () => [...document.querySelectorAll<HTMLElement>('.bolt-callout [role="option"]')].filter(rendered);
-      const close = async () => {
-        if (!options().length) return;
-        trigger.click();
-        for (let i = 0; i < 20 && options().length; i++) await sleep(25);
-      };
-      trigger.click();
-      let target: HTMLElement | undefined;
-      for (let i = 0; i < 40 && !target; i++) {
-        await sleep(50);
-        if (disposed || touched.has(key)) { await close(); return; }
-        target = options().find(option => option.id.endsWith('active_comments'));
-      }
-      const selected = options().find(option => option.getAttribute('aria-selected') === 'true');
-      if (!target || !selected) { await close(); filters.set(key, 'unavailable'); }
-      else if (!selected.id.endsWith('everything')) { await close(); filters.set(key, 'kept'); }
-      else {
-        const expected = labelText(target);
-        target.click();
-        for (let i = 0; i < 20 && options().length; i++) await sleep(25);
-        filters.set(key, labelText(trigger) === expected ? 'applied' : 'unavailable');
-      }
-      // ADO moves focus back to the trigger after its own async update; wait for that before restoring.
-      await sleep(100);
-      hold();
-      if (focused && focused !== trigger && focused !== document.body && focused.isConnected) focused.focus({ preventScroll: true });
-      else if (document.activeElement === trigger) trigger.blur();
-    } catch (reason) {
-      console.error('[ADOverride] Could not select the native activity filter.', reason);
-      filters.set(key, 'unavailable');
-    } finally {
-      page?.removeEventListener('scroll', hold);
-      filterBusy = false;
-      schedule();
-    }
-  }
-
   function reconcile() {
     scheduled = 0;
     if (disposed) return;
@@ -306,6 +275,8 @@ export function createPrController(document: Document, address: () => string) {
       }
       if (!preferences.enabled) { reset(); publish({ ...emptyPrSnapshot(), status: 'paused', view: pr.view }); return; }
       const profile: PrProfile = preferences.pr;
+      let filesMessage: string | null = null;
+      if (pr.view !== 'files' || !profile.focusFiles) files.clear();
       const desired = new Map<Element, Map<string, string>>();
       const keepButtons = new Set<string>();
       const tokens: string[] = [];
@@ -314,7 +285,6 @@ export function createPrController(document: Document, address: () => string) {
       let passedChecks = 0;
       let silentReviewers = 0;
       let treeComments = 0;
-      let foldedUpdates = 0;
       let blockedThreads = 0;
       let descriptionFolded = false;
       let checksFailed = 0;
@@ -465,7 +435,6 @@ export function createPrController(document: Document, address: () => string) {
           .filter(row => !row.hidden && row.getAttribute('aria-hidden') !== 'true') : [];
         const dropdownHost = root.querySelector<HTMLElement>('.repos-activity-filter-dropdown');
         const blockedOpen = opened.has(`${pr.key}:blocked`);
-        const hiddenRows = new Set<HTMLElement>();
         const blockedRows: HTMLElement[] = [];
         for (const row of feedRows) {
           if (feedRowKind(row) !== 'comment') continue;
@@ -475,7 +444,7 @@ export function createPrController(document: Document, address: () => string) {
         }
         if (blockedRows.length && dropdownHost) {
           blockedThreads = blockedRows.length;
-          if (!blockedOpen) for (const row of blockedRows) { mark(row, HIDE, 'blocked'); hiddenRows.add(row); }
+          if (!blockedOpen) for (const row of blockedRows) mark(row, HIDE, 'blocked');
           keepButtons.add('blocked');
           button('blocked', dropdownHost, blockedOpen ? `Hide ${blockedRows.length} from blocked authors` : `${blockedRows.length} from blocked authors`,
             blockedOpen, () => toggle(`${pr.key}:blocked`));
@@ -483,20 +452,7 @@ export function createPrController(document: Document, address: () => string) {
         if (profile.foldUpdates) {
           if (feed) {
             applied.push('foldUpdates');
-            const visible = feedRows.filter(row => !hiddenRows.has(row));
-            for (const { start, end } of updateRuns(visible.map(feedRowKind))) {
-              const first = visible[start];
-              if (!first) continue;
-              const iteration = first.querySelector('.activity-feed-timeline-iteration')?.textContent?.trim();
-              const id = `${pr.key}:updates:${iteration || `row${feedRows.indexOf(first)}`}`;
-              const open = opened.has(id);
-              const count = end - start;
-              if (!open) { for (const row of visible.slice(start + 1, end + 1)) mark(row, HIDE, 'update'); foldedUpdates += count; }
-              const key = `updates:${id}`;
-              keepButtons.add(key);
-              const cards = first.querySelectorAll('.bolt-card');
-              button(key, cards[cards.length - 1] ?? first.querySelector(':scope > td') ?? first, open ? `Hide ${count} updates` : `+${count} more updates`, open, () => toggle(id));
-            }
+            for (const row of feedRows) if (feedRowKind(row) === 'update') mark(row, UPDATE);
           } else unsupported.push('foldUpdates');
         }
         if (profile.compactPushes) {
@@ -507,28 +463,38 @@ export function createPrController(document: Document, address: () => string) {
               const column = row.querySelector<HTMLElement>('.bolt-table-card > .bolt-card-content > .flex-column');
               const header = column?.querySelector(':scope > .iteration-card-header');
               if (!iteration || !column || !header) continue;
-              const details = [...column.children].filter(child => child !== header && !child.hasAttribute(UI));
-              if (!details.length) continue;
+              const tables = column.querySelectorAll('.iteration-commits-table');
+              if (!tables.length) continue;
+              const table = tables.length === 1 ? tables[0] : null;
+              const commits = table ? commitRows(table) : null;
+              if (!table || !commits) {
+                if (!unsupported.includes('compactPushes')) unsupported.push('compactPushes');
+                continue;
+              }
+              if (commits.length <= 2) continue;
               const id = `${pr.key}:commits:${iteration}`;
-              const open = opened.has(id);
-              if (!open) for (const child of details) mark(child, HIDE, 'commits');
+              const extra = commits.slice(2);
+              const active = document.activeElement;
+              const open = opened.has(id) || extra.some(row => active && row.contains(active) || row.querySelector('textarea,[contenteditable="true"]'));
+              if (!open) {
+                mark(table, COMMIT_PREVIEW);
+                for (const row of extra) mark(row, HIDE, 'commits');
+              }
               keepButtons.add(id);
-              button(id, column, open ? 'Hide commits' : 'Show commits', open, () => toggle(id));
+              button(id, column, open ? 'Show fewer commits' : 'Show more commits', open, () => toggle(id));
             }
           } else unsupported.push('compactPushes');
-        }
-        if (profile.activeComments) {
-          const dropdown = root.querySelector<HTMLElement>('.repos-activity-filter-dropdown');
-          const ready = dropdown && rendered(dropdown) && root.querySelector('table.activity-feed-list');
-          if (!filters.has(pr.key) && touched.has(pr.key)) filters.set(pr.key, 'kept');
-          if (!filters.has(pr.key) && ready && !filterBusy) { filters.set(pr.key, 'waiting'); void applyFilter(pr.key, dropdown); }
-          applied.push('activeComments');
         }
       } else if (pr.view === 'files') {
         const tree = root.querySelector('.repos-changes-explorer-tree');
         treeComments = tree ? tree.querySelectorAll('tr.bolt-tree-row .repos-file-explorer-tree-thread-item').length : 0;
-        for (const feature of FILES) if (profile[feature]) {
+        for (const feature of FILES.filter(feature => feature !== 'focusFiles')) if (profile[feature]) {
           if (tree) { tokens.push(TOKENS[feature]); applied.push(feature); } else unsupported.push(feature);
+        }
+        if (profile.focusFiles) {
+          const result = files.update(root, pr.key, profile.filesPosition);
+          if (result.applied) applied.push('focusFiles'); else unsupported.push('focusFiles');
+          filesMessage = result.message;
         }
         for (const item of tree?.querySelectorAll('tr.bolt-tree-row .repos-file-explorer-tree-thread-item') ?? []) {
           const name = normalizeAuthor(item.querySelector('.bolt-coin')?.getAttribute('aria-label') ?? '') || null;
@@ -584,7 +550,7 @@ export function createPrController(document: Document, address: () => string) {
       sync(desired);
       removeButtons(keepButtons);
       if (resized && !desired.get(resized)?.has(PLACED)) { resize.unobserve(resized); resized = null; }
-      const filter = profile.activeComments && pr.view === 'overview' ? filters.get(pr.key) ?? 'waiting' : 'off';
+      const filter = pr.view === 'overview' ? 'kept' : 'off';
       const relevant = [...EVERY_TAB, ...(pr.view === 'overview' ? OVERVIEW : pr.view === 'files' ? FILES : [])];
       const missing = unsupported.filter(feature => relevant.includes(feature));
       if (knownKey !== pr.key) { known.clear(); knownKey = pr.key; }
@@ -596,9 +562,9 @@ export function createPrController(document: Document, address: () => string) {
       const blockedAll: PrAuthorState[] = [...known].map(([key, item]) => ({ name: item.name, threads: item.threads, blocked: blocked.has(key) }));
       for (const name of profile.blockedAuthors) if (!known.has(authorKey(name))) blockedAll.push({ name, threads: 0, blocked: true });
       publish({ version: 2, status: applied.length || tabs.some(tab => tab.hidden) ? 'active' : 'original', view: pr.view, applied, unsupported: missing,
-        passedChecks, silentReviewers, treeComments, foldedUpdates, blockedThreads, descriptionFolded, filter, tabs,
+        passedChecks, silentReviewers, treeComments, foldedUpdates: 0, blockedThreads, descriptionFolded, filter, tabs,
         authors: blockedAll.slice(0, 200),
-        message: missing.length ? 'Some parts of this page were not recognized and keep the native layout.' : null });
+        message: filesMessage ?? (missing.length ? 'Some parts of this page were not recognized and keep the native layout.' : null) });
     } catch (reason) {
       reset();
       console.error('[ADOverride] Could not customize the pull request page.', reason);
@@ -617,16 +583,8 @@ export function createPrController(document: Document, address: () => string) {
     })) schedule();
   });
   observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true,
-    attributeFilter: ['class', 'hidden', 'aria-hidden', 'aria-selected', 'aria-expanded'] });
+    attributeFilter: ['class', 'hidden', 'aria-hidden', 'aria-selected', 'aria-expanded', 'aria-checked', 'aria-rowcount'] });
   resize.observe(document.documentElement);
-  const interaction = (event: Event) => {
-    if (!event.isTrusted || !(event.target instanceof Element) || !event.target.closest('.repos-activity-filter-dropdown') ||
-      event.target.closest(`[${UI}]`)) return;
-    const pr = parsePullRequest(address());
-    if (pr) touched.add(pr.key);
-  };
-  document.addEventListener('pointerdown', interaction, true);
-  document.addEventListener('keydown', interaction, true);
   // The native Overview tab now reads Activity; a real click on it returns to the feed.
   const nativeOverviewClick = (event: Event) => {
     if (!event.isTrusted || !(event.target instanceof Element) || !event.target.closest('#__bolt-tab-overview')) return;
@@ -654,12 +612,11 @@ export function createPrController(document: Document, address: () => string) {
     dispose() {
       disposed = true; observer.disconnect(); resize.disconnect();
       if (scheduled) window.cancelAnimationFrame(scheduled);
-      document.removeEventListener('pointerdown', interaction, true);
-      document.removeEventListener('keydown', interaction, true);
       document.removeEventListener('click', nativeOverviewClick, true);
       document.removeEventListener('focusin', focusChange);
       document.removeEventListener('focusout', focusChange);
       reset(); listeners.clear();
+      files.dispose();
     },
   };
 }

@@ -27,7 +27,8 @@ svg.bolt-status{width:24px;height:24px;flex-shrink:0;} svg.repos-reviewer-vote-i
 .repos-reviewer{padding:10px 8px 10px 12px;min-height:55px;} .repos-pr-no-items-well{padding:12px;}
 .bolt-button{font:inherit;padding:6px 12px;border:1px solid #8a8886;border-radius:2px;background:transparent;color:inherit;}
 table{border-collapse:collapse;width:100%;} td{padding:0;}
-.bolt-timeline-row>td{padding:8px 0;} .iteration-card{min-height:72px;} .repos-discussion-thread{min-height:120px;padding:12px;}
+.bolt-timeline-row>td{padding:0;} .iteration-card{min-height:72px;} .repos-discussion-thread{min-height:120px;padding:12px;}
+.padding-bottom-16{padding-bottom:16px;} .fixture-event{min-height:36px;}
 .bolt-callout{z-index:10;background:#fff;box-shadow:0 6px 14px rgba(0,0,0,.2);} .ms-vss-web-vsts-theme-dark .bolt-callout{background:#252423;}
 .bolt-list-box-row{cursor:pointer;} .bolt-list-box-row>td{padding:6px 12px;}
 .pr-header-reviewers .bolt-coin{display:inline-block;width:24px;height:24px;border-radius:50%;background:#8a8886;margin-left:4px;}
@@ -146,7 +147,7 @@ export function commentThread(author: string, text: string, state: 'Active' | 'R
 function feedRow({ kind, author, iteration }: (typeof ROWS)[number], index: number) {
   const body = kind === 'composer' ? `<div class="repos-comment-card bolt-card"><div class="padding-vertical-8 padding-horizontal-20">Add a comment</div></div>` :
     kind === 'push' ? pushCard(iteration ?? 0) :
-    kind === 'system' ? `<div class="flex-row flex-center"><span>Sample Reviewer joined as a reviewer</span></div>` :
+    kind === 'system' ? `<div class="flex-grow scroll-hidden"><div class="flex-row flex-grow padding-bottom-16 scroll-hidden padding-left-8 padding-right-4"><div class="fixture-event flex-row flex-center"><span>Sample Reviewer joined as a reviewer</span></div></div></div>` :
     kind === 'placeholder' ? `<div class="shimmer" style="height:40px"></div>` :
     commentThread(author ?? 'Sample Reviewer', `A fictional review comment ${index}`, kind === 'active' ? 'Active' : kind === 'closed' ? 'Closed' : 'Resolved');
   const sequence = kind === 'push' ? `<div class="activity-feed-sequence bolt-timeline-sequence flex-column flex-center flex-noshrink">
@@ -156,10 +157,10 @@ function feedRow({ kind, author, iteration }: (typeof ROWS)[number], index: numb
 }
 // Real ADO shows the commit table only on recent pushes; older ones are header-only.
 function pushCard(iteration: number) {
-  const commits = iteration >= 11 ? [1, 2, 3].map(n => `<tr class="bolt-table-row" role="row"><td>Fictional commit ${iteration}.${n}</td></tr>`).join('') : '';
+  const commits = iteration >= 11 ? [1, 2, 3].map(n => `<tr class="bolt-table-row" role="row"><td class="bolt-table-two-line-cell" role="gridcell"><div class="bolt-table-two-line-cell-item flex-row"><a class="bolt-table-link bolt-link" href="#commit-${iteration}-${n}"><div class="commit-title text-ellipsis">Fictional commit ${iteration}.${n}</div></a></div></td></tr>`).join('') : '';
   return `<div class="bolt-table-card bolt-card flex-column iteration-card" data-fixture-push="${iteration}"><div class="bolt-card-content flex-row flex-grow"><div class="flex-column flex-grow scroll-hidden">
     <a class="iteration-card-header bolt-link" href="?_a=files&iteration=${iteration}"><div class="flex-row iteration-header"><span class="font-weight-semibold">Sample Author pushed ${commits ? 3 : 1} commits</span></div></a>
-    ${commits ? `<div class="bolt-table-container flex-grow" data-fixture-commits="${iteration}"><table class="iteration-commits-table bolt-table" role="grid"><tbody>${commits}</tbody></table></div>
+    ${commits ? `<div class="bolt-table-container flex-grow" data-fixture-commits="${iteration}"><table class="iteration-commits-table bolt-table" role="grid" aria-rowcount="3"><tbody>${commits}</tbody></table></div>
     <a class="margin-16 bolt-link" href="?_a=commits" data-fixture-all-commits="${iteration}">View all commits</a>` : ''}
   </div></div></div>`;
 }
@@ -241,10 +242,10 @@ const TREE: { level: number; name: string; comment?: boolean; folder?: boolean; 
   { level: 6, name: 'A fictional inline review comment', comment: true, author: 'Sample Bot' }, { level: 5, name: 'warmer_scheduler_configuration_test.go' },
   { level: 6, name: 'Another fictional review comment', comment: true, author: 'Sample Reviewer' }, { level: 3, name: 'README.md' },
 ];
-export function prFilesHtml({ dark = false } = {}) {
-  const rows = TREE.map(({ level, name, comment, folder, author }) => `<tr class="bolt-tree-row bolt-table-row bolt-list-row single-click-activation" role="row" aria-level="${level}"${folder ? ' aria-expanded="true"' : ''} data-fixture-tree="${comment ? 'comment' : 'file'}">
+export function prFilesHtml({ dark = false, nativeEditorSizing = false, virtualTree = false } = {}) {
+  const rows = TREE.map(({ level, name, comment, folder, author }, index) => `<tr class="bolt-tree-row bolt-table-row bolt-list-row single-click-activation" role="row" aria-level="${level}"${folder ? ' aria-expanded="true"' : ''} data-row-index="${index}" data-fixture-tree="${comment ? 'comment' : 'file'}">
     <td class="bolt-table-cell-compact bolt-table-cell bolt-list-cell"></td>
-    <td class="bolt-table-cell bolt-list-cell"><div class="bolt-table-cell-content flex-row flex-center"></div></td>
+    <td class="bolt-table-cell bolt-list-cell"><div class="bolt-table-cell-content flex-row flex-center">${!folder && !comment ? `<div role="checkbox" aria-label="Mark as reviewed" tabindex="0" aria-checked="${name.endsWith('_test.go')}"></div>` : ''}</div></td>
     <td class="bolt-tree-cell bolt-table-cell bolt-list-cell"><div class="${comment ? 'repos-file-explorer-tree-thread-item rhythm-horizontal-4 ' : 'scroll-hidden flex-grow padding-0 '}bolt-table-cell-content flex-row flex-center">
       <span class="fluent-icons-enabled"><span class="bolt-tree-expand-button font-size cursor-pointer flex-noshrink fabric-icon small" style="margin-left: ${(level - 1) * 16}px;">${folder ? '&#9662;' : ''}</span></span>
       ${comment ? `<div><div class="bolt-coin size16" aria-label="${author}"></div></div><div class="flex-grow text-ellipsis">${name}</div>` : `<div class="padding-vertical-8 scroll-hidden flex-grow flex-row flex-center"><span class="text-ellipsis"><span>${name}</span></span></div>`}
@@ -254,12 +255,12 @@ export function prFilesHtml({ dark = false } = {}) {
     <div class="repos-pr-details-page flex-grow custom-scrollbar scroll-auto-hide bolt-page v-scroll-auto flex-column bolt-page-grey">
       ${header('files')}
       <div class="page-content flex-column flex-noshrink flex-grow rhythm-vertical-16 padding-horizontal-0 padding-bottom-0"><div class="flex-column flex-grow">
-        <div class="repos-compare-toolbar flex-row flex-center"><button class="bolt-button">All changes</button><span>6 changed files</span></div>
+        <div class="repos-compare-toolbar flex-row flex-center"><button class="bolt-button">All changes</button><button class="bolt-button" data-fixture-file-filter>Filter</button><span>6 changed files</span></div>
         <div class="scroll-hidden bolt-page-grey repos-changes-explorer-splitter vss-Splitter--container vss-Splitter--container-row">
           <div class="vss-Splitter--pane-fixed flex-column relative"><div class="absolute-fill flex-grow flex-column v-scroll-auto"><div class="bolt-table-container flex-grow">
-            <table class="repos-changes-explorer-tree repos-file-explorer-tree body-xl bolt-table bolt-list body-m relative scroll-hidden" role="treegrid"><tbody>${rows}</tbody></table>
+            <table class="repos-changes-explorer-tree repos-file-explorer-tree body-xl bolt-table bolt-list body-m relative scroll-hidden" role="treegrid" aria-rowcount="${TREE.length}"><tbody>${rows}</tbody></table>
           </div></div></div>
-          <div class="flex-grow v-scroll-auto">${TREE.filter(row => !row.folder && !row.comment).map(row => `<div class="diff">${row.name}</div>`).join('')}
+          <div class="vss-Splitter--pane-flexible flex-grow v-scroll-auto" style="min-width:0;flex:1;${nativeEditorSizing ? 'position:relative;' : ''}">${nativeEditorSizing ? '<canvas data-fixture-editor style="position:absolute;inset:0;pointer-events:none"></canvas>' : ''}${TREE.filter(row => !row.folder && !row.comment).map(row => `<div class="diff">${row.name}</div>`).join('')}
             ${TREE.filter(row => row.comment).map(row => `<div class="monaco-zone" data-fixture-inline="${row.author}"><div class="repos-monaco-discussion-host repos-editor-discussion-host">
               <div class="repos-editor-discussion margin-vertical-8">${commentThread(row.author ?? '', row.name, row.author === 'Sample Bot' ? 'Closed' : 'Active')}</div></div></div>`).join('')}
             <div class="monaco-zone" data-fixture-inline="Sample Bot active"><div class="repos-monaco-discussion-host repos-editor-discussion-host">
@@ -267,5 +268,64 @@ export function prFilesHtml({ dark = false } = {}) {
         </div>
       </div></div>
     </div>
-  </div></body></html>`;
+  </div><script>
+    ${nativeEditorSizing ? `
+    const editor = document.querySelector('.vss-Splitter--pane-flexible');
+    const canvas = editor.querySelector('canvas');
+    const layoutEditor = () => {
+      canvas.width = editor.clientWidth;
+      canvas.height = editor.clientHeight;
+      window.__fixtureResizeEvents = (window.__fixtureResizeEvents || 0) + 1;
+    };
+    window.addEventListener('resize', layoutEditor);
+    layoutEditor();
+    ` : ''}
+    const bindRows = () => { for (const row of document.querySelectorAll('.repos-changes-explorer-tree tr')) {
+      row.querySelector('[role=checkbox]')?.addEventListener('click', event => {
+        event.stopPropagation();
+        event.currentTarget.setAttribute('aria-checked', String(event.currentTarget.getAttribute('aria-checked') !== 'true'));
+        window.__fixtureReviewWrites = (window.__fixtureReviewWrites || 0) + 1;
+      });
+      row.querySelector('.bolt-tree-cell .text-ellipsis')?.addEventListener('click', () => {
+        for (const other of document.querySelectorAll('.repos-changes-explorer-tree tr')) other.setAttribute('aria-selected', String(other === row));
+        window.__fixtureFileClicks = (window.__fixtureFileClicks || 0) + 1;
+      });
+    } };
+    document.querySelector('[data-fixture-file-filter]').addEventListener('click', () => {
+      window.__fixtureNativeFilterOpens = (window.__fixtureNativeFilterOpens || 0) + 1;
+    });
+    ${virtualTree ? `
+    const tree = document.querySelector('.repos-changes-explorer-tree');
+    const source = tree.closest('.vss-Splitter--pane-fixed');
+    const scroll = source.firstElementChild;
+    const spacer = scroll.firstElementChild;
+    const template = tree.querySelector('tr:not([aria-expanded]):has([role=checkbox])').cloneNode(true);
+    Object.assign(template.querySelector('[role=checkbox]').style, { width: '16px', height: '16px', border: '1px solid currentColor' });
+    Object.assign(scroll.style, { position: 'absolute', inset: '0', overflow: 'auto' });
+    Object.assign(spacer.style, { position: 'relative', flexShrink: '0', height: '19904px' });
+    Object.assign(tree.style, { position: 'absolute', width: '100%' });
+    tree.setAttribute('aria-rowcount', '622');
+    const renderRows = () => {
+      const start = Math.max(0, Math.floor(scroll.scrollTop / 32) - 3);
+      const end = Math.min(622, start + Math.ceil(scroll.clientHeight / 32) + 7);
+      const rows = [];
+      for (let index = start; index < end; index++) {
+        const row = template.cloneNode(true);
+        row.style.height = '32px';
+        row.setAttribute('data-row-index', String(index));
+        row.setAttribute('aria-selected', String(index === 555));
+        row.querySelector('.text-ellipsis').textContent = 'sample-' + index + '.yaml';
+        row.querySelector('[role=checkbox]').setAttribute('aria-checked', String(index % 2 === 0));
+        rows.push(row);
+      }
+      tree.style.top = start * 32 + 'px';
+      tree.tBodies[0].replaceChildren(...rows);
+      bindRows();
+    };
+    scroll.addEventListener('scroll', renderRows);
+    new ResizeObserver(renderRows).observe(scroll);
+    scroll.scrollTop = 555 * 32;
+    renderRows();
+    ` : 'bindRows();'}
+  </script></body></html>`;
 }

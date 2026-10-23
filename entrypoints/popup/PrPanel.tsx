@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
-import { Button, Flash, Text, TextInput, ToggleSwitch } from '@primer/react';
+import { Button, Flash, Select, Text, TextInput, ToggleSwitch } from '@primer/react';
 import { UnderlinePanels } from '@primer/react/experimental';
-import { authorKey, isAuthorName, PR_FEATURES, PR_FEATURE_IDS, type PrFeature, type PrSnapshot } from '@/lib/pr';
+import { authorKey, isAuthorName, PR_FEATURES, type PrFeature, type PrSnapshot } from '@/lib/pr';
 import type { PreferenceAction, Preferences } from '@/lib/preferences';
 import { Help } from './Help';
 
@@ -15,8 +15,6 @@ function status(snapshot: PrSnapshot): string {
     if (snapshot.passedChecks) parts.push(`${snapshot.passedChecks} passed folded`);
     if (snapshot.silentReviewers) parts.push(`${snapshot.silentReviewers} silent reviewers folded`);
     if (snapshot.descriptionFolded) parts.push('description folded');
-    if (snapshot.foldedUpdates) parts.push(`${snapshot.foldedUpdates} updates folded`);
-    if (snapshot.filter === 'applied') parts.push('active comments shown');
     if (snapshot.filter === 'kept') parts.push('your filter kept');
   }
   if (snapshot.view === 'files' && snapshot.treeComments && snapshot.applied.includes('hideTreeComments')) parts.push(`${snapshot.treeComments} comment rows hidden`);
@@ -71,10 +69,63 @@ export function PrPanel({ preferences, snapshot, saving, update }: {
       <UnderlinePanels.Tab value="tabs">Tabs</UnderlinePanels.Tab>
       <UnderlinePanels.Tab value="blocked">Blocked</UnderlinePanels.Tab>
       <UnderlinePanels.Panel value="overview">
-        {PR_FEATURE_IDS.filter(feature => PR_FEATURES[feature].tab === 'overview').map(row)}
+        <fieldset className="settings-section">
+          <legend>Layout</legend>
+          <div className="ticket-row">
+            <div className="label-with-help"><Text as="label" htmlFor={`${id}-overview-layout`}>Overview layout</Text>
+              <Help label="Overview layout" text={PR_FEATURES.splitOverview.help} /></div>
+            <Select id={`${id}-overview-layout`} size="small" value={preferences.pr.splitOverview ? 'tabs' : 'single'} disabled={saving}
+              onChange={event => void update({ kind: 'pr-feature', feature: 'splitOverview', enabled: event.target.value === 'tabs' })}>
+              <Select.Option value="tabs">Separate tabs</Select.Option>
+              <Select.Option value="single">Single page</Select.Option>
+            </Select>
+          </div>
+          {!preferences.pr.splitOverview && <div className="settings-children" role="group" aria-label="Single-page options">
+            {row('railStatus')}
+            {row('foldDescription')}
+          </div>}
+        </fieldset>
+        <fieldset className="settings-section">
+          <legend>Activity</legend>
+          {row('foldUpdates')}
+          <div className="ticket-row">
+            <div className="label-with-help"><Text as="label" htmlFor={`${id}-commit-details`}>Commit details</Text>
+              <Help label="Commit details" text={PR_FEATURES.compactPushes.help} /></div>
+            <Select id={`${id}-commit-details`} size="small" value={preferences.pr.compactPushes ? 'preview' : 'all'} disabled={saving}
+              onChange={event => void update({ kind: 'pr-feature', feature: 'compactPushes', enabled: event.target.value === 'preview' })}>
+              <Select.Option value="preview">Preview 2</Select.Option>
+              <Select.Option value="all">All loaded</Select.Option>
+            </Select>
+          </div>
+        </fieldset>
+        <details className="settings-details">
+          <summary>Header</summary>
+          {row('compactHeader')}
+          {row('hideHeaderReviewers')}
+        </details>
+        <details className="settings-details">
+          <summary>Checks &amp; reviewers</summary>
+          {row('hidePassedChecks')}
+          {row('collapseReviewers')}
+        </details>
       </UnderlinePanels.Panel>
       <UnderlinePanels.Panel value="files">
-        {PR_FEATURE_IDS.filter(feature => PR_FEATURES[feature].tab === 'files').map(row)}
+        <div role="group" aria-labelledby={`${id}-focusFiles`}>
+          {row('focusFiles')}
+          {preferences.pr.focusFiles && <div className="ticket-row ticket-leaf">
+            <Text as="label" htmlFor={`${id}-files-position`}>File navigation</Text>
+            <Select id={`${id}-files-position`} size="small" value={preferences.pr.filesPosition} disabled={saving}
+              onChange={event => void update({ kind: 'pr-files-position', position: event.target.value === 'bottom' ? 'bottom' : 'drawer' })}>
+              <Select.Option value="drawer">Drawer</Select.Option>
+              <Select.Option value="bottom">Bottom panel</Select.Option>
+            </Select>
+          </div>}
+        </div>
+        <details className="settings-details">
+          <summary>Native file tree</summary>
+          {row('hideTreeComments')}
+          {row('compactTree')}
+        </details>
       </UnderlinePanels.Panel>
       <UnderlinePanels.Panel value="tabs">
         <section aria-label="Visible pull request tabs">

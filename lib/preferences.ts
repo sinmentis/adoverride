@@ -4,7 +4,7 @@ import { decodeCardLayout, decodeCardLayouts, decodeWorkspaceLayouts, isCardColu
   type CardColumn, type CardLayout, type CardLayouts } from './card-layout';
 import { decodeBoardProfile, defaultBoardProfile, isBoardCardField, isBoardPresentationFeature,
   type BoardCardField, type BoardPresentationFeature, type BoardProfile } from './board-profile';
-import { decodePrProfile, isAuthorName, isPrFeature, isPrTabId, kiwifruitPrProfile, setBlockedAuthor, setHiddenTab, type PrFeature, type PrProfile } from './pr';
+import { decodePrProfile, isAuthorName, isPrFeature, isPrTabId, kiwifruitPrProfile, setBlockedAuthor, setHiddenTab, type PrFeature, type PrFilesPosition, type PrProfile } from './pr';
 export { defaultBoardProfile, type BoardProfile } from './board-profile';
 
 export const DEFAULT_FEATURES = {
@@ -359,6 +359,7 @@ export type PreferenceAction =
   | { kind: 'reset-ticket-layout' }
   | { kind: 'reset-ticket' }
   | { kind: 'pr-feature'; feature: PrFeature; enabled: boolean }
+  | { kind: 'pr-files-position'; position: PrFilesPosition }
   | { kind: 'pr-tab'; id: string; hidden: boolean }
   | { kind: 'pr-author'; name: string; blocked: boolean }
   | { kind: 'reset-pr' }
@@ -372,6 +373,7 @@ export function decodePreferenceAction(value: unknown): PreferenceAction {
   if (!isObject(value)) throw new Error('Invalid preferences action.');
   if (value.kind === 'initialize' || value.kind === 'reset-all' || value.kind === 'reset-ticket' || value.kind === 'reset-ticket-layout' || value.kind === 'reset-pr') return { kind: value.kind };
   if (value.kind === 'pr-feature' && isPrFeature(value.feature) && typeof value.enabled === 'boolean') return { kind: value.kind, feature: value.feature, enabled: value.enabled };
+  if (value.kind === 'pr-files-position' && (value.position === 'drawer' || value.position === 'bottom')) return { kind: value.kind, position: value.position };
   if (value.kind === 'pr-tab' && isPrTabId(value.id) && typeof value.hidden === 'boolean') return { kind: value.kind, id: value.id, hidden: value.hidden };
   if (value.kind === 'pr-author' && isAuthorName(value.name) && typeof value.blocked === 'boolean') return { kind: value.kind, name: value.name, blocked: value.blocked };
   if (value.kind === 'replace-configuration' || value.kind === 'restore-configuration') {
@@ -454,6 +456,7 @@ export function applyPreferenceAction(current: Preferences, action: PreferenceAc
   }
   if (action.kind === 'ticket-layout-lock') return { ...current, ticket: { ...current.ticket, layoutLocked: action.locked } };
   if (action.kind === 'pr-feature') return { ...current, pr: { ...current.pr, [action.feature]: action.enabled } };
+  if (action.kind === 'pr-files-position') return { ...current, pr: { ...current.pr, filesPosition: action.position } };
   if (action.kind === 'pr-tab') return { ...current, pr: setHiddenTab(current.pr, action.id, action.hidden) };
   if (action.kind === 'pr-author') return { ...current, pr: setBlockedAuthor(current.pr, action.name, action.blocked) };
   // A reset restores layout defaults but keeps the curated block list.
@@ -556,7 +559,7 @@ export function preferenceSaveMessage(action: PreferenceAction): string {
   if (action.kind === 'board-columns') return action.equal ? 'Equal Board widths enabled' : 'Original Board widths restored';
   if (action.kind === 'pr-tab') return action.hidden ? 'Tab hidden' : 'Tab shown';
   if (action.kind === 'pr-author') return action.blocked ? 'Author blocked' : 'Author unblocked';
-  if (action.kind === 'pr-feature' || action.kind === 'reset-pr') return 'Pull request settings saved';
+  if (action.kind === 'pr-feature' || action.kind === 'pr-files-position' || action.kind === 'reset-pr') return 'Pull request settings saved';
   if (action.kind === 'replace-configuration') return 'Configuration imported';
   if (action.kind === 'restore-configuration') return 'Backup restored';
   if (action.kind === 'undo-ticket') return 'Change undone';

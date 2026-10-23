@@ -18,20 +18,21 @@ export const PR_FEATURES = {
     help: 'Optional reviewers without a vote fold into a "+N with no vote" button. Required reviewers always stay.' },
   foldDescription: { title: 'Fold long description', tab: 'overview',
     help: 'When Overview is not split: descriptions taller than about 12 lines show a preview with Show more. Editing always shows the full text.' },
-  activeComments: { title: 'Start on active comments', tab: 'overview',
-    help: 'Pick the native "Active comments" activity filter once when a PR opens. Your own choice is never overridden.' },
-  foldUpdates: { title: 'Fold update runs', tab: 'overview',
-    help: 'Two or more pushes or system events in a row fold behind the first one. Comments stay where they are.' },
-  compactPushes: { title: 'Compact pushes', tab: 'overview',
-    help: 'Push cards show only "pushed N commits". Show commits opens the commit list.' },
+  foldUpdates: { title: 'Compact spacing', tab: 'overview',
+    help: 'Reduce spacing around push and system events. Every update stays visible in its original order.' },
+  compactPushes: { title: 'Commit preview', tab: 'overview',
+    help: 'Preview the first two loaded commits in longer lists. Short lists stay unchanged. Show more commits reveals the remaining loaded rows; native links to all commits stay visible.' },
   hideTreeComments: { title: 'Hide comments in file tree', tab: 'files',
     help: 'Comment threads stop showing as rows in the changed-files tree. Comments stay in the diff.' },
   compactTree: { title: 'Compact file tree', tab: 'files',
     help: 'Half the indentation and tighter rows, so long paths fit in the tree.' },
+  focusFiles: { title: 'Wide Files layout', tab: 'files',
+    help: "Use a file drawer or bottom panel without hiding PR actions. Complete file lists get custom search. Large or collapsed trees keep native navigation and ADO's Filter inside the panel." },
 } as const;
 export type PrFeature = keyof typeof PR_FEATURES;
 export type PrFlags = Record<PrFeature, boolean>;
-export interface PrProfile extends PrFlags { hiddenTabs: string[]; blockedAuthors: string[] }
+export type PrFilesPosition = 'drawer' | 'bottom';
+export interface PrProfile extends PrFlags { hiddenTabs: string[]; blockedAuthors: string[]; filesPosition: PrFilesPosition }
 export const PR_FEATURE_IDS = Object.keys(PR_FEATURES) as PrFeature[];
 
 // Tab ids are the native `__bolt-tab-<id>` suffix: stable contribution ids, not labels.
@@ -62,7 +63,8 @@ export function isAuthorName(value: unknown): value is string {
   return typeof value === 'string' && normalizeAuthor(value).length > 0 && normalizeAuthor(value).length <= MAX_AUTHOR_LENGTH;
 }
 export function kiwifruitPrProfile(): PrProfile {
-  return { ...Object.fromEntries(PR_FEATURE_IDS.map(id => [id, true])) as PrFlags, hiddenTabs: [...KIWIFRUIT_HIDDEN_TABS], blockedAuthors: [] };
+  return { ...Object.fromEntries(PR_FEATURE_IDS.map(id => [id, true])) as PrFlags,
+    filesPosition: 'drawer', hiddenTabs: [...KIWIFRUIT_HIDDEN_TABS], blockedAuthors: [] };
 }
 export function prFlagCount(profile: PrProfile): number {
   return PR_FEATURE_IDS.filter(id => profile[id]).length;
@@ -75,6 +77,10 @@ export function decodePrProfile(value: unknown): PrProfile {
     if (value[id] === undefined) continue;
     if (typeof value[id] !== 'boolean') throw new Error(`Invalid pull request setting: ${id}.`);
     profile[id] = value[id];
+  }
+  if (value.filesPosition !== undefined) {
+    if (value.filesPosition !== 'drawer' && value.filesPosition !== 'bottom') throw new Error('Invalid file navigation position.');
+    profile.filesPosition = value.filesPosition;
   }
   if (value.hiddenTabs !== undefined) {
     if (!Array.isArray(value.hiddenTabs) || value.hiddenTabs.length > MAX_HIDDEN_TABS || !value.hiddenTabs.every(isPrTabId) ||
@@ -171,14 +177,3 @@ export function decodePrSnapshot(value: unknown): PrSnapshot {
 }
 
 export type FeedRowKind = 'composer' | 'comment' | 'update' | 'placeholder' | 'unknown';
-// Runs of two or more consecutive update rows. Anything else breaks a run.
-export function updateRuns(kinds: FeedRowKind[]): { start: number; end: number }[] {
-  const runs: { start: number; end: number }[] = [];
-  let start = -1;
-  kinds.forEach((kind, index) => {
-    if (kind === 'update') { if (start < 0) start = index; }
-    else { if (start >= 0 && index - start >= 2) runs.push({ start, end: index - 1 }); start = -1; }
-  });
-  if (start >= 0 && kinds.length - start >= 2) runs.push({ start, end: kinds.length - 1 });
-  return runs;
-}

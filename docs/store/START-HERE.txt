@@ -1,13 +1,28 @@
-ADOverride 0.11.19 - Chrome Web Store update
+ADOverride 0.11.23 - release kit
 
-1. Open https://chrome.google.com/webstore/devconsole
-2. Select the existing ADOverride item: ijeoidnjoamdkpfgbnhfajddhpakobjo. Do not create a new item.
-3. Upload adoverride-0.11.19-chrome.zip as the new extension package. It comes from the v0.11.19 GitHub release; SHA256SUMS contains its checksum.
-4. Check the package title: ADOverride - Customize Azure DevOps. The new short description also comes from this package.
-5. Replace the detailed description with all of LISTING.txt and the five screenshots in the order below. Replace the store icon with icon-128.png and the promotional tile with promo-440x280.png. If you use a marquee, replace it with marquee-1400x560.png.
-6. Data handling is unchanged from 0.11.18. If updating from 0.11.10, review Privacy practices for the PR features: the extension reads comment author display names and saves blocked author names. Check the current data-use definitions, including Personally identifiable information, before confirming the declarations.
-7. Check the homepage, support, and privacy URLs below. Use the reviewer instructions in the linked checklist, including its PR steps.
-8. Save and submit the update. After approval, publish it and check that the public listing shows 0.11.19 and the new Offset icon.
+This kit is prepared locally. It has not been submitted to Chrome Web Store or published as a GitHub release.
+
+1. Open PREVIEW.html to inspect the five promotional screenshots.
+2. Read chrome-web-store.md for the full store checklist, reviewer instructions, and public developer-address settings. Publisher contact details are account settings, not part of the extension package.
+3. Review and commit the pending source, images, and privacy policy. Push to main, wait for CI, and follow publishing.md to publish the approved v0.11.23 tag. No script in this kit publishes anything.
+4. Download the resulting adoverride-0.11.23-chrome.zip and SHA256SUMS from GitHub Releases. Use that matching artifact/checksum pair for the store submission. The included ZIP/checksum pair is the locally tested candidate.
+5. Open https://chrome.google.com/webstore/devconsole and select the existing item ijeoidnjoamdkpfgbnhfajddhpakobjo. Do not create a new item.
+6. Upload only the Chrome extension ZIP in the package section, not a source archive or the outer release-kit ZIP.
+7. Paste store/LISTING.txt into the detailed description. Replace the screenshots in the order below. The manifest supplies the title and short description.
+8. Review Privacy practices, including transient file paths/reviewed states, saved blocked-author names, and explicit native review-checkbox clicks. Confirm the linked privacy policy is current before submission.
+9. Save and submit for review. Choose the dashboard's publication timing yourself. After publication, check the version, screenshots, and public developer details while signed out.
+
+Screenshots, in order (all 1280x800):
+store/01-pr-files-wide.jpg
+store/02-pr-files-bottom.jpg
+store/03-pr-commits.jpg
+store/04-pr-reading-space.jpg
+store/05-work-item-layout.jpg
+
+Other listing assets:
+store/icon-128.png
+store/promo-440x280.png
+store/marquee-1400x560.png (optional)
 
 Homepage:
 https://github.com/sinmentis/adoverride
@@ -15,21 +30,11 @@ Support:
 https://github.com/sinmentis/adoverride/issues
 Privacy policy:
 https://github.com/sinmentis/adoverride/blob/main/PRIVACY.md
+Existing store item:
+https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo
 
-Screenshots, in order (all 1280x800):
-01-board.jpg
-02-workspace.jpg
-03-ticket-fields.jpg
-04-ticket-layout.jpg
-05-pull-request.jpg
+The images use real Azure DevOps layouts with sample values. Each before/after pair uses matching content, window size, font size, and scale. Measurements describe the pictured example only.
 
-The images use fictional data and the 0.11.19 extension. Replace the old sliders icon wherever it appears in the listing.
+Wide Files layout is permanent, with a drawer or bottom navigation panel. File navigation is a child setting of Wide Files layout. There are no previous/next-file buttons or Enter/Exit focus controls.
 
-Upload only adoverride-0.11.19-chrome.zip in the package section. Do not upload a source archive or a ZIP containing the whole store-materials folder.
-
-For the GitHub repository's uploaded social preview, use social-preview.png under Settings > Social preview. This is separate from the store update.
-
-Keep the existing store item so users receive the update and keep their settings. Publishing the GitHub release does not update Chrome Web Store.
-
-Source checklist and reviewer instructions:
-https://github.com/sinmentis/adoverride/blob/main/docs/chrome-web-store.md
+Keep the existing item so users receive the update with their saved settings. A GitHub release does not update Chrome Web Store.

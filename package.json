@@ -10,7 +10,7 @@
     "url": "https://github.com/sinmentis/adoverride/issues"
   },
   "private": true,
-  "version": "0.11.19",
+  "version": "0.11.26",
   "license": "MIT",
   "type": "module",
   "keywords": [
@@ -39,7 +39,7 @@
     "test:browser": "playwright test",
     "media": "node scripts/media.mjs",
     "screenshots": "node scripts/screenshots.mjs",
-    "store:assets": "node scripts/screenshots.mjs --store && node scripts/store-media.mjs",
+    "store:assets": "node scripts/store-media.mjs",
     "icons": "node scripts/icons.mjs",
     "postinstall": "wxt prepare"
   },

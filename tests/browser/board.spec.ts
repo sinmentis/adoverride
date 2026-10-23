@@ -73,6 +73,8 @@ test('kiwifruit Board default: only kiwifruit is built in and the requested setu
   const context = await launch(info.outputPath('profile'), true);
   try {
     const { page, popup } = await boardFixture(context, presentationBoardHtml());
+    await expect(popup.getByRole('group', { name: 'Layout', exact: true }).getByRole('button', { name: 'Compact cards', exact: true })).toBeVisible();
+    await expect(popup.getByRole('group', { name: 'Loading', exact: true }).getByRole('button', { name: 'Auto-load all items', exact: true })).toBeVisible();
     await expect(popup.getByRole('button', { name: 'Choose preset, current kiwifruit', exact: true })).toBeVisible();
     for (const name of ['Equal-width columns', 'Compact header', 'Auto-load all items']) {
       await expect(popup.getByRole('button', { name, exact: true })).toHaveAttribute('aria-pressed', 'true');

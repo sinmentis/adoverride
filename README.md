@@ -6,11 +6,17 @@ ADOverride is a Chrome extension for changing how Azure DevOps pages look. It on
 
 ## Pull requests
 
+- Give code the full width with a searchable file drawer or bottom panel. Keep the native PR header, comments, and actions.
 - Split **Activity**, **Description**, and **Checks** into separate tabs. Each section uses the full width.
-- Hide unused PR tabs and duplicate reviewer avatars. Fold commit lists, repeated push updates, passed checks, and reviewers who have not voted.
+- Keep every update visible, with two commits previewed per push. Expand the rest in one click.
+- Hide unused PR tabs and duplicate reviewer avatars. Fold passed checks and reviewers who have not voted.
 - Fold resolved threads from bots or other authors you choose. Active and pending threads stay visible.
 
-[![Before and after: ADOverride collapses Azure DevOps commit details into an expandable summary](docs/images/pr-commits.png)](docs/images/pr-commits.png)
+[![Before and after: moving Azure DevOps file navigation into a drawer gives the same diff more width](docs/images/pr-files-wide.png)](docs/images/pr-files-wide.png)
+
+[![Before and after: the same Azure DevOps file list moves below the code in ADOverride's bottom navigation layout](docs/images/pr-files-bottom.png)](docs/images/pr-files-bottom.png)
+
+[![Before and after: ADOverride keeps two native commits visible in a compact push card](docs/images/pr-commits.png)](docs/images/pr-commits.png)
 
 [![Before and after: the same Azure DevOps review gets more room when ADOverride moves the sidebar to a separate tab](docs/images/pr-reading-space.png)](docs/images/pr-reading-space.png)
 

@@ -2,7 +2,7 @@
 
 ADOverride changes the layout of Azure DevOps boards, work items, and pull requests in Chrome. You can hide fields, move sections in work items, make board columns wider, and put PR activity, descriptions, and checks in separate tabs. It only changes your view, not work item data or what other people see.
 
-**This guide covers v0.11.19**, with the new Offset icon and the PR settings from 0.11.18. Chrome Web Store approval is separate from the GitHub release. Check the version on the listing; the older 0.11.10 store package only supports Boards and work items.
+**This guide covers the 0.11.26 source build**, including grouped popup settings, readable Activity summaries, and native file navigation for large PRs. Local builds, GitHub releases, and the Chrome Web Store can have different versions. Check the installed version before using a feature; the older 0.11.10 store package only supports Boards and work items.
 
 ## Install in Chrome
 
@@ -81,7 +81,7 @@ setting and save new personal presets.
 ## Personalize your Board
 
 Open the extension's **Library** tab. The scope menu next to the preset chooses
-where changes are saved. **Board layout** holds the Board switches, and
+where changes are saved. **Board layout** separates the layout switches from automatic **Loading**, and
 **Card fields** holds card field visibility; its number counts hidden fields.
 Runtime precedence is Board, project, organization, then All ADO. A narrower
 profile overrides the broader one; filters do not create new Board scopes.
@@ -128,25 +128,43 @@ that must remain reachable.
 **Included in v0.11.18.** When upgrading from 0.11.10, PR settings turn on by default. Existing Board and work item settings are kept.
 
 The popup selects **PR** on a pull request page. PR settings are one global
-profile; **Reset to kiwifruit** turns every option back on.
+profile; **Reset to kiwifruit** restores the defaults, including the wide Files layout.
+
+**Overview** shows the main **Layout** and **Activity** settings first. Choose **Separate tabs** or **Single page** under **Overview layout**; sidebar placement and description folding appear only for Single page. **Header** and **Checks & reviewers** expand to show their related options. Hidden controls keep their saved choices.
 
 | Overview option | What it does |
 | --- | --- |
-| Split Overview into tabs | Overview becomes **Activity** (the feed at full width), followed by **Description** (with tags and work items) and **Checks** (merge status with reviewers). On those two tabs each block spans the full width, one under another. Checks shows a red **N failed** or **N pending** badge. The last tab you used is remembered; clicking Activity always opens the feed |
+| Overview layout: Separate tabs | Overview becomes **Activity** (the feed at full width), followed by **Description** (with tags and work items) and **Checks** (merge status with reviewers). On those two tabs each block spans the full width, one under another. Checks shows a red **N failed** or **N pending** badge. The last tab you used is remembered; clicking Activity always opens the feed |
 | Compact header | Tighter title, tab bar and Files toolbar on every PR tab |
 | Hide header avatars | Removes the reviewer avatar strip next to the title; the sidebar Reviewers list stays |
 | Merge status in sidebar | When Overview is not split, moves the checks and policies card to the top of the right sidebar; work items are listed before tags. **Expand** widens the card over the left column so long check names fit on one line; **Collapse** puts it back |
 | Collapse passed checks | Folds passed policies into an **N passed** button; failing and pending ones stay |
 | Collapse silent reviewers | Folds optional reviewers without a vote into **+N with no vote**; required reviewers and anyone who voted stay |
 | Fold long description | When Overview is not split, descriptions taller than about 12 lines show a preview with **Show more**; editing always shows the full text |
-| Start on active comments | Picks the native **Active comments** activity filter once when a PR opens |
-| Fold update runs | Two or more pushes or system events in a row fold behind the first one (**+N more updates**); comments stay in place |
-| Compact pushes | Push cards show only "pushed N commits"; **Show commits** opens the commit list |
+| Activity > Compact spacing | Reduces native spacing around push and system events without adding outer padding. Every event stays visible in its original order, including events beside blocked threads |
+| Activity > Commit details | **Preview 2** keeps the first two loaded native commits visible in longer lists. **Show more commits** reveals the remaining loaded rows in one step; **Show fewer commits** restores the preview. **All loaded** keeps all native rows visible. This choice is independent of spacing |
+
+Activity no longer merges consecutive events behind a count-only button or changes the native activity filter. The retired **Start on active comments** setting is ignored when reading older settings. If ADO still shows only comments after upgrading, choose **Show everything** in its native filter once; ADOverride does not override a filter you already have selected.
+
+Pushes with one or two loaded commits stay unchanged in preview mode, with no extra button or preview styling. Header-only updates keep their native content and links. Unrecognized or incomplete commit tables stay visible instead of hiding rows based on a partial list. Commit previews use the original rows and controls, not copied content or generated summaries. Manual expansion survives ordinary page updates during the current page session.
 
 | Files option | What it does |
 | --- | --- |
 | Hide comments in file tree | Removes comment-thread rows from the changed-files tree; comments stay in the diff |
 | Compact file tree | Halves the indentation and tightens rows so long paths fit |
+| Wide Files layout | Uses a drawer or bottom panel as the normal Files layout. Complete file lists get custom search; large or collapsed trees keep native navigation. The PR header, tabs, actions, native code editor, and comments stay in place |
+
+In **PR > Files**, **File navigation** is a subsetting of **Wide Files layout**. It appears when the layout is enabled and lets you choose **Drawer** or **Bottom panel**; turning the layout off keeps your choice. This is the normal Files layout, not a temporary fullscreen mode: it applies whenever you open Files, with no Enter or Exit button. The drawer opens with **Files** and closes after selecting a file; **Pin** keeps it beside the code. The bottom panel keeps the file list below the editor; **Minimize** gives the height back. Turning off **Wide Files layout** restores the native sidebar.
+
+Expand **Native file tree** for comment-row visibility and indentation controls. Those options apply to the original sidebar and native-tree navigation, not the custom file list.
+
+The native code editor resizes when you open a pinned drawer, change the panel layout, minimize or expand the bottom panel, or turn the layout off. The bottom panel trades some height for more code width. Native Inline/Side-by-side, word wrap, and whitespace preferences remain available.
+
+Search matches paths. **Unreviewed** shows files that the native tree has not marked reviewed. Selecting a file does not mark it reviewed; the separate checkbox delegates your click to ADO's review control. There are no extra previous/next file buttons.
+
+Large PRs use a virtual file tree: Azure DevOps renders only the rows near the current scroll position. When the complete file list cannot be read, including collapsed folders, ADOverride keeps the original tree inside the drawer or bottom panel instead of abandoning the wide layout. The panel says **Native file navigation**. Use ADO's existing **Filter** for keyword and reviewed-state filtering; no partial custom search or file count is shown.
+
+In native navigation, the bottom panel contains a tree, not a multi-column file list. Folder expansion, scrolling, file selection, and review controls remain native. The original tree and editors are not moved to new DOM parents. Native navigation stays active for that PR page so filtering and virtual row replacement do not switch the interface while you use it. Unrecognized page shells or already-inactive native trees stay unchanged with a notice. No file inventory or review state is fetched or stored separately.
 
 **Tabs** lists the PR tabs on the page with a switch each, including extension
 tabs such as Agency Sessions or Risk Assessment. Hidden tabs are remembered by
@@ -163,13 +181,11 @@ blocked by name. The list collects thread authors as they appear while the page
 is open, including after you switch the activity filter or scroll; type a name
 to block someone who hasn't appeared yet.
 
-kiwifruit turns every option on and hides Updates, Test Results Hub, Agency
+kiwifruit enables the Overview, tree cleanup, and wide Files layout options and hides Updates, Test Results Hub, Agency
 Sessions, PR Standard Questionnaire and Risk Assessment, including for installs
 that existed before PR support. **Reset to kiwifruit** keeps your blocked
-list. The activity filter is a one-time default: if you already picked
-another filter, or change it later, ADOverride leaves it alone. ADOverride
-never votes, completes, resolves, or comments; it only changes the layout and
-opens the native filter menu once. Parts of the page it doesn't recognize keep
+list. ADOverride leaves the native activity filter alone and never opens its menu automatically. It
+never votes, completes, resolves, or comments; it only changes the layout. Parts of the page it doesn't recognize keep
 the native layout, and the popup names them.
 
 ## Privacy and permissions

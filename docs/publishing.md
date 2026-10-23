@@ -3,7 +3,7 @@
 ## GitHub discoverability
 
 Repository: [sinmentis/adoverride](https://github.com/sinmentis/adoverride).
-The repository and [Chrome Web Store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) are public. This release is **0.11.19**. Store submissions need separate approval, so check the live listing before saying an update is available there.
+The repository and [Chrome Web Store item](https://chromewebstore.google.com/detail/adoverride-azure-devops-b/ijeoidnjoamdkpfgbnhfajddhpakobjo) are public. The current release candidate is **0.11.23**. Preparing a kit does not publish a release. Store submissions need separate approval, so check the live listing before saying an update is available there.
 
 **Short explanation**
 
@@ -32,13 +32,13 @@ Keep GitHub repository metadata and the social preview aligned with the listing.
 
 ## Chrome Web Store copy
 
-Use [store/LISTING.txt](store/LISTING.txt) for the 0.11.19 description and the [update checklist](chrome-web-store.md) for the package, images, privacy declarations, and reviewer instructions. Update the existing item, not a new listing.
+Use [store/LISTING.txt](store/LISTING.txt) for the 0.11.23 description, [release notes](store/RELEASE-NOTES.md) for the GitHub release, and the [update checklist](chrome-web-store.md) for the package, images, privacy declarations, public developer-address settings, and reviewer instructions. Update the existing item, not a new listing.
 
 **Name**
 
 > ADOverride - Customize Azure DevOps
 
-**Short description (0.11.19 manifest)**
+**Short description (0.11.23 manifest)**
 
 > Hide work item fields, widen boards, and organize pull request pages in Azure DevOps. Changes only affect your browser.
 
@@ -53,17 +53,17 @@ listing until a matching release is available there.
 - `docs/images/social-preview.svg`: reproducible source artwork.
 - Generate the PNG with `npm run media`.
 - The GitHub social preview is a separate repository setting. Upload the regenerated PNG under **Settings > Social preview**; committing the image does not replace an uploaded preview.
-- The README uses `docs/images/pr-commits.png`, `pr-reading-space.png`, and `work-item-layout.png`. Each 1280 x 800 poster shows side-by-side crops of the same captured Azure DevOps page, with sample names, text, code, and avatars. Keep content, font size, window size, and image scale consistent within each comparison.
+- The README uses `docs/images/pr-files-wide.png`, `pr-files-bottom.png`, `pr-commits.png`, `pr-reading-space.png`, and `work-item-layout.png`. Each 1280 x 800 poster shows side-by-side crops of the same captured Azure DevOps page, with sample names, text, code, and avatars. Keep content, font size, window size, and image scale consistent within each comparison.
+- The Files captures use the actual 0.11.23 implementation, not the superseded temporary-focus mock. Native PR headers stay visible. Check the inner code panes resize, not just the outer editor rectangle. The pictured 1278px window has a 931px native diff and a 1230px wide diff; the rounded 32% gain applies only to that example.
 - Annotations must match the captured geometry. Any measurements or percentages describe only the example shown, not a guaranteed improvement on every page.
 - Keep source captures, extracted styles, fonts, and replay files local. Review every visible value and image before committing only the final PNGs.
 - `docs/images/board-before-after.png` and `docs/images/ticket-before-after.png`
   compare native and customized layouts with the same fictional content.
-- `docs/images/board-hero.png` and `docs/store/01-board.jpg` use the same Board
-  comparison in a labeled, 1280 x 800 composition. Regenerate with
-  `node scripts/store-media.mjs`.
+- `docs/images/board-hero.png` and the older store images are retained historical fixture artwork, not the current store gallery.
 - `docs/images/popup.png` shows the real popup: Ticket cards & fields, Ticket
   layout and Board layout.
-- `docs/store/05-pull-request.jpg` shows the full-width Checks tab from the current extension with fictional PR data.
+- `docs/store/promo-440x280.png` and `marquee-1400x560.png` are the approved "More code. Less clutter." Before/After tiles. The small tile compares PR Files; the marquee compares PR Files and Ticket Workspace. Both use real-layout captures with sample data.
+- `npm run store:assets` converts the five approved real-layout posters to the current store JPEGs, regenerates the Offset listing icon, and validates the two curated promo tiles without overwriting them. It does not recapture fixtures or replace the approved PNGs.
 - Generate the fixture comparisons and popup gallery with `npm run build` then `npm run screenshots`. This does not regenerate the README screenshots; do not replace those with fixture renders. Use a build matching the version being advertised; recapturing with main can expose controls not yet in the store.
 - Use made-up content in public screenshots. Never publish real work item content, people, organization URLs, source captures, or browser profiles.
 
@@ -83,6 +83,8 @@ listing until a matching release is available there.
    it is live, synchronize store copy, README/guide version notices, the privacy
    policy's version scope, GitHub About, and the listing checklist. A GitHub
    release alone does not update Chrome Web Store.
+
+Before store submission, make sure the current privacy policy is already available at its public URL. A local file in the release kit is not enough. Publish only the Chrome ZIP and `SHA256SUMS` as installable GitHub release assets; the release-kit ZIP contains marketing materials and is not an extension package.
 
 ## CI and manual tag releases
 

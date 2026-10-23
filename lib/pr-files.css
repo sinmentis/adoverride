@@ -1,0 +1,88 @@
+[data-ado-files] {
+  --ado-files-bg: var(--background-color, #fff);
+  --ado-files-panel: #f3f2f1;
+  --ado-files-line: #c8c6c4;
+  --ado-files-text: #242424;
+  --ado-files-muted: #605e5c;
+  --ado-files-selected: #deecf9;
+}
+.ms-vss-web-vsts-theme-dark [data-ado-files] {
+  --ado-files-bg: #1f1f1f;
+  --ado-files-panel: #252526;
+  --ado-files-line: #555;
+  --ado-files-text: #eee;
+  --ado-files-muted: #bbb;
+  --ado-files-selected: #223e5a;
+}
+[data-ado-files] .repos-changes-explorer-splitter { position: relative; min-height: 0; }
+[data-ado-files] [data-ado-files-source] {
+  position: absolute !important;
+  inset: 0 auto 0 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+[data-ado-files] [data-ado-files-source="visible"] {
+  inset: var(--ado-files-native-top) auto 0 0 !important;
+  width: var(--ado-files-native-width) !important; height: auto !important; min-height: 0 !important;
+  max-width: none !important; box-sizing: border-box; z-index: 4;
+  visibility: visible !important; pointer-events: auto !important;
+  background: var(--ado-files-bg); color: var(--ado-files-text);
+}
+[data-ado-files] .vss-Splitter--divider { display: none !important; }
+[data-ado-files] [data-ado-files-setup="pinned"] > .vss-Splitter--pane-flexible { margin-left: 295px !important; }
+[data-ado-files] [data-ado-files-setup="bottom"] > .vss-Splitter--pane-flexible { margin-bottom: 206px !important; }
+[data-ado-files="bottom"] [data-ado-files-setup="wide"] > .vss-Splitter--pane-flexible { margin-bottom: 37px !important; }
+[data-ado-files-toolbar] { padding-left: 12px !important; padding-right: 12px !important; }
+[data-ado-files-toolbar] .ado-files-controls { display: flex; align-items: center; align-self: center; gap: 8px; margin: 0 8px 0 0; padding: 0; flex-shrink: 0; border: 0; }
+[data-ado-files] .ado-files-button {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 31px; padding: 4px 10px;
+  border: 1px solid var(--ado-files-line); border-radius: 3px; background: var(--ado-files-panel);
+  color: var(--ado-files-text); font: 14px/20px "Segoe UI", sans-serif; white-space: nowrap; cursor: pointer;
+}
+[data-ado-files] .ado-files-primary { color: #fff; background: #005a9e; border-color: #2682c9; }
+[data-ado-files] .ado-files-subtle { background: transparent; border-color: transparent; }
+[data-ado-files] .ado-files-button:hover { box-shadow: inset 0 0 0 1px currentColor; }
+[data-ado-files] .ado-files-panel {
+  position: absolute; top: 0; bottom: 0; left: 0; width: 295px; z-index: 3;
+  display: flex; flex-direction: column; align-items: stretch; align-self: stretch; gap: 0; margin: 0; padding: 0;
+  color: var(--ado-files-text); background: var(--ado-files-panel); white-space: normal;
+  border: 1px solid var(--ado-files-line); border-radius: 0; box-shadow: 8px 0 24px #0005; font: 14px/1.4 "Segoe UI", sans-serif;
+}
+[data-ado-files] .ado-files-panel[hidden],
+[data-ado-files] .ado-files-panel [hidden] { display: none !important; }
+[data-ado-files] .ado-files-heading { display: flex; align-items: center; gap: 6px; padding: 8px 10px; min-height: 43px; border-bottom: 1px solid var(--ado-files-line); }
+.ado-files-heading > strong { margin-right: auto; }
+[data-ado-files] .ado-files-content { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+[data-ado-files] .ado-files-native-help { padding: 5px 10px; color: var(--ado-files-muted); font-size: 12px; line-height: 18px; border-bottom: 1px solid var(--ado-files-line); }
+[data-ado-files] .ado-files-tools { padding: 10px; flex-shrink: 0; }
+[data-ado-files] .ado-files-search { box-sizing: border-box; width: 100%; min-width: 0; border: 1px solid #7e7e7e; padding: 6px 8px; border-radius: 3px; background: var(--ado-files-bg); color: var(--ado-files-text); font: inherit; }
+[data-ado-files] .ado-files-filters { display: flex; gap: 5px; margin-top: 10px; }
+[data-ado-files] .ado-files-chip { border: 1px solid var(--ado-files-line); border-radius: 12px; padding: 3px 9px; font: 12px/17px "Segoe UI", sans-serif; background: transparent; color: var(--ado-files-text); cursor: pointer; }
+[data-ado-files] .ado-files-chip[aria-pressed="true"] { background: var(--ado-files-selected); border-color: #5392c8; }
+[data-ado-files] .ado-files-list { overflow: auto; flex: 1; min-height: 0; padding: 4px 0 12px; }
+[data-ado-files] .ado-files-folder { padding: 8px 14px 4px; color: var(--ado-files-muted); font-size: 12px; font-weight: 600; }
+[data-ado-files] .ado-files-entry { display: flex; align-items: center; gap: 8px; box-sizing: border-box; width: 100%; min-height: 35px; padding: 0 14px 0 24px; border: 0; background: transparent; color: var(--ado-files-text); text-align: left; font: inherit; }
+[data-ado-files] .ado-files-entry:hover { background: var(--ado-files-selected); }
+[data-ado-files] .ado-files-entry[data-selected="true"] { background: var(--ado-files-selected); box-shadow: inset 3px 0 #5aa5e5; }
+[data-ado-files] .ado-files-check { color: var(--ado-files-muted); width: 18px; min-height: 30px; flex-shrink: 0; padding: 0; border: 0; background: transparent; cursor: pointer; }
+[data-ado-files] .ado-files-file-button { display: flex; flex: 1; min-width: 0; min-height: 35px; padding: 6px 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+[data-ado-files] .ado-files-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-ado-files] .ado-files-name small { display: block; color: var(--ado-files-muted); font-size: 10px; }
+[data-ado-files] .ado-files-empty { padding: 20px; color: var(--ado-files-muted); }
+[data-ado-files] .ado-files-feedback:empty { display: none; }
+[data-ado-files] .ado-files-feedback { padding: 8px 12px; color: var(--ado-files-muted); border-top: 1px solid var(--ado-files-line); }
+[data-ado-files="bottom"] .ado-files-panel { top: auto; right: 0; width: auto; height: 206px; box-shadow: none; border-width: 1px 0 0; }
+[data-ado-files="bottom"] .ado-files-heading { min-height: 37px; padding: 3px 12px; }
+[data-ado-files="bottom"] .ado-files-content { flex-direction: row; }
+[data-ado-files="bottom"] .ado-files-tools { width: 215px; box-sizing: border-box; border-right: 1px solid var(--ado-files-line); }
+[data-ado-files="bottom"] .ado-files-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; gap: 0 8px; padding: 8px; }
+[data-ado-files="bottom"] .ado-files-entry { padding-left: 10px; }
+[data-ado-files="bottom"] .ado-files-minimized { height: 37px; }
+[data-ado-files="bottom"] .ado-files-minimized .ado-files-content { display: none; }
+[data-ado-files] button:focus-visible,
+[data-ado-files] input:focus-visible { outline: 2px solid #70b5ff; outline-offset: 2px; }
+.ado-files-notice { padding: 8px 16px; font: 13px/20px "Segoe UI", sans-serif; }
+@media (max-width: 900px) {
+  [data-ado-files="bottom"] .ado-files-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  [data-ado-files="bottom"] .ado-files-tools { width: 170px; }
+}

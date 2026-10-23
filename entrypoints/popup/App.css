@@ -41,6 +41,12 @@
 .popup .configuration-panel { display: grid; gap: 8px; }
 .popup .board-settings { display: grid; gap: 4px; }
 .popup .board-settings p { margin: 2px 0; }
+.popup .settings-section { min-width: 0; margin: 0 0 8px; padding: 0 0 8px; border: 0; border-bottom: 1px solid var(--borderColor-muted); }
+.popup .settings-section > legend { padding: 4px 0; font-size: 11px; font-weight: 600; color: var(--fgColor-muted); }
+.popup .settings-children { padding-left: 28px; }
+.popup .settings-details { padding: 4px 0; border-bottom: 1px solid var(--borderColor-muted); }
+.popup .settings-details > summary { padding: 4px 0; cursor: pointer; font-size: 12px; font-weight: 600; }
+.popup .settings-details > summary:focus-visible { outline: 2px solid var(--borderColor-accent-emphasis); outline-offset: 2px; }
 .popup .label-with-help { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .popup .context-help { flex: 0 0 auto; width: 24px; height: 24px; color: var(--fgColor-muted); }
 .popup .configuration-actions { display: flex; flex-wrap: wrap; gap: 6px; }

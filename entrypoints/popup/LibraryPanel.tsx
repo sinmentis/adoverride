@@ -25,6 +25,8 @@ export function LibraryPanel({ view, viewKey, snapshot, saving, update, retryAut
     <UnderlinePanels.Tab value="layout">Board layout</UnderlinePanels.Tab>
     <UnderlinePanels.Tab value="fields" counter={hidden || undefined}>Card fields</UnderlinePanels.Tab>
     <UnderlinePanels.Panel value="layout">
+    <fieldset className="settings-section">
+    <legend>Layout</legend>
     <div className="ticket-row">
       <div className="label-with-help"><Text id={label}>Equal-width columns</Text>
         <Help label="Equal-width columns" text="Fill the Board width. Collapsed columns keep their native width; narrow windows scroll." /></div>
@@ -43,12 +45,16 @@ export function LibraryPanel({ view, viewKey, snapshot, saving, update, retryAut
       <ToggleSwitch size="small" aria-labelledby={cardsLabel} checked={profile.compactCards} disabled={saving}
         onChange={enabled => void update({ kind: 'board-presentation', viewKey, feature: 'compactCards', enabled })} />
     </div>
+    </fieldset>
+    <fieldset className="settings-section">
+    <legend>Loading</legend>
     <div className="ticket-row">
       <div className="label-with-help"><Text id={autoLabel}>Auto-load all items</Text>
         <Help label="Auto-load all items" text="Load native batches under the current filters, in expanded columns only. Native result limits still apply. Large Boards may slow down." /></div>
       <ToggleSwitch size="small" aria-labelledby={autoLabel} checked={view.board?.autoLoadItems ?? false} disabled={saving}
         onChange={enabled => void update({ kind: 'board-autoload', viewKey, enabled })} />
     </div>
+    </fieldset>
     {view.board === null && <Text className="caption">Inherited settings</Text>}
     {snapshot.message ? <Flash role="alert" variant={snapshot.status === 'error' ? 'danger' : 'warning'}>{snapshot.message}</Flash> :
       <Text as="p" className="caption" role="status">{snapshot.equalColumns ?

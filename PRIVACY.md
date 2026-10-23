@@ -1,13 +1,13 @@
 # ADOverride privacy policy
 
-Effective date: October 21, 2026
+Effective date: October 23, 2026
 
 ADOverride customizes the appearance of Azure DevOps Boards, work items, and
 pull requests in your browser. It has no developer-operated backend, analytics, advertising, or
 telemetry. The developers do not receive your Azure DevOps data through the
 extension.
 
-**Version scope:** this policy covers v0.11.18 and v0.11.19, including pull request features. The icon update in 0.11.19 does not change data handling. The older 0.11.10 store package only customizes Boards and work items and does not perform the PR handling described below.
+**Version scope:** this policy covers the current 0.11.26 source build and the earlier 0.11.18-0.11.25 builds, including pull request features. The older 0.11.10 store package only customizes Boards and work items and does not perform the PR handling described below. Source builds, GitHub releases, and store packages can have different versions.
 
 ## Information handled in your browser
 
@@ -20,17 +20,17 @@ extension.
   items. It changes presentation without copying ticket bodies, comments,
   attachments, or editor drafts into its settings. On pull request pages it
   reads the rendered page structure (policy status icons, reviewer vote icons,
-  file-tree rows) to adjust the layout, and opens the native activity filter
-  once to select Active comments. It reads comment author display names to
+  file-tree rows and loaded commit titles) to adjust the layout. Commit previews keep the original rows and do not save commit content in settings. Since 0.11.25, the extension never changes the native activity filter; earlier PR builds could select Active comments once. It reads comment author display names to
   match your blocked list and to list authors in the popup, and reads thread
   status to keep active discussions visible. It does not copy pull request
   code, descriptions, or comment text into settings or send them to the
   developer, and never votes,
   completes, or resolves anything. The last Overview tab you used (Activity,
   Description or Checks) is kept in the Azure DevOps site's local storage.
+- **Files navigation:** the wide Files layout reads file names, folder paths, selection, and reviewed state from the rendered native tree to show a searchable drawer or bottom panel. This inventory and the search text stay in page memory, not settings or configuration exports. When the complete inventory is unavailable, the original tree appears in the panel and its controls remain native. The feature makes no separate file-inventory requests. Selecting a file invokes its native navigation control. Clicking a review checkbox explicitly invokes Azure DevOps' native review control; opening or selecting a file never marks it reviewed automatically.
 - **Interactions and preferences:** pull request layout options, hidden pull
   request tabs, blocked comment author names, visibility choices, card positions, view
-  mode, presets, scope, theme, layout lock, and the last undoable Ticket change
+  mode, Files navigation position, presets, scope, theme, layout lock, and the last undoable Ticket change
   are stored locally using Chrome's extension storage. Importing settings also
   keeps a local pre-import backup. Settings are not sent to Chrome Storage Sync.
 

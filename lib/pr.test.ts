@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { decodePrProfile, decodePrSnapshot, emptyPrSnapshot, KIWIFRUIT_HIDDEN_TABS, kiwifruitPrProfile, parsePullRequest, PR_FEATURE_IDS, updateRuns } from './pr';
+import { decodePrProfile, decodePrSnapshot, emptyPrSnapshot, KIWIFRUIT_HIDDEN_TABS, kiwifruitPrProfile, parsePullRequest, PR_FEATURE_IDS } from './pr';
 import { applyPreferenceAction, decodePreferenceAction, decodePreferences, defaultPreferences } from './preferences';
-import { feedRowKind, statusSections, threadAuthor, threadOpen } from './pr-controller';
+import { commitRows, feedRowKind, statusSections, threadAuthor, threadOpen } from './pr-controller';
 
 describe('pull request pages', () => {
   it('parses the PR key and tab from both hosts', () => {
@@ -33,10 +33,17 @@ describe('pull request pages', () => {
     expect(() => decodePrSnapshot({ ...value, version: 1 })).toThrow();
   });
 
-  it('finds update runs of two or more and lets other rows break them', () => {
-    expect(updateRuns(['composer', 'update', 'comment', 'update', 'update', 'update', 'placeholder', 'update', 'update'])).toEqual([
-      { start: 3, end: 5 }, { start: 7, end: 8 }]);
-    expect(updateRuns(['update', 'comment', 'update', 'unknown', 'update'])).toEqual([]);
+  it('only previews a complete native commit table with readable titles', () => {
+    document.body.innerHTML = `<table aria-rowcount="3"><tbody><tr role="presentation"><td></td></tr>
+      ${[1, 2, 3].map(index => `<tr role="row"><td><div class="commit-title">Commit ${index}</div></td></tr>`).join('')}
+    </tbody></table>`;
+    const table = document.querySelector('table')!;
+    expect(commitRows(table)).toHaveLength(3);
+    table.setAttribute('aria-rowcount', '10');
+    expect(commitRows(table)).toBeNull();
+    table.setAttribute('aria-rowcount', '3');
+    table.querySelector('.commit-title')!.textContent = '';
+    expect(commitRows(table)).toBeNull();
   });
 
   it('classifies native feed rows and reads thread authors', () => {
@@ -63,9 +70,10 @@ describe('pull request pages', () => {
 });
 
 describe('pull request preferences', () => {
-  it('turns every option on for fresh installs and documents saved before PR support', () => {
+  it('enables the permanent Files layout by default', () => {
     expect(defaultPreferences().pr).toEqual(kiwifruitPrProfile());
     expect(PR_FEATURE_IDS.every(id => kiwifruitPrProfile()[id])).toBe(true);
+    expect(kiwifruitPrProfile()).toMatchObject({ focusFiles: true, filesPosition: 'drawer' });
     const { pr: _pr, ...older } = defaultPreferences();
     expect(decodePreferences({ ...older, enabled: false }).pr).toEqual(kiwifruitPrProfile());
   });
@@ -80,6 +88,12 @@ describe('pull request preferences', () => {
     expect(() => decodePrProfile({ blockedAuthors: ['x'.repeat(129)] })).toThrow();
     expect(() => decodePrProfile({ railStatus: 'yes' })).toThrow('railStatus');
     expect(() => decodePrProfile([])).toThrow();
+    expect(decodePrProfile({ focusFiles: true, filesPosition: 'bottom' })).toMatchObject({ focusFiles: true, filesPosition: 'bottom' });
+    expect(decodePrProfile({ focusFiles: false })).toMatchObject({ focusFiles: false });
+    expect(() => decodePrProfile({ filesPosition: 'sideways' })).toThrow('position');
+    expect(decodePrProfile({ activeComments: true, foldUpdates: false })).not.toHaveProperty('activeComments');
+    expect(decodePrProfile({ activeComments: true, foldUpdates: false }).foldUpdates).toBe(false);
+    expect(() => decodePreferenceAction({ kind: 'pr-feature', feature: 'activeComments', enabled: true })).toThrow();
   });
 
   it('applies toggles and the kiwifruit reset without touching other areas', () => {
@@ -99,5 +113,7 @@ describe('pull request preferences', () => {
     expect(() => decodePreferenceAction({ kind: 'pr-tab', id: '../x y', hidden: true })).toThrow();
     expect(() => decodePreferenceAction({ kind: 'pr-author', name: '   ', blocked: true })).toThrow();
     expect(() => decodePreferenceAction({ kind: 'pr-feature', feature: 'nope', enabled: true })).toThrow();
+    expect(applyPreferenceAction(base, decodePreferenceAction({ kind: 'pr-files-position', position: 'bottom' })).pr.filesPosition).toBe('bottom');
+    expect(() => decodePreferenceAction({ kind: 'pr-files-position', position: 'picker' })).toThrow();
   });
 });

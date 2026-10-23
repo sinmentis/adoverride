@@ -67,6 +67,292 @@ async function nativesIntact(page: Page) {
   return broken.length === 0;
 }
 
+for (const dark of [false, true]) test(`PR Files layout: drawer and bottom are permanent and preserve native actions (${dark ? 'dark' : 'light'})`, async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { filesPosition: 'drawer' });
+    const page = await open(context, { files: prFilesHtml({ dark }) }, '?_a=files');
+    await expect(page.locator('[data-ado-files="drawer"]')).toBeVisible();
+    await expect(page.locator('.repos-pr-header')).toBeVisible();
+    await expect(page.locator('.repos-pr-details-page-tabbar')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Approve', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: /^(Enter focus|Exit focus)$/ })).toHaveCount(0);
+    expect(await page.locator('.repos-pr-details-page').evaluate(root => getComputedStyle(root).position)).not.toBe('fixed');
+    await page.evaluate(() => {
+      const nodes = [...document.querySelectorAll('.repos-changes-explorer-tree,.repos-changes-explorer-tree *,.vss-Splitter--pane-flexible,.monaco-zone,.repos-discussion-thread')];
+      (window as unknown as { __natives: [Element, Element | null][] }).__natives = nodes.map(node => [node, node.parentElement]);
+    });
+    const editorWidth = (await box(page, '.vss-Splitter--pane-flexible')).width;
+    expect(editorWidth).toBeCloseTo((await box(page, '.repos-changes-explorer-splitter')).width, 0);
+    await expect(page.locator('.ado-files-panel')).toBeHidden();
+    await page.getByRole('button', { name: 'Files', exact: true }).click();
+    await expect(page.locator('.ado-files-panel')).toBeVisible();
+    expect((await box(page, '.ado-files-panel')).width).toBeCloseTo(295, 0);
+    expect((await box(page, '.vss-Splitter--pane-flexible')).width).toBeCloseTo(editorWidth, 0);
+    const search = page.getByRole('searchbox', { name: 'Find changed file', exact: true });
+    await search.fill('configuration_test');
+    await expect(page.locator('.ado-files-file-button')).toHaveCount(1);
+    await page.locator('.ado-files-file-button').click();
+    await expect(page.locator('.ado-files-panel')).toBeHidden();
+    expect(await page.evaluate(() => (window as unknown as { __fixtureFileClicks: number }).__fixtureFileClicks)).toBe(1);
+    expect(await page.evaluate(() => (window as unknown as { __fixtureReviewWrites?: number }).__fixtureReviewWrites ?? 0)).toBe(0);
+    await page.getByRole('button', { name: 'Files', exact: true }).click();
+    await search.fill('');
+    const total = await page.locator('.ado-files-file-button').count();
+    await page.getByRole('button', { name: /^Unreviewed \d+$/ }).click();
+    const pending = await page.locator('.ado-files-file-button').count();
+    expect(pending).toBeGreaterThan(0); expect(pending).toBeLessThan(total);
+    await page.locator('.ado-files-check').first().click();
+    await expect(page.locator('.ado-files-file-button')).toHaveCount(pending - 1);
+    expect(await page.evaluate(() => (window as unknown as { __fixtureReviewWrites: number }).__fixtureReviewWrites)).toBe(1);
+    await page.getByRole('button', { name: /^All \d+$/ }).click();
+    await page.getByRole('button', { name: 'Pin', exact: true }).click();
+    await expect.poll(async () => (await box(page, '.vss-Splitter--pane-flexible')).width).toBeLessThan(editorWidth - 290);
+    await page.getByRole('button', { name: 'Unpin', exact: true }).click();
+    await search.focus(); await search.press('Escape');
+    await expect(page.locator('.ado-files-panel')).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Files', exact: true })).toBeFocused();
+    const popup = await popupFor(context, page);
+    await expect(popup.getByRole('button', { name: 'Wide Files layout', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    const filesSettings = popup.getByRole('group', { name: 'Wide Files layout', exact: true });
+    const navigation = filesSettings.getByLabel('File navigation', { exact: true });
+    await expect(navigation).toHaveValue('drawer');
+    const parentLabel = await filesSettings.getByText('Wide Files layout', { exact: true }).boundingBox();
+    const childLabel = await filesSettings.getByText('File navigation', { exact: true }).boundingBox();
+    expect(childLabel!.x - parentLabel!.x).toBeCloseTo(28, 0);
+    await navigation.selectOption('bottom');
+    await expect(page.locator('[data-ado-files="bottom"]')).toBeVisible();
+    const panel = await box(page, '.ado-files-panel');
+    expect(panel.height).toBeCloseTo(206, 0);
+    expect(panel.width).toBeCloseTo((await box(page, '.repos-changes-explorer-splitter')).width, 0);
+    await page.getByRole('button', { name: 'Minimize file panel', exact: true }).click();
+    expect((await box(page, '.ado-files-panel')).height).toBeCloseTo(37, 0);
+    await page.getByRole('button', { name: 'Expand file panel', exact: true }).click();
+    await expect(page.locator('.ado-files-search')).toBeFocused();
+    await expect(page.getByRole('button', { name: /^(Previous file|Next file|Next unreviewed)$/ })).toHaveCount(0);
+    expect(await nativesIntact(page)).toBe(true);
+    await page.screenshot({ path: info.outputPath('files-bottom.png') });
+    await expect(page.locator('.repos-pr-header')).toBeVisible();
+    await expect(page.locator('.repos-pr-details-page-tabbar')).toBeVisible();
+    await popup.getByRole('button', { name: 'Wide Files layout', exact: true }).click();
+    await expect(navigation).toHaveCount(0);
+    expect((await stored(context)).pr.filesPosition).toBe('bottom');
+    await expect(page.locator('[data-ado-files],.ado-files-panel,.ado-files-controls')).toHaveCount(0);
+    await expect(page.locator('.vss-Splitter--pane-fixed')).not.toHaveAttribute('inert');
+    expect(await nativesIntact(page)).toBe(true);
+    await popup.getByRole('button', { name: 'Wide Files layout', exact: true }).click();
+    await expect(navigation).toHaveValue('bottom');
+    await popup.locator('.popup').screenshot({ path: info.outputPath('files-settings-nested.png') });
+    await page.reload();
+    await expect(page.locator('[data-ado-files="bottom"]')).toBeVisible();
+    await page.locator('#__bolt-tab-overview').click();
+    await expect(page.locator('[data-ado-files]')).toHaveCount(0);
+    await page.locator('#__bolt-tab-files').click();
+    await expect(page.locator('[data-ado-files="bottom"]')).toBeVisible();
+    await expect(page.locator('.repos-pr-header')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^(Enter focus|Exit focus)$/ })).toHaveCount(0);
+  } finally { await context.close(); }
+});
+
+test('PR Files layout: native editor resizes on layout changes without repeated notifications', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { filesPosition: 'drawer' });
+    const page = await open(context, { files: prFilesHtml({ nativeEditorSizing: true }) }, '?_a=files');
+    await expect(page.locator('[data-ado-files="drawer"]')).toBeVisible();
+    const fitted = () => page.locator('.vss-Splitter--pane-flexible').evaluate(editor => {
+      const canvas = editor.querySelector('canvas')!;
+      return canvas.width === editor.clientWidth && canvas.height === editor.clientHeight;
+    });
+    await expect.poll(fitted).toBe(true);
+    await page.getByRole('button', { name: 'Files', exact: true }).click();
+    await page.getByRole('button', { name: 'Pin', exact: true }).click();
+    await expect.poll(fitted).toBe(true);
+    await page.getByRole('button', { name: 'Unpin', exact: true }).click();
+    await expect.poll(fitted).toBe(true);
+    await setPr(context, { filesPosition: 'bottom' });
+    await expect(page.locator('[data-ado-files="bottom"]')).toBeVisible();
+    await expect.poll(fitted).toBe(true);
+    await page.getByRole('button', { name: 'Minimize file panel', exact: true }).click();
+    await expect.poll(fitted).toBe(true);
+    await page.getByRole('button', { name: 'Expand file panel', exact: true }).click();
+    await expect.poll(fitted).toBe(true);
+    const notifications = () => page.evaluate(() =>
+      (window as unknown as { __fixtureResizeEvents: number }).__fixtureResizeEvents);
+    const before = await notifications();
+    await page.locator('.repos-changes-explorer-tree tr[aria-level="5"]').first().evaluate(row => row.setAttribute('aria-selected', 'true'));
+    await expect(page.locator('.ado-files-entry[data-selected="true"]')).toHaveCount(1);
+    expect(await notifications()).toBe(before);
+    await setPr(context, { focusFiles: false });
+    await expect(page.locator('[data-ado-files]')).toHaveCount(0);
+    await expect.poll(fitted).toBe(true);
+  } finally { await context.close(); }
+});
+
+test('PR Files layout: partial and collapsed inventories keep wide native navigation', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { focusFiles: true, filesPosition: 'bottom' });
+    const page = await open(context, { files: prFilesHtml() }, '?_a=files');
+    await page.locator('.repos-changes-explorer-tree').evaluate(tree => tree.setAttribute('aria-rowcount', '1000'));
+    await expect(page.locator('[data-ado-files-navigation="native"]')).toBeVisible();
+    await expect(page.locator('.ado-files-native-help')).toContainText('Native file navigation');
+    await expect(page.locator('.vss-Splitter--pane-fixed')).toBeVisible();
+    await expect(page.locator('.ado-files-search')).toBeHidden();
+    await page.locator('.repos-changes-explorer-tree').evaluate(tree => {
+      tree.setAttribute('aria-rowcount', String(tree.querySelectorAll('tr[role=row]').length));
+      tree.querySelector('[aria-expanded]')!.setAttribute('aria-expanded', 'false');
+    });
+    await expect(page.locator('[data-ado-files-navigation="native"]')).toBeVisible();
+    await page.locator('.repos-changes-explorer-tree [aria-expanded]').first().evaluate(folder => folder.setAttribute('aria-expanded', 'true'));
+    await expect(page.locator('[data-ado-files]')).toHaveCount(1);
+    await expect(page.locator('[data-ado-files-navigation="native"]')).toBeVisible();
+    await setPr(context, { focusFiles: false });
+    await expect(page.locator('[data-ado-files]')).toHaveCount(0);
+    await setPr(context, { focusFiles: true });
+    await expect(page.locator('[data-ado-files-navigation="custom"]')).toBeVisible();
+  } finally { await context.close(); }
+});
+
+for (const dark of [false, true]) test(`PR Files layout: virtualized native tree remains usable without reparenting (${dark ? 'dark' : 'light'})`, async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { filesPosition: 'drawer', compactHeader: false, compactTree: false });
+    const page = await open(context, { files: prFilesHtml({ dark, virtualTree: true, nativeEditorSizing: true }) },
+      '?_a=files&path=/src/sample-555.yaml');
+    await expect(page.locator('[data-ado-files-navigation="native"]')).toBeVisible();
+    const source = page.locator('[data-ado-files-source]');
+    const tree = page.locator('.repos-changes-explorer-tree');
+    const scroller = source.locator(':scope > div');
+    await page.evaluate(() => {
+      const nodes = [...document.querySelectorAll('.repos-changes-explorer-tree,.vss-Splitter--pane-fixed,.vss-Splitter--pane-fixed>div,.vss-Splitter--pane-flexible')];
+      (window as unknown as { __natives: [Element, Element | null][] }).__natives = nodes.map(node => [node, node.parentElement]);
+    });
+    const fitted = () => page.locator('.vss-Splitter--pane-flexible').evaluate(editor => {
+      const canvas = editor.querySelector('canvas')!;
+      return canvas.width === editor.clientWidth && canvas.height === editor.clientHeight;
+    });
+    await expect.poll(fitted).toBe(true);
+    const wide = (await box(page, '.vss-Splitter--pane-flexible')).width;
+    await expect(source).toBeHidden();
+    await expect(source).toHaveAttribute('inert');
+    await page.getByRole('button', { name: 'Files', exact: true }).click();
+    await expect(source).toBeVisible();
+    await expect(source).toBeFocused();
+    await expect(page.locator('.ado-files-search')).toBeHidden();
+    await expect(page.locator('.ado-files-file-button')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Filter', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Filter', exact: true }).click();
+    expect(await page.evaluate(() => (window as unknown as { __fixtureNativeFilterOpens: number }).__fixtureNativeFilterOpens)).toBe(1);
+    const initialScroll = await scroller.evaluate(element => element.scrollTop);
+    expect(initialScroll).toBeGreaterThan(10000);
+    await expect(tree.locator('tr[data-row-index="555"]')).toBeVisible();
+    const nativeBox = await box(page, '[data-ado-files-source]');
+    const panelBox = await box(page, '.ado-files-panel');
+    expect(nativeBox.top).toBeGreaterThan(panelBox.top + 40);
+    expect(nativeBox.bottom).toBeLessThanOrEqual(panelBox.bottom + 1);
+    expect(nativeBox.width).toBeGreaterThan(280);
+    await tree.locator('tr[data-row-index="555"] .text-ellipsis').click();
+    await expect(source).toBeHidden();
+    expect(await page.evaluate(() => (window as unknown as { __fixtureFileClicks: number }).__fixtureFileClicks)).toBe(1);
+    expect(await page.evaluate(() => (window as unknown as { __fixtureReviewWrites?: number }).__fixtureReviewWrites ?? 0)).toBe(0);
+    await page.getByRole('button', { name: 'Files', exact: true }).click();
+    await expect.poll(() => scroller.evaluate(element => element.scrollTop)).toBe(initialScroll);
+    await page.getByRole('button', { name: 'Pin', exact: true }).click();
+    await expect.poll(async () => (await box(page, '.vss-Splitter--pane-flexible')).width).toBeLessThan(wide - 290);
+    await expect.poll(fitted).toBe(true);
+    await page.getByRole('button', { name: 'Unpin', exact: true }).click();
+    await expect.poll(fitted).toBe(true);
+    await source.press('Escape');
+    await expect(source).toHaveAttribute('inert');
+    await expect(page.getByRole('button', { name: 'Files', exact: true })).toBeFocused();
+    await setPr(context, { filesPosition: 'bottom' });
+    await expect(source).toBeVisible();
+    await expect.poll(fitted).toBe(true);
+    const bottom = await box(page, '.ado-files-panel');
+    const bottomTree = await box(page, '[data-ado-files-source]');
+    expect(bottomTree.width).toBeCloseTo(bottom.width, 0);
+    expect(bottomTree.top).toBeGreaterThan(bottom.top + 37);
+    expect(bottomTree.bottom).toBeLessThanOrEqual(bottom.bottom + 1);
+    expect((await box(page, '.vss-Splitter--pane-flexible')).width).toBeCloseTo(wide, 0);
+    const firstBefore = await tree.locator('tr').first().getAttribute('data-row-index');
+    await scroller.evaluate(element => { element.scrollTop -= 1600; });
+    await expect.poll(() => tree.locator('tr').first().getAttribute('data-row-index')).not.toBe(firstBefore);
+    expect(await tree.locator('tr').count()).toBeLessThan(50);
+    await expect(page.locator('[data-ado-files-navigation="native"]')).toBeVisible();
+    await tree.locator('[role=checkbox]').nth(4).click();
+    expect(await page.evaluate(() => (window as unknown as { __fixtureReviewWrites: number }).__fixtureReviewWrites)).toBe(1);
+    const scrolled = await scroller.evaluate(element => element.scrollTop);
+    await page.getByRole('button', { name: 'Minimize file panel' }).click();
+    await expect(source).toBeHidden();
+    await expect.poll(fitted).toBe(true);
+    await page.getByRole('button', { name: 'Expand file panel' }).click();
+    await expect(source).toBeFocused();
+    await expect.poll(fitted).toBe(true);
+    await expect.poll(() => scroller.evaluate(element => element.scrollTop)).toBe(scrolled);
+    expect(await nativesIntact(page)).toBe(true);
+    await page.setViewportSize({ width: 800, height: 900 });
+    await expect.poll(async () => (await box(page, '[data-ado-files-source]')).width)
+      .toBeCloseTo((await box(page, '.ado-files-panel')).width, 0);
+    await setPr(context, { focusFiles: false });
+    await expect(page.locator('[data-ado-files]')).toHaveCount(0);
+    await expect(source).toHaveCount(0);
+    const restored = page.locator('.vss-Splitter--pane-fixed');
+    await expect(restored).not.toHaveAttribute('inert');
+    await expect(restored).not.toHaveAttribute('tabindex');
+    await expect(restored).not.toHaveAttribute('id');
+    expect((await box(page, '.vss-Splitter--pane-fixed')).width).toBeCloseTo(295, 0);
+    await expect.poll(fitted).toBe(true);
+    expect(await nativesIntact(page)).toBe(true);
+  } finally { await context.close(); }
+});
+
+test('PR popup hierarchy: primary settings stay visible and dependent choices retain their values', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { splitOverview: true, railStatus: false, foldDescription: true,
+      compactHeader: false, hideHeaderReviewers: true, foldUpdates: false, compactPushes: true });
+    const page = await open(context);
+    const popup = await popupFor(context, page);
+    await expect(popup.getByRole('group', { name: 'Layout', exact: true })).toBeVisible();
+    await expect(popup.getByRole('group', { name: 'Activity', exact: true })).toBeVisible();
+    await expect(popup.getByLabel('Overview layout', { exact: true })).toHaveValue('tabs');
+    await expect(popup.getByRole('group', { name: 'Single-page options', exact: true })).toHaveCount(0);
+    await expect(popup.getByRole('button', { name: 'Compact header', exact: true })).toBeHidden();
+    await expect(popup.getByRole('button', { name: 'Collapse passed checks', exact: true })).toBeHidden();
+    await expect(popup.getByRole('button', { name: 'Compact spacing', exact: true })).toHaveAttribute('aria-pressed', 'false');
+    await expect(popup.getByLabel('Commit details', { exact: true })).toHaveValue('preview');
+    await popup.locator('.popup').screenshot({ path: info.outputPath('pr-popup-grouped.png') });
+    await popup.getByLabel('Overview layout', { exact: true }).selectOption('single');
+    const single = popup.getByRole('group', { name: 'Single-page options', exact: true });
+    await expect(single).toBeVisible();
+    await expect(single.getByRole('button', { name: 'Merge status in sidebar', exact: true })).toHaveAttribute('aria-pressed', 'false');
+    await expect(single.getByRole('button', { name: 'Fold long description', exact: true })).toHaveAttribute('aria-pressed', 'true');
+    expect(await single.evaluate(element => getComputedStyle(element).paddingLeft)).toBe('28px');
+    await popup.getByLabel('Overview layout', { exact: true }).selectOption('tabs');
+    await expect(single).toHaveCount(0);
+    expect((await stored(context)).pr).toMatchObject({ railStatus: false, foldDescription: true });
+    await popup.getByLabel('Commit details', { exact: true }).selectOption('all');
+    await expect.poll(async () => (await stored(context)).pr.compactPushes).toBe(false);
+    expect((await stored(context)).pr.foldUpdates).toBe(false);
+    await popup.getByText('Header', { exact: true }).focus();
+    await popup.keyboard.press('Enter');
+    await expect(popup.getByRole('button', { name: 'Compact header', exact: true })).toBeVisible();
+    await popup.getByRole('button', { name: 'Compact header', exact: true }).click();
+    await expect.poll(async () => (await stored(context)).pr.compactHeader).toBe(true);
+    expect((await stored(context)).pr.hideHeaderReviewers).toBe(true);
+    await popup.getByText('Checks & reviewers', { exact: true }).click();
+    await expect(popup.getByRole('button', { name: 'Collapse passed checks', exact: true })).toBeVisible();
+    expect(await popup.locator('.popup').evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+    await popup.getByRole('tab', { name: 'Files', exact: true }).click();
+    await expect(popup.getByRole('button', { name: 'Wide Files layout', exact: true })).toBeVisible();
+    await expect(popup.getByRole('button', { name: 'Compact file tree', exact: true })).toBeHidden();
+    await popup.getByText('Native file tree', { exact: true }).click();
+    await expect(popup.getByRole('button', { name: 'Compact file tree', exact: true })).toBeVisible();
+    await popup.locator('.popup').screenshot({ path: info.outputPath('pr-popup-files-grouped.png') });
+  } finally { await context.close(); }
+});
+
 test('PR overview: kiwifruit defaults fold noise, move merge status to the sidebar and keep native nodes', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
@@ -74,13 +360,13 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     const page = await open(context, { overview: prOverviewHtml() }, '', 360);
     await tagNatives(page);
     await expect(page.locator('[data-ado-pr]')).toHaveAttribute('data-ado-pr', /rail/);
-    // The native filter is switched to Active comments once, without scrolling the page to the dropdown.
-    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Active comments (2)');
+    // Native filter, focus and scroll remain untouched, even below the viewport.
+    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Show everything (11)');
     expect(await page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])').evaluate(node =>
       node.getBoundingClientRect().top + document.querySelector('.repos-pr-details-page')!.scrollTop)).toBeGreaterThan(360);
-    await expect(page.locator('tr[data-fixture-kind="push"]').first()).toBeHidden();
+    await expect(page.locator('tr[data-fixture-kind="push"]').first()).toBeVisible();
     await expect(page.locator('.bolt-callout')).toHaveCount(0);
-    expect(await page.evaluate(() => (window as unknown as { __fixtureFilterOpens: number }).__fixtureFilterOpens)).toBe(1);
+    expect(await page.evaluate(() => (window as unknown as { __fixtureFilterOpens?: number }).__fixtureFilterOpens ?? 0)).toBe(0);
     await expect(page.locator('.repos-pr-details-page')).toHaveJSProperty('scrollTop', 0);
     await expect.poll(() => page.evaluate(() => document.activeElement === document.querySelector('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])'))).toBe(false);
     await page.setViewportSize({ width: 1440, height: 1000 });
@@ -124,7 +410,7 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     await expect(page.locator('[data-fixture-reviewer="Sample Reviewer E"]')).toBeVisible();
     await page.getByRole('button', { name: 'Hide 5 with no vote', exact: true }).click();
     await expect(page.locator('[data-fixture-reviewer="Sample Reviewer E"]')).toBeHidden();
-    expect(await page.evaluate(() => (window as unknown as { __fixtureFilterOpens: number }).__fixtureFilterOpens)).toBe(1);
+    expect(await page.evaluate(() => (window as unknown as { __fixtureFilterOpens?: number }).__fixtureFilterOpens ?? 0)).toBe(0);
     // Compact header.
     expect((await box(page, '.repos-pr-details-page-tabbar')).height).toBeLessThanOrEqual(40.5);
     expect(await nativesIntact(page)).toBe(true);
@@ -133,7 +419,9 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
 
     const popup = await popupFor(context, page);
     await expect(popup.getByRole('button', { name: 'PR', exact: true })).toHaveAttribute('aria-pressed', 'true');
-    for (const name of ['Compact header', 'Merge status in sidebar', 'Collapse passed checks', 'Collapse silent reviewers', 'Start on active comments']) {
+    await popup.getByText('Header', { exact: true }).click();
+    await popup.getByText('Checks & reviewers', { exact: true }).click();
+    for (const name of ['Compact header', 'Merge status in sidebar', 'Collapse passed checks', 'Collapse silent reviewers', 'Compact spacing']) {
       await expect(popup.getByRole('button', { name, exact: true })).toHaveAttribute('aria-pressed', 'true');
     }
     await expect(popup.locator('p[role="status"]')).toContainText('2 passed folded');
@@ -154,8 +442,7 @@ test('PR overview: kiwifruit defaults fold noise, move merge status to the sideb
     await expect(page.locator('[data-fixture-reviewer="Sample Reviewer A"]')).toBeVisible();
     expect((await box(page, '.repos-pr-details-page-tabbar')).height).toBeGreaterThanOrEqual(47.5);
     expect(await nativesIntact(page)).toBe(true);
-    // The filter is a one-time default; it is not reverted.
-    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Active comments (2)');
+    await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('Show everything (11)');
   } finally { await context.close(); }
 });
 
@@ -166,7 +453,7 @@ test('PR overview: a filter that is already not "Show everything" is kept, and d
     const page = await open(context, { overview: prOverviewHtml({ dark: true, filter: 'all_comments' }) });
     await expect(page.getByRole('button', { name: '2 passed', exact: true })).toBeVisible();
     await expect(page.locator('.bolt-callout')).toHaveCount(0);
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __fixtureFilterOpens?: number }).__fixtureFilterOpens ?? 0)).toBe(1);
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __fixtureFilterOpens?: number }).__fixtureFilterOpens ?? 0)).toBe(0);
     await expect(page.locator('.repos-activity-filter-dropdown > button:not([data-ado-pr-ui])')).toHaveText('All comments (4)');
     const colors = await page.getByRole('button', { name: '2 passed', exact: true }).evaluate(node => {
       const parse = (value: string) => (value.match(/\d+(\.\d+)?/g) ?? []).slice(0, 3).map(Number);
@@ -198,6 +485,7 @@ test('PR overview: unknown structures stay native and are reported', async ({}, 
 test('PR files: comment rows leave the tree, indentation halves, and both restore', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
+    await setPr(context, { focusFiles: false });
     const page = await open(context, {}, '?_a=files');
     await expect(page.locator('[data-ado-pr]')).toHaveAttribute('data-ado-pr', /tree-comments/);
     await expect(page.locator('tr[data-fixture-tree="comment"]')).toHaveCount(2);
@@ -208,6 +496,7 @@ test('PR files: comment rows leave the tree, indentation halves, and both restor
     const popup = await popupFor(context, page);
     await expect(popup.getByRole('tab', { name: /Files/ })).toHaveAttribute('aria-selected', 'true');
     await expect(popup.locator('p[role="status"]')).toContainText('2 comment rows hidden');
+    await popup.getByText('Native file tree', { exact: true }).click();
     await popup.getByRole('button', { name: 'Hide comments in file tree', exact: true }).click();
     await expect(page.locator('tr[data-fixture-tree="comment"]').first()).toBeVisible();
     await popup.getByRole('button', { name: 'Compact file tree', exact: true }).click();
@@ -267,52 +556,153 @@ test('PR description: long text folds behind Show more and opens fully while edi
     await page.getByRole('button', { name: 'Edit description' }).click();
     await expect(page.locator('textarea.repos-description-editor')).toBeFocused();
     await expect(page.locator('[data-ado-pr-fold]')).toHaveCount(0);
-    await expect(page.getByRole('button', { name: /Show (more|less)/ })).toHaveCount(0);
+    await expect(page.locator('.repos-pr-description-card').getByRole('button', { name: /^Show (more|less)$/ })).toHaveCount(0);
   } finally { await context.close(); }
 });
 
-test('PR feed: pushes show only their header until Show commits', async ({}, info) => {
+test('PR Activity summary: keep events, preview two commits, and never change the native filter', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
-    await setPr(context, { activeComments: false, foldUpdates: false });
+    await setPr(context, { activeComments: true, foldUpdates: true, compactPushes: true });
+    const page = await open(context);
+    await expect(page.locator('[data-ado-pr]')).toBeVisible();
+    await expect(page.locator('.repos-activity-filter-dropdown > button').first()).toHaveText('Show everything (11)');
+    expect(await page.evaluate(() => (window as unknown as { __fixtureFilterOpens?: number }).__fixtureFilterOpens ?? 0)).toBe(0);
+    for (const row of await page.locator('[data-fixture-kind="push"],[data-fixture-kind="system"]').all()) await expect(row).toBeVisible();
+    await expect(page.getByRole('button', { name: /\+\d+ more updates/ })).toHaveCount(0);
+    for (const iteration of [12, 11]) {
+      const push = page.locator(`[data-fixture-push="${iteration}"]`);
+      await expect(push.getByText(`Fictional commit ${iteration}.1`, { exact: true })).toBeVisible();
+      await expect(push.getByText(`Fictional commit ${iteration}.2`, { exact: true })).toBeVisible();
+      await expect(push.getByText(`Fictional commit ${iteration}.3`, { exact: true })).toBeHidden();
+      await expect(page.locator(`[data-fixture-all-commits="${iteration}"]`)).toBeVisible();
+    }
+    await tagNatives(page);
+    const older = page.locator('[data-fixture-push="11"]');
+    await older.getByRole('button', { name: 'Show more commits', exact: true }).click();
+    await expect(older.getByText('Fictional commit 11.3', { exact: true })).toBeVisible();
+    await page.locator('[data-fixture-kind="system"] span').evaluate(node => { node.textContent = 'Changes requested'; });
+    await expect(page.getByText('Changes requested', { exact: true })).toBeVisible();
+    await expect(older.getByText('Fictional commit 11.3', { exact: true })).toBeVisible();
+    await older.getByRole('button', { name: 'Show fewer commits', exact: true }).click();
+    await expect(older.getByText('Fictional commit 11.2', { exact: true })).toBeVisible();
+    await expect(older.getByText('Fictional commit 11.3', { exact: true })).toBeHidden();
+    expect(await nativesIntact(page)).toBe(true);
+    const popup = await popupFor(context, page);
+    await expect(popup.getByRole('button', { name: 'Start on active comments', exact: true })).toHaveCount(0);
+    await popup.getByRole('button', { name: 'Enable ADOverride', exact: true }).click();
+    await expect(older.getByText('Fictional commit 11.3', { exact: true })).toBeVisible();
+    await expect(page.locator('[data-ado-pr-ui],[data-ado-pr-update],[data-ado-pr-commit-preview]')).toHaveCount(0);
+  } finally { await context.close(); }
+});
+
+test('PR feed: commit previews preserve native rows, links and independent expansion', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { foldUpdates: false });
     const page = await open(context);
     await tagNatives(page);
     const push = page.locator('[data-fixture-push="12"]');
     await expect(push.getByText('Sample Author pushed 3 commits')).toBeVisible();
-    await expect(page.locator('[data-fixture-commits="12"]')).toBeHidden();
-    await expect(page.locator('[data-fixture-all-commits="12"]')).toBeHidden();
+    await expect(push.getByText('Fictional commit 12.1')).toBeVisible();
+    await expect(push.getByText('Fictional commit 12.2')).toBeVisible();
+    await expect(push.getByText('Fictional commit 12.3')).toBeHidden();
+    await expect(page.locator('[data-fixture-all-commits="12"]')).toBeVisible();
     // Header-only pushes get no button.
     await expect(page.locator('[data-fixture-push="10"]').getByRole('button')).toHaveCount(0);
-    await push.getByRole('button', { name: 'Show commits', exact: true }).click();
+    await push.getByRole('button', { name: 'Show more commits', exact: true }).click();
     await expect(page.locator('[data-fixture-commits="12"]')).toBeVisible();
     await expect(page.locator('[data-fixture-all-commits="12"]')).toBeVisible();
-    await expect(page.locator('[data-fixture-commits="11"]')).toBeHidden();
-    await push.getByRole('button', { name: 'Hide commits', exact: true }).click();
-    await expect(page.locator('[data-fixture-commits="12"]')).toBeHidden();
+    await expect(page.getByText('Fictional commit 11.3')).toBeHidden();
+    await push.getByRole('button', { name: 'Show fewer commits', exact: true }).click();
+    await expect(push.getByText('Fictional commit 12.3')).toBeHidden();
     expect(await nativesIntact(page)).toBe(true);
     const popup = await popupFor(context, page);
-    await popup.getByRole('button', { name: 'Compact pushes', exact: true }).click();
+    await popup.getByLabel('Commit details', { exact: true }).selectOption('all');
     await expect(page.locator('[data-fixture-commits="12"]')).toBeVisible();
     await expect(push.getByRole('button', { name: /commits/ })).toHaveCount(0);
   } finally { await context.close(); }
 });
 
-test('PR feed: update runs fold, blocked authors fold behind one button, and runs join across hidden threads', async ({}, info) => {
+test('PR Activity summary: short lists, unknown structures and long titles stay readable', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
-    await setPr(context, { activeComments: false });
+    const page = await open(context, { overview: prOverviewHtml({ dark: true }) });
+    const push = page.locator('[data-fixture-push="12"]');
+    await expect(push.getByRole('button', { name: 'Show more commits', exact: true })).toBeVisible();
+    await page.setViewportSize({ width: 800, height: 1000 });
+    await push.locator('.commit-title').first().evaluate(node => {
+      node.textContent = 'Preserve the caller deadline while waiting for a cache refresh and keep the original error when every retry fails. '.repeat(3);
+    });
+    expect(await push.locator('.commit-title').first().evaluate(node => getComputedStyle(node).whiteSpace)).toBe('normal');
+    expect((await push.locator('.commit-title').first().boundingBox())!.height).toBeGreaterThan(40);
+    await push.locator('table').evaluate(table => {
+      table.querySelectorAll('tr[role=row]')[2]!.remove();
+      table.setAttribute('aria-rowcount', '2');
+    });
+    await expect(push.getByRole('button', { name: /commits/ })).toHaveCount(0);
+    await expect(push.getByText('Fictional commit 12.2')).toBeVisible();
+    await push.locator('table').evaluate(table => {
+      table.setAttribute('aria-rowcount', '500');
+    });
+    await expect(push.locator('[data-ado-pr-commit-preview]')).toHaveCount(0);
+    await expect(push.getByText('Fictional commit 12.2')).toBeVisible();
+    const popup = await popupFor(context, page);
+    await expect(popup.getByRole('alert')).toContainText('Commit preview');
+    await push.locator('table').evaluate(table => {
+      table.setAttribute('aria-rowcount', '2');
+      table.querySelectorAll('.commit-title')[1]!.classList.remove('commit-title');
+    });
+    await expect(push.locator('[data-ado-pr-commit-preview]')).toHaveCount(0);
+    await expect(push.getByText('Fictional commit 12.2')).toBeVisible();
+    await expect(page.locator('[data-fixture-kind="system"]')).toBeVisible();
+  } finally { await context.close(); }
+});
+
+test('PR Activity density: compact updates must not add padding to native event rows', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { foldUpdates: false, compactPushes: false });
+    const page = await open(context);
+    const event = page.locator('[data-fixture-kind="system"]');
+    const original = (await event.boundingBox())!.height;
+    expect(original).toBe(52);
+    await setPr(context, { foldUpdates: true });
+    await expect(event).toHaveAttribute('data-ado-pr-update');
+    await expect.poll(async () => (await event.boundingBox())!.height).toBeLessThan(original);
+    await expect(event.getByText('Sample Reviewer joined as a reviewer')).toBeVisible();
+    await setPr(context, { foldUpdates: false });
+    await expect.poll(async () => (await event.boundingBox())!.height).toBe(original);
+  } finally { await context.close(); }
+});
+
+test('PR Activity density: one or two native commits are unchanged by preview mode', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
+    await setPr(context, { compactPushes: false, foldUpdates: false });
+    const page = await open(context);
+    const table = page.locator('[data-fixture-commits="12"] table');
+    await table.evaluate(table => {
+      table.querySelectorAll('tr')[2]!.remove();
+      table.setAttribute('aria-rowcount', '2');
+    });
+    await setPr(context, { compactPushes: true });
+    await expect(page.locator('[data-ado-pr]')).toBeVisible();
+    await expect(table).not.toHaveAttribute('data-ado-pr-commit-preview');
+    await expect(page.locator('[data-fixture-push="12"]').getByRole('button', { name: /commits/ })).toHaveCount(0);
+  } finally { await context.close(); }
+});
+
+test('PR feed: compact updates stay visible across blocked threads and restore exactly', async ({}, info) => {
+  const { context } = await launch(info.outputPath('profile'));
+  try {
     const page = await open(context);
     await tagNatives(page);
     const row = (index: number) => `tr[data-fixture-row="${index}"]`;
-    // Runs: rows 6-8 (push, system, push) and 10-11 (push, push). The placeholder and composer never fold.
-    await expect(page.getByRole('button', { name: '+2 more updates', exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: '+1 more updates', exact: true })).toBeVisible();
-    for (const index of [7, 8, 11]) expect(await hidden(page, row(index))).toBe(true);
-    for (const index of [0, 1, 2, 3, 6, 10, 12]) expect(await hidden(page, row(index))).toBe(false);
-    await page.getByRole('button', { name: '+2 more updates', exact: true }).click();
-    await expect.poll(() => hidden(page, row(8))).toBe(false);
-    await page.getByRole('button', { name: 'Hide 2 updates', exact: true }).click();
-    await expect.poll(() => hidden(page, row(8))).toBe(true);
+    await expect(page.getByRole('button', { name: /more updates/ })).toHaveCount(0);
+    for (const index of [0, 1, 2, 3, 6, 7, 8, 10, 11, 12]) expect(await hidden(page, row(index))).toBe(false);
+    const updates = page.locator('[data-fixture-kind="push"],[data-fixture-kind="system"]');
+    for (const update of await updates.all()) await expect(update).toHaveAttribute('data-ado-pr-update');
 
     const popup = await popupFor(context, page);
     await popup.getByRole('tab', { name: 'Blocked' }).click();
@@ -325,8 +715,9 @@ test('PR feed: update runs fold, blocked authors fold behind one button, and run
     expect(await hidden(page, row(5))).toBe(false);
     const summary = page.getByRole('button', { name: '1 from blocked authors', exact: true });
     await expect(summary).toBeVisible();
-    // With the closed bot thread folded, rows 6-11 are one run behind the first push.
-    await expect(page.getByRole('button', { name: '+4 more updates', exact: true })).toBeVisible();
+    // Blocking a thread never merges or hides the updates on either side.
+    for (const index of [6, 7, 8, 10, 11]) expect(await hidden(page, row(index))).toBe(false);
+    await expect(page.getByRole('button', { name: /more updates/ })).toHaveCount(0);
     await summary.click();
     await expect.poll(() => hidden(page, row(9))).toBe(false);
     await expect(page.getByRole('button', { name: 'Hide 1 from blocked authors', exact: true })).toBeVisible();
@@ -347,6 +738,7 @@ test('PR feed: update runs fold, blocked authors fold behind one button, and run
 test('PR files: blocked authors leave the tree and their inline threads fold', async ({}, info) => {
   const { context } = await launch(info.outputPath('profile'));
   try {
+    await setPr(context, { focusFiles: false });
     await setPr(context, { hideTreeComments: false });
     const page = await open(context, {}, '?_a=files');
     await expect(page.locator('tr[data-fixture-tree="comment"]').first()).toBeVisible();
@@ -471,7 +863,7 @@ test('PR split overview: Activity, Description and Checks tabs show their parts,
     await expect(page.locator('table.activity-feed-list')).toBeHidden();
     // Turning the option off restores the native layout and removes our tabs.
     const popup = await popupFor(context, page);
-    await popup.getByRole('button', { name: 'Split Overview into tabs', exact: true }).click();
+    await popup.getByLabel('Overview layout', { exact: true }).selectOption('single');
     await expect(page.locator('[data-ado-pr-tab]')).toHaveCount(0);
     await expect(page.locator('table.activity-feed-list')).toBeVisible();
     await expect(page.locator('.repos-overview-right-pane')).toBeVisible();
